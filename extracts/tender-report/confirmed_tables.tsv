@@ -1,0 +1,5 @@
+old_table	new_table
+District_Directors	district_directors
+NetSuiteLocation_Mapping	netsuite_location_mapping
+POS_ORDERPAIDOUTS	pos_order_paid_outs
+POS_ORDERPAYMENTS	pos_order_payments

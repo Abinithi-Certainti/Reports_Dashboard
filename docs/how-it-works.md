@@ -37,19 +37,37 @@ Safety built in:
 ## 3. How field mapping works
 
 The old reports use SQL Server names (`POS_ORDERPAYMENTS.PaymentTypeName`); the new database uses PostgreSQL
-names (`pos_order_payments.payment_type_name`). Mapping is done in five steps, and only step 4 needs a person.
+names (`pos_order_payments.payment_type_name`). Picture version: `docs/mapping-diagram.html`.
 
 | Step | What happens | Who |
 |---|---|---|
-| 1. Extract | 5 read-only DAX queries pull tables, columns, formulas, links and source SQL out of the old report | person runs, 10 min |
-| 2. Auto-match | each old name is converted by rule: split the words, lower-case, join with `_` (`PaymentTypeName` -> `payment_type_name`) | automatic |
-| 3. Check it exists | every converted name is looked up in the new database structure (`extracts/new-db/master_columns.tsv`) | automatic |
-| 4. Review leftovers | anything the rule cannot prove is marked **Review** and waits for a person - never guessed (Tender Report: 1 of 19, `CTLOCATION` -> `ct_location`) | person |
-| 5. Go live | the report's `dataset.sql` uses only confirmed new names; a test runs it against the new table structure | automatic |
+| 1. Extract | 5 read-only DAX queries pull tables, fields, formulas, links and source SQL out of the old report | person, ~10 min |
+| 2. Save in catalog | stored in the catalog database | automatic |
+| 3. Confirm tables once | old table -> new table. Old table names often break the naming rule (`POS_ORDERPAYMENTS` is all capitals), so a person confirms each table **once**; tables are shared, so later reports reuse it | person, once per table |
+| 4. Match fields by rule | `tools/auto_map.py` tries the rules below and checks every result exists in the new database | automatic |
+| 5. Review leftovers | only fields marked Review or Missing reach a person - nothing is guessed | person |
+| 6. Go live | the report's SQL uses only confirmed names; `tests/check_queries.sh` runs it against the new tables | automatic |
 
-Everything is stored in the catalog database (`catalog.table_map`, `catalog.column_map`) and shown in the
-**Mapping Studio** page. Most tables are shared between reports, so each report after the first needs fewer new
-mappings.
+Matching rules, tried in order - the first that finds a real field wins:
+
+| Rule | Example | Result |
+|---|---|---|
+| exact (lower-cased) | `Plaza` -> `plaza` | Auto |
+| snake case | `PaymentTypeName` -> `payment_type_name`, `HostLocationID` -> `host_location_id` | Auto |
+| ignore underscores | `CTLOCATION` -> `ct_location` | Review |
+| nothing found | - | Missing |
+
+Tender Report result: with the 4 tables confirmed, **18 of 19 fields Auto, 1 Review, 0 guessed** - and the tool's
+answer agrees with the hand-made mapping on all 19. Without confirmed tables it marks 15 of 19 Review, which is why
+step 3 exists.
+
+```bash
+python3 tools/auto_map.py extracts/tender-report/old_fields.tsv extracts/new-db/master_columns.tsv \
+        --tables extracts/tender-report/confirmed_tables.tsv
+```
+
+Correction to an earlier status: before `tools/auto_map.py` existed, the Tender Report's 19 fields were matched by
+applying the rule by hand; only the "exists in the new database" check was automatic.
 
 ## 4. Adding a report without touching the code
 
