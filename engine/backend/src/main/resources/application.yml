@@ -1,0 +1,18 @@
+# Connection settings come from environment variables; nothing secret lives in this file.
+spring:
+  datasource:
+    url: jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5432}/${PG_NAME:tender_demo}${PG_URL_PARAMS:}
+    username: ${PG_USERNAME:postgres}
+    password: ${PG_PASSWORD:}
+    hikari:
+      # Belt and braces on top of a read-only database user: every connection refuses writes.
+      connection-init-sql: SET default_transaction_read_only = on
+      read-only: true
+
+reports:
+  dir: ${REPORTS_DIR:../../reports}
+  # Shown as a banner on every report. Set only for demos on made-up data.
+  sample-data-notice: ${SAMPLE_DATA_NOTICE:}
+
+server:
+  port: ${PORT:8080}
