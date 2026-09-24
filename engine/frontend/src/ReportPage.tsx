@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, CircularProgress, Container, Typography } from '@mui/material';
+import { tokens } from './theme';
 import { api, QueryRequest, Spec } from './api';
 import { addDays } from './format';
 import FilterBar, { FilterState } from './components/FilterBar';
@@ -52,12 +53,36 @@ export default function ReportPage({ reportId }: { reportId: string }) {
 
   return (
     <Container maxWidth={false} sx={{ py: 3, maxWidth: 1600 }}>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h1">{spec.title}</Typography>
-        {spec.subtitle && <Typography color="text.secondary">{spec.subtitle}</Typography>}
+      <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box>
+          <Typography
+            variant="h1"
+            sx={{
+              background: `linear-gradient(90deg, ${tokens.textPrimary} 30%, ${tokens.accent})`,
+              WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+            }}
+          >
+            {spec.title}
+          </Typography>
+          {spec.subtitle && <Typography sx={{ color: tokens.textSecondary }}>{spec.subtitle}</Typography>}
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
+          <Box
+            sx={{
+              width: 8, height: 8, borderRadius: '50%', bgcolor: '#34d399', boxShadow: '0 0 10px #34d399',
+              animation: 'pulse 2s ease-in-out infinite',
+              '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
+            }}
+          />
+          {filters.dateFrom} → {filters.dateTo}
+        </Box>
       </Box>
       {spec.sampleDataNotice && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert
+          severity="warning"
+          variant="outlined"
+          sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.06)', borderColor: 'rgba(251,191,36,0.35)', color: '#fde68a' }}
+        >
           <strong>Sample data.</strong> {spec.sampleDataNotice}
         </Alert>
       )}

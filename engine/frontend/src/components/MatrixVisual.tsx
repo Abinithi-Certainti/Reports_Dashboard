@@ -3,6 +3,7 @@ import { Box, Button, IconButton, Paper, Skeleton, Table, TableBody, TableCell, 
 import { QueryRequest, Row, Spec, Visual } from '../api';
 import { formatDay, formatValue } from '../format';
 import { useQuery } from '../useQuery';
+import { tokens } from '../theme';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -61,7 +62,10 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
     });
 
   const cell = (n: number | undefined) => (n === undefined ? '' : formatValue(n, format));
-  const firstColSx = { position: 'sticky', left: 0, zIndex: 1, bgcolor: 'background.paper', minWidth: 240, whiteSpace: 'nowrap' } as const;
+  const firstColSx = { position: 'sticky', left: 0, zIndex: 1, bgcolor: '#0d1422', minWidth: 240, whiteSpace: 'nowrap' } as const;
+  // Heat shading for leaf cells: one hue, stronger = bigger (sequential, never a rainbow).
+  const leafMax = useMemo(() => (rows ? Math.max(1, ...rows.map((r) => Number(r[measure] ?? 0))) : 1), [rows, measure]);
+  const heat = (v: number | undefined) => (v === undefined || v <= 0 ? 'transparent' : `rgba(56,189,248,${(0.04 + 0.30 * Math.min(1, v / leafMax)).toFixed(3)})`);
 
   const renderNode = (n: Node): JSX.Element => {
     const isOpen = !collapsed.has(n.key);
@@ -81,11 +85,19 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
             {n.label}
           </TableCell>
           {tree!.columns.map((c) => (
-            <TableCell key={c} align="right" sx={{ fontWeight: weight, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+            <TableCell
+              key={c}
+              align="right"
+              sx={{
+                fontWeight: weight, fontFamily: tokens.mono, fontSize: '0.78rem', whiteSpace: 'nowrap',
+                bgcolor: hasChildren ? 'transparent' : heat(n.cells.get(c)),
+                color: hasChildren ? tokens.textPrimary : tokens.textPrimary,
+              }}
+            >
               {cell(n.cells.get(c))}
             </TableCell>
           ))}
-          <TableCell align="right" sx={{ fontWeight: 650, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', bgcolor: '#f7f8fa' }}>
+          <TableCell align="right" sx={{ fontWeight: 650, fontFamily: tokens.mono, fontSize: '0.78rem', whiteSpace: 'nowrap', bgcolor: '#0d1422', color: tokens.accent }}>
             {cell(n.total)}
           </TableCell>
         </TableRow>
@@ -122,12 +134,12 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
             </TableHead>
             <TableBody>
               {tree.roots.map(renderNode)}
-              <TableRow sx={{ '& td': { fontWeight: 700, borderTop: '2px solid #d8dbe0' } }}>
-                <TableCell sx={firstColSx}>Total</TableCell>
+              <TableRow sx={{ '& td': { fontWeight: 700, borderTop: `1px solid ${tokens.accent}`, fontFamily: tokens.mono, fontSize: '0.78rem', color: tokens.accent } }}>
+                <TableCell sx={{ ...firstColSx, color: tokens.accent }}>Total</TableCell>
                 {tree.columns.map((c) => (
                   <TableCell key={c} align="right" sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{cell(tree.grand.cells.get(c))}</TableCell>
                 ))}
-                <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', bgcolor: '#f7f8fa' }}>{cell(tree.grand.total)}</TableCell>
+                <TableCell align="right" sx={{ whiteSpace: 'nowrap', bgcolor: '#0d1422' }}>{cell(tree.grand.total)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

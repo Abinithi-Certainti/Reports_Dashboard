@@ -3,7 +3,7 @@ import { Paper, Skeleton, Typography } from '@mui/material';
 import { QueryRequest, Spec, Visual } from '../api';
 import { formatCompactCurrency, formatValue } from '../format';
 import { useQuery } from '../useQuery';
-import { chartColors } from '../theme';
+import { chartColors, tokens } from '../theme';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -18,6 +18,9 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
     grid: { left: 8, right: 64, top: 8, bottom: 8, containLabel: true },
     tooltip: {
       trigger: 'item',
+      backgroundColor: '#0f1623',
+      borderColor: tokens.panelBorder,
+      textStyle: { color: tokens.textPrimary },
       formatter: (p: { name: string; value: number }) => `${p.name}<br/><b>${formatValue(p.value, format)}</b>`,
     },
     xAxis: {
@@ -38,14 +41,23 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
         type: 'bar',
         data: rows.map((r) => Number(r[measure] ?? 0)),
         barMaxWidth: 20,
-        itemStyle: { color: chartColors.series1, borderRadius: [0, 4, 4, 0] },
+        itemStyle: {
+          borderRadius: [0, 4, 4, 0],
+          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [
+            { offset: 0, color: chartColors.series1 }, { offset: 1, color: chartColors.series1Light }] },
+          shadowColor: 'rgba(56,189,248,0.35)', shadowBlur: 10,
+        },
+        animationDuration: 900,
+        animationEasing: 'cubicOut',
         label: {
           show: true,
           position: 'right',
-          color: chartColors.axisText,
+          color: tokens.textPrimary,
+          fontFamily: tokens.mono,
+          fontSize: 11,
           formatter: (p: { value: number }) => formatCompactCurrency(p.value),
         },
-        emphasis: { itemStyle: { color: '#1f64b8' } },
+        emphasis: { itemStyle: { shadowBlur: 18, shadowColor: 'rgba(56,189,248,0.6)' } },
       },
     ],
   };
