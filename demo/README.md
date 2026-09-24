@@ -87,3 +87,22 @@ Set `REPORTS_IMPORT_DIR` to choose where uploaded reports are saved (default `./
 - Microsoft sign-in (needs the company's Azure app registration)
 - Excel export
 - Per-user data restriction (waiting on decision 4)
+
+## Online demo (no server)
+
+One HTML file that runs the whole demo inside the browser: the Tender Report, Mapping Studio and import. Useful for
+showing people who cannot run the Java engine.
+
+```bash
+cd engine/frontend
+npm ci
+npm run build:static        # writes dist-static/index.html (about 2.7 MB, everything inside)
+```
+
+- The sample rows come from `demo/static-data/*.json`, exported from the `tender_demo` database by running each
+  report's `dataset.sql`. They are made up, like `sample_data.sql`.
+- `src/static/staticApi.ts` answers the same API calls in the browser, with the same filter, sorting, % to Total
+  and import-check rules as the Java engine. Checked by comparing the page text with the real engine: identical
+  apart from the sidebar labels.
+- One difference: there is no database, so an uploaded report can only use one of the bundled datasets (the example
+  Paid-outs Report works). Uploads are kept in that browser only.

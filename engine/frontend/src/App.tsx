@@ -12,7 +12,7 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import { api, ReportSummary } from './api';
+import { api, isStaticDemo, ReportSummary } from './api';
 import { ThemeName, useTokens } from './theme';
 import { useSound } from './sound';
 import { PrefsContext } from './prefs';
@@ -104,7 +104,7 @@ export default function App() {
           </Box>
           <Box>
             <Typography sx={{ fontWeight: 750, lineHeight: 1.1, color: t.textPrimary }}>Report Engine</Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>Certainti · Reports 2.0</Typography>
+            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Online demo · sample data' : 'Certainti · Reports 2.0'}</Typography>
           </Box>
         </Box>
 
@@ -130,10 +130,10 @@ export default function App() {
         </Box>
 
         <Box sx={{ ...{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' } }}>
-          <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>Connected to</Typography>
+          <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Runs in' : 'Connected to'}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: t.good, boxShadow: `0 0 8px ${t.good}` }} />
-            <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary, whiteSpace: 'nowrap' }}>PostgreSQL · read-only</Typography>
+            <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary, whiteSpace: 'nowrap' }}>{isStaticDemo ? 'your browser · no server' : 'PostgreSQL · read-only'}</Typography>
           </Box>
         </Box>
       </Box>
