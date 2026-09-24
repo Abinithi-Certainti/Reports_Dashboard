@@ -74,9 +74,16 @@ Reconciling against the production Power BI report needs production-like data.
 4. **Bar chart** of the same summary.
 5. **Detail grid** - Plaza > Brand > Payment Type by day, expand/collapse, sticky first column, totals.
 
+## Try the import (no code change)
+
+1. Open **Import report** in the side menu.
+2. Press **Use the example: Paid-outs Report** (or drop the two files from `demo/import-example/paidout-report/`).
+3. Press **Check it**, then **Publish**, then **Open report**.
+
+Set `REPORTS_IMPORT_DIR` to choose where uploaded reports are saved (default `./imported-reports`).
+
 ## Not in this demo yet
 
 - Microsoft sign-in (needs the company's Azure app registration)
 - Excel export
 - Per-user data restriction (waiting on decision 4)
-- Dark mode

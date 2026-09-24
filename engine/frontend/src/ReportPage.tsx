@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, CircularProgress, Container, Typography } from '@mui/material';
-import { tokens } from './theme';
+import { useTokens } from './theme';
 import { api, QueryRequest, Spec } from './api';
 import { addDays } from './format';
 import FilterBar, { FilterState } from './components/FilterBar';
@@ -8,9 +8,11 @@ import KpiRow from './components/KpiRow';
 import SummaryTable from './components/SummaryTable';
 import BarChartVisual from './components/BarChartVisual';
 import MatrixVisual from './components/MatrixVisual';
+import LineChartVisual from './components/LineChartVisual';
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
 export default function ReportPage({ reportId }: { reportId: string }) {
+  const tokens = useTokens();
   const [spec, setSpec] = useState<Spec>();
   const [filters, setFilters] = useState<FilterState>();
   const [defaults, setDefaults] = useState<FilterState>();
@@ -52,7 +54,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
   const bars = spec.visuals.filter((v) => v.type === 'bar');
 
   return (
-    <Container maxWidth={false} sx={{ py: 3, maxWidth: 1600 }}>
+    <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
       <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
         <Box>
           <Typography
@@ -69,7 +71,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
           <Box
             sx={{
-              width: 8, height: 8, borderRadius: '50%', bgcolor: '#34d399', boxShadow: '0 0 10px #34d399',
+              width: 8, height: 8, borderRadius: '50%', bgcolor: tokens.good, boxShadow: `0 0 10px ${tokens.good}`,
               animation: 'pulse 2s ease-in-out infinite',
               '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
             }}
@@ -81,7 +83,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
         <Alert
           severity="warning"
           variant="outlined"
-          sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.06)', borderColor: 'rgba(251,191,36,0.35)', color: '#fde68a' }}
+          sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.08)', borderColor: 'rgba(245,158,11,0.45)', color: tokens.mode === 'light' ? '#92400e' : '#fde68a' }}
         >
           <strong>Sample data.</strong> {spec.sampleDataNotice}
         </Alert>
@@ -93,7 +95,11 @@ export default function ReportPage({ reportId }: { reportId: string }) {
         .filter((v) => v.type === 'kpi')
         .map((v, i) => <KpiRow key={`kpi-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '5fr 7fr' }, gap: 2, mb: 2 }}>
+      {spec.visuals
+        .filter((v) => v.type === 'line')
+        .map((v, i) => <Box key={`l-${i}`} sx={{ mb: 2 }}><LineChartVisual reportId={reportId} spec={spec} visual={v} base={base} /></Box>)}
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: tables.length && bars.length ? '5fr 7fr' : '1fr' }, gap: 2, mb: 2 }}>
         {tables.map((v, i) => <SummaryTable key={`t-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
         {bars.map((v, i) => <BarChartVisual key={`b-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
       </Box>

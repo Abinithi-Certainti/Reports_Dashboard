@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Autocomplete, Box, Button, Paper, TextField } from '@mui/material';
 import { api, Spec } from '../api';
+import { useSound } from '../sound';
 
 export type FilterState = {
   values: Record<string, string[]>;
@@ -19,7 +20,12 @@ type Props = {
 };
 
 /** All filters in one row above the visuals. An empty dropdown means "All". */
-export default function FilterBar({ reportId, spec, value, onChange, onReset }: Props) {
+export default function FilterBar({ reportId, spec, value, onChange: change, onReset }: Props) {
+  const sound = useSound();
+  const onChange = (v: FilterState) => {
+    sound.play('filter');
+    change(v);
+  };
   const [options, setOptions] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -42,7 +48,7 @@ export default function FilterBar({ reportId, spec, value, onChange, onReset }: 
             options={options[f.dimension] ?? []}
             value={value.values[f.dimension] ?? []}
             onChange={(_, selected) => onChange({ ...value, values: { ...value.values, [f.dimension]: selected } })}
-            sx={{ width: 220 }}
+            sx={{ width: { xs: '100%', sm: 200 } }}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -76,7 +82,14 @@ export default function FilterBar({ reportId, spec, value, onChange, onReset }: 
         ),
       )}
       <Box sx={{ flex: 1 }} />
-      <Button onClick={onReset}>Reset filters</Button>
+      <Button
+        onClick={() => {
+          sound.play('whoosh');
+          onReset();
+        }}
+      >
+        Reset filters
+      </Button>
     </Paper>
   );
 }

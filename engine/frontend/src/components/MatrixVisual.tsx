@@ -3,7 +3,8 @@ import { Box, Button, IconButton, Paper, Skeleton, Table, TableBody, TableCell, 
 import { QueryRequest, Row, Spec, Visual } from '../api';
 import { formatDay, formatValue } from '../format';
 import { useQuery } from '../useQuery';
-import { tokens } from '../theme';
+import { useSound } from '../sound';
+import { useTokens } from '../theme';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -35,6 +36,12 @@ function buildTree(rows: Row[], rowDims: string[], colDim: string, measure: stri
   return { roots: grand.children, columns, grand };
 }
 
+/** Hex colour + opacity -> rgba, for the one-hue heat shading. */
+function heatColour(hex: string, a: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
+}
+
 function allKeys(nodes: Node[], out: string[] = []): string[] {
   nodes.forEach((n) => {
     if (n.children.length) {
@@ -46,6 +53,8 @@ function allKeys(nodes: Node[], out: string[] = []): string[] {
 }
 
 export default function MatrixVisual({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
+  const tokens = useTokens();
+  const sound = useSound();
   const rowDims = visual.rows ?? [];
   const colDim = visual.columns?.[0] ?? '';
   const measure = visual.values?.[0] ?? '';
@@ -54,18 +63,20 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
 
   const tree = useMemo(() => (rows ? buildTree(rows, rowDims, colDim, measure) : undefined), [rows, rowDims, colDim, measure]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const toggle = (key: string) =>
+  const toggle = (key: string) => {
+    sound.play('click');
     setCollapsed((s) => {
       const next = new Set(s);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
+  };
 
   const cell = (n: number | undefined) => (n === undefined ? '' : formatValue(n, format));
-  const firstColSx = { position: 'sticky', left: 0, zIndex: 1, bgcolor: '#0d1422', minWidth: 240, whiteSpace: 'nowrap' } as const;
+  const firstColSx = { position: 'sticky', left: 0, zIndex: 1, bgcolor: tokens.headerCell, minWidth: 240, whiteSpace: 'nowrap' } as const;
   // Heat shading for leaf cells: one hue, stronger = bigger (sequential, never a rainbow).
   const leafMax = useMemo(() => (rows ? Math.max(1, ...rows.map((r) => Number(r[measure] ?? 0))) : 1), [rows, measure]);
-  const heat = (v: number | undefined) => (v === undefined || v <= 0 ? 'transparent' : `rgba(56,189,248,${(0.04 + 0.30 * Math.min(1, v / leafMax)).toFixed(3)})`);
+  const heat = (v: number | undefined) => (v === undefined || v <= 0 ? 'transparent' : heatColour(tokens.series1Light, 0.04 + 0.30 * Math.min(1, v / leafMax)));
 
   const renderNode = (n: Node): JSX.Element => {
     const isOpen = !collapsed.has(n.key);
@@ -97,7 +108,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
               {cell(n.cells.get(c))}
             </TableCell>
           ))}
-          <TableCell align="right" sx={{ fontWeight: 650, fontFamily: tokens.mono, fontSize: '0.78rem', whiteSpace: 'nowrap', bgcolor: '#0d1422', color: tokens.accent }}>
+          <TableCell align="right" sx={{ fontWeight: 650, fontFamily: tokens.mono, fontSize: '0.78rem', whiteSpace: 'nowrap', bgcolor: tokens.headerCell, color: tokens.accent }}>
             {cell(n.total)}
           </TableCell>
         </TableRow>
@@ -139,7 +150,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
                 {tree.columns.map((c) => (
                   <TableCell key={c} align="right" sx={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{cell(tree.grand.cells.get(c))}</TableCell>
                 ))}
-                <TableCell align="right" sx={{ whiteSpace: 'nowrap', bgcolor: '#0d1422' }}>{cell(tree.grand.total)}</TableCell>
+                <TableCell align="right" sx={{ whiteSpace: 'nowrap', bgcolor: tokens.headerCell }}>{cell(tree.grand.total)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

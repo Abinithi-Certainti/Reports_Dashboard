@@ -4,8 +4,9 @@ import {
 } from '@mui/material';
 import { QueryRequest, Spec, Visual } from '../api';
 import { formatValue } from '../format';
-import { tokens } from '../theme';
+import { useTokens } from '../theme';
 import { useQuery } from '../useQuery';
+import { useSound } from '../sound';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -14,6 +15,8 @@ type Base = Omit<QueryRequest, 'measures'>;
  * several modes (like % to Total) gets a toggle so old and corrected numbers can be compared.
  */
 export default function SummaryTable({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
+  const tokens = useTokens();
+  const sound = useSound();
   const values = visual.values ?? [];
   const measures = values.filter((v) => spec.measures[v]);
   const calcIds = values.filter((v) => spec.calculations[v]);
@@ -42,7 +45,12 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
             size="small"
             exclusive
             value={modes[c]}
-            onChange={(_, m) => m && setModes({ ...modes, [c]: m })}
+            onChange={(_, m) => {
+              if (m) {
+                setModes({ ...modes, [c]: m });
+                sound.play('toggle');
+              }
+            }}
             aria-label={`${label(c)} mode`}
           >
             {Object.entries(spec.calculations[c].modes).map(([id, m]) => (
@@ -80,7 +88,7 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
                           sx={{
                             position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', height: 18, borderRadius: '4px',
                             width: `calc(${(share * 100).toFixed(1)}% - 16px)`, minWidth: 2,
-                            background: 'linear-gradient(90deg, rgba(57,135,229,0.10), rgba(56,189,248,0.32))',
+                            background: `linear-gradient(90deg, ${tokens.series1}12, ${tokens.series1Light}${tokens.mode === 'light' ? '38' : '52'})`,
                             transition: 'width .6s ease',
                           }}
                         />
@@ -94,7 +102,7 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
           </TableBody>
           {visual.total_row && totalQuery.rows?.[0] && (
             <TableHead>
-              <TableRow sx={{ '& th': { fontWeight: 700, color: 'text.primary', bgcolor: '#0d1422', position: 'sticky', bottom: 0, borderTop: `1px solid ${tokens.panelBorder}` } }}>
+              <TableRow sx={{ '& th': { fontWeight: 700, color: 'text.primary', bgcolor: tokens.headerCell, position: 'sticky', bottom: 0, borderTop: `1px solid ${tokens.panelBorder}` } }}>
                 <TableCell colSpan={rowDims.length}>Total</TableCell>
                 {values.map((v) => (
                   <TableCell key={v} align="right" sx={{ fontFamily: tokens.mono, color: tokens.accent }}>

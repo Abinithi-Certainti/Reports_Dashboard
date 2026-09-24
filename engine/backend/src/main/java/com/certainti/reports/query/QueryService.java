@@ -39,6 +39,20 @@ public class QueryService {
         return jdbc.queryForMap(built.sql());
     }
 
+    /**
+     * Proves an uploaded spec works without reading any rows: every dimension column and every measure is
+     * evaluated over the dataset with LIMIT 0, inside a read-only transaction.
+     */
+    @Transactional(readOnly = true)
+    public void dryRun(ReportSpec spec) {
+        StringBuilder select = new StringBuilder();
+        spec.dimensions().values().forEach(d -> select.append(select.isEmpty() ? "" : ", ").append("d.").append(d.column()));
+        jdbc.queryForList("WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT " + select + " FROM d LIMIT 0");
+        StringBuilder measures = new StringBuilder();
+        spec.measures().values().forEach(m -> measures.append(measures.isEmpty() ? "" : ", ").append("(").append(m.sql()).append(")"));
+        jdbc.queryForList("WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT " + measures + " FROM (SELECT * FROM d LIMIT 0) d");
+    }
+
     private static void applyCalculations(ReportSpec spec, QueryRequest request, List<Map<String, Object>> rows) {
         request.calculationsOrEmpty().forEach((calcId, modeId) -> {
             ReportSpec.Calculation calc = spec.calculations() == null ? null : spec.calculations().get(calcId);

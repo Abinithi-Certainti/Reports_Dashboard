@@ -40,7 +40,11 @@ visuals:
       - { label: Total tender amount,     measure: tender_amount }
       - { label: Cash (after paid-outs),  measure: tender_amount, include: { payment_type: [Cash] } }
       - { label: Card and other,          measure: tender_amount, exclude: { payment_type: [Cash] } }
-      - { label: Paid-outs,               measure: paidouts }
+      - { label: Paid-outs,               measure: paidouts, good_direction: down }
+  - type: line
+    title: Daily tender amount
+    rows: [end_day]
+    values: [tender_amount]
   - type: table
     title: Selected Locations - Summary
     rows: [payment_type]

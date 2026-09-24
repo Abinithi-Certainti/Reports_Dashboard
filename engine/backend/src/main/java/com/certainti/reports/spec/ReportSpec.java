@@ -61,6 +61,7 @@ public record ReportSpec(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record KpiItem(String label, String measure, Map<String, List<String>> include,
-                          Map<String, List<String>> exclude) {
+                          Map<String, List<String>> exclude,
+                          @JsonProperty("good_direction") String goodDirection) {
     }
 }

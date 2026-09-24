@@ -13,3 +13,4 @@ engine/frontend/dist/
 engine/frontend/*.tsbuildinfo
 *.webm
 *.mp4
+engine/backend/imported-reports/

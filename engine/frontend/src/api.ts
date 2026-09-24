@@ -5,9 +5,15 @@ export type Measure = { label: string; format: 'currency' | 'percent' | 'number'
 export type Mode = { type: string; label: string };
 export type Calculation = { label: string; of: string; format: string; modes: Record<string, Mode>; default_mode: string };
 export type Filter = { dimension: string; type: 'multi_select' | 'date_range'; default_last_days?: number };
-export type KpiItem = { label: string; measure: string; include?: Record<string, string[]>; exclude?: Record<string, string[]> };
+export type KpiItem = {
+  label: string;
+  measure: string;
+  include?: Record<string, string[]>;
+  exclude?: Record<string, string[]>;
+  good_direction?: 'up' | 'down' | null;
+};
 export type Visual = {
-  type: 'kpi' | 'table' | 'bar' | 'matrix';
+  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line';
   title?: string;
   rows?: string[];
   columns?: string[];
@@ -26,8 +32,22 @@ export type Spec = {
   filters: Filter[];
   visuals: Visual[];
 };
-export type ReportSummary = { id: string; title: string; subtitle?: string };
+export type ReportSummary = { id: string; title: string; subtitle?: string; imported: boolean; visuals: number };
 export type Row = Record<string, string | number | null>;
+
+export type MappingColumn = { old_column: string; new_column: string; new_type: string; method: 'exact' | 'snake_case' | 'manual'; confirmed_by: string | null };
+export type MappingTable = { old_table: string; new_table: string; confirmed: boolean; evidence: string; columns: MappingColumn[] };
+export type Mapping = {
+  report: string;
+  source: { server: string; database: string; schema: string };
+  target: { database: string; schema: string };
+  extracted_on: string;
+  tables: MappingTable[];
+  rules: { rule: string; found_in: string; decision: string }[];
+  findings: { severity: 'high' | 'medium' | 'low'; finding: string; verified: boolean; status: string; decision_owner: string | null }[];
+};
+export type ImportCheck = { name: string; ok: boolean; detail: string };
+export type ImportResult = { ok: boolean; id: string | null; title: string | null; checks: ImportCheck[] };
 
 export type QueryRequest = {
   filters?: Record<string, string[]>;
@@ -53,6 +73,13 @@ export const api = {
   values: (id: string, dim: string) => fetch(`/api/reports/${id}/values/${dim}`).then((r) => json<string[]>(r)),
   dateBounds: (id: string) =>
     fetch(`/api/reports/${id}/date-bounds`).then((r) => json<{ min_date: string; max_date: string }>(r)),
+  mapping: (id: string) => fetch(`/api/reports/${id}/mapping`).then((r) => json<Mapping>(r)),
+  importReport: (yaml: string, sql: string, publish: boolean) =>
+    fetch(publish ? '/api/admin/reports' : '/api/admin/reports/validate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ yaml, sql }),
+    }).then(async (r) => (await r.json()) as ImportResult),
   query: (id: string, body: QueryRequest) =>
     fetch(`/api/reports/${id}/query`, {
       method: 'POST',

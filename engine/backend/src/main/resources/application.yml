@@ -11,6 +11,8 @@ spring:
 
 reports:
   dir: ${REPORTS_DIR:../../reports}
+  # Reports uploaded in the browser are saved here (survives restarts). Keep it outside the code folder.
+  import-dir: ${REPORTS_IMPORT_DIR:./imported-reports}
   # Shown as a banner on every report. Set only for demos on made-up data.
   sample-data-notice: ${SAMPLE_DATA_NOTICE:}
 

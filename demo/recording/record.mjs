@@ -1,20 +1,24 @@
-// Records a captioned walkthrough of the Tender Report demo (WebM).
+// Captioned walkthrough v2: themes, KPIs, filters, mapping studio, live import. Logs sound cues to sfx.json.
 import { chromium } from 'playwright';
+import { writeFileSync } from 'fs';
 
 const OUT = process.argv[2];
 const W = 1440, H = 900;
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: W, height: H }, recordVideo: { dir: OUT, size: { width: W, height: H } } });
+const t0 = Date.now();
+const cues = [];
+const sfx = (name, delay = 0) => cues.push({ t: (Date.now() - t0 + delay) / 1000, name });
 
-// A visible cursor and a caption bar, injected into every page load.
 await context.addInitScript(() => {
+  try { localStorage.setItem('re.theme', 'neon'); localStorage.setItem('re.sound', 'on'); } catch {}
   const install = () => {
     if (document.getElementById('__cap')) return;
     const cap = document.createElement('div');
     cap.id = '__cap';
     cap.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;padding:12px 22px;border-radius:14px;' +
-      'background:rgba(7,11,20,.88);border:1px solid rgba(56,189,248,.55);color:#f1f5f9;font:600 18px Inter Variable,system-ui,sans-serif;' +
-      'box-shadow:0 0 30px rgba(56,189,248,.25);backdrop-filter:blur(8px);opacity:0;transition:opacity .35s ease;pointer-events:none;max-width:80vw;text-align:center';
+      'background:rgba(7,11,20,.9);border:1px solid rgba(56,189,248,.6);color:#f1f5f9;font:600 18px "Inter Variable",system-ui,sans-serif;' +
+      'box-shadow:0 0 30px rgba(56,189,248,.25);opacity:0;transition:opacity .35s ease;pointer-events:none;max-width:80vw;text-align:center';
     document.body.appendChild(cap);
     const cur = document.createElement('div');
     cur.id = '__cur';
@@ -34,96 +38,120 @@ const caption = async (text, ms = 2600) => {
   await page.evaluate((t) => { const c = document.getElementById('__cap'); if (c) { c.textContent = t; c.style.opacity = '1'; } }, text);
   await wait(ms);
 };
-const hideCaption = () => page.evaluate(() => { const c = document.getElementById('__cap'); if (c) c.style.opacity = '0'; });
-async function glide(locator, opts = {}) {
-  const box = await locator.boundingBox();
-  const x = box.x + (opts.dx ?? box.width / 2), y = box.y + (opts.dy ?? box.height / 2);
-  await page.mouse.move(x, y, { steps: 28 });
-  return { x, y };
+const hide = () => page.evaluate(() => { const c = document.getElementById('__cap'); if (c) c.style.opacity = '0'; });
+async function glide(loc, dx, dy) {
+  const b = await loc.boundingBox();
+  await page.mouse.move(b.x + (dx ?? b.width / 2), b.y + (dy ?? b.height / 2), { steps: 26 });
 }
-async function clickSmooth(locator) { await glide(locator); await wait(250); await locator.click(); }
+async function click(loc, sound = 'click') { await glide(loc); await wait(200); sfx(sound); await loc.click(); }
 
-// 1. Report list
+// 0. Overview
 await page.goto('http://localhost:4173/#/');
-await page.waitForSelector('text=Tender Report');
-await page.mouse.move(700, 400);
-await caption('Report Engine demo  ·  one website that can show any report', 3000);
-await caption('1 · Pick a report from the list');
-await clickSmooth(page.getByText('Tender Report').first());
+await page.waitForSelector('text=Reports live');
+await page.mouse.move(720, 450);
+await wait(900);
+await caption('Report Engine  ·  one website for every migrated report', 3000);
+await glide(page.getByText('Code changes per new report'));
+await caption('Every report runs from its own settings file - no new code per report', 3000);
 
-// 2. The report
+// 1. Open the Tender Report
+await click(page.getByRole('link', { name: /Tender Report Tenders by payment type/ }));
 await page.waitForSelector('text=All Locations - Detail');
-await wait(1500);
-await caption('2 · The Tender Report, rebuilt on the new PostgreSQL model  (sample data)', 3200);
+await wait(1600);
+await caption('1 · Tender Report, rebuilt on the new PostgreSQL model  (sample data)', 3000);
 await glide(page.getByText('Total tender amount'));
-await caption('Live number cards with a daily trend line', 2400);
-const spark = page.locator('canvas').first();
-const sb = await spark.boundingBox();
-await page.mouse.move(sb.x + sb.width * 0.25, sb.y + sb.height / 2, { steps: 20 });
-await wait(500);
-await page.mouse.move(sb.x + sb.width * 0.75, sb.y + sb.height / 2, { steps: 40 });
-await caption('Hover any day to see its value', 2000);
+await caption('Number cards: animated value, daily trend, and change vs the previous period', 3200);
+await glide(page.getByText('Paid-outs', { exact: true }).first());
+await caption('Paid-outs going up is shown in red - each card knows which direction is good', 3000);
+const line = page.getByText('Daily tender amount');
+const lb = await line.boundingBox();
+await page.mouse.move(lb.x + 200, lb.y + 120, { steps: 20 });
+await page.mouse.move(lb.x + 900, lb.y + 130, { steps: 60 });
+await caption('Hover the trend for any day', 2200);
 
-// 3. Filters
-await caption('3 · Filters: every card, table and chart follows them');
-await clickSmooth(page.getByLabel('Plaza'));
-await wait(600);
-await clickSmooth(page.getByRole('option', { name: 'Market' }));
+// 2. Filters
+await caption('2 · Filters - every card, chart and table follows them', 2200);
+await click(page.getByLabel('Plaza'));
+await wait(500);
+await click(page.getByRole('option', { name: 'Market' }), 'filter');
 await page.keyboard.press('Escape');
-await caption('Plaza = Market  →  the whole page updates', 3000);
-await clickSmooth(page.getByLabel('Brand'));
-await wait(600);
-await clickSmooth(page.getByRole('option', { name: "Wendy's" }));
-await page.keyboard.press('Escape');
-await caption("…and Brand = Wendy's", 2600);
+await caption('Plaza = Market', 2400);
+
+// 3. Themes
+await hide();
+await caption('3 · Switch themes in one click', 1600);
+await click(page.getByRole('button', { name: 'Light theme' }), 'whoosh');
+await caption('Light', 2400);
+await click(page.getByRole('button', { name: 'Midnight theme' }), 'whoosh');
+await caption('Midnight', 2400);
+await click(page.getByRole('button', { name: 'Neon theme' }), 'whoosh');
+await caption('Neon  ·  your choice is remembered, and sounds can be switched off', 2800);
+await click(page.getByRole('button', { name: 'Reset filters' }), 'whoosh');
+await wait(800);
 
 // 4. % to Total
-await hideCaption();
-await glide(page.getByText('Selected Locations - Summary'));
-await clickSmooth(page.getByRole('button', { name: 'Reset filters' }));
-await caption('4 · "% to Total": exactly as Power BI calculates it today', 3000);
-await glide(page.getByRole('cell', { name: '% to Total' }).first().or(page.getByText('% to Total').first()));
-await caption('Today these percentages do not add up to 100%', 2600);
-await clickSmooth(page.getByRole('button', { name: 'Corrected (adds to 100%)' }));
-await caption('One click shows the corrected version, so the lead can decide', 3200);
-await clickSmooth(page.getByRole('button', { name: 'As in Power BI today' }));
-await wait(800);
+await page.mouse.wheel(0, 560);
+await wait(900);
+await caption('4 · "% to Total" exactly as Power BI shows it today (does not add to 100%)', 3000);
+await click(page.getByRole('button', { name: 'Corrected (adds to 100%)' }), 'toggle');
+await caption('One click shows the corrected version - so the lead can decide', 3000);
+await click(page.getByRole('button', { name: 'As in Power BI today' }), 'toggle');
 
-// 5. Bar chart
-const chart = page.getByText('Tender amount by payment type');
-await glide(chart);
-const cb = await page.locator('canvas').nth(4).boundingBox();
-if (cb) {
-  await page.mouse.move(cb.x + cb.width * 0.3, cb.y + cb.height * 0.2, { steps: 25 });
-  await wait(600);
-  await page.mouse.move(cb.x + cb.width * 0.3, cb.y + cb.height * 0.45, { steps: 25 });
-}
-await caption('5 · Chart of the same summary, with hover details', 2800);
+// 5. Detail grid
+await hide();
+await page.mouse.wheel(0, 700);
+await wait(1100);
+await caption('5 · Detail by store, brand and payment type - heat map, one column per day', 3000);
+await click(page.getByRole('button', { name: 'Collapse Bainsville' }));
+await wait(900);
+await click(page.getByRole('button', { name: 'Expand Bainsville' }));
+await wait(700);
 
-// 6. Detail grid
-await hideCaption();
-await page.mouse.wheel(0, 820);
+// 6. Mapping Studio
+await page.mouse.wheel(0, -3000);
+await wait(500);
+await click(page.getByRole('link', { name: 'Mapping Studio' }));
+await page.waitForSelector('text=Hidden business rules');
 await wait(1200);
-await caption('6 · Detail by store, brand and payment type, one column per day', 3000);
-await caption('Heat-map shading: brighter = bigger amount', 2600);
-await clickSmooth(page.getByRole('button', { name: 'Collapse Bainsville' }));
-await caption('Collapse and expand any store', 2400);
-await clickSmooth(page.getByRole('button', { name: 'Expand Bainsville' }));
-await wait(800);
-const grid = page.getByText('All Locations - Detail').locator('xpath=ancestor::div[contains(@class,"MuiPaper")][1]').locator('div').filter({ has: page.locator('table') }).first();
-await grid.evaluate((el) => el.scrollBy({ left: 700, behavior: 'smooth' }));
-await caption('Scroll across the days; the store names stay in place', 2600);
-await grid.evaluate((el) => el.scrollBy({ left: -700, behavior: 'smooth' }));
-
-// 7. Wrap-up
-await page.mouse.wheel(0, -1200);
+await caption('6 · Mapping Studio - how every old field maps to the new database', 3200);
+await glide(page.getByText('Auto-match').first());
+await caption('Old names are converted by rule, then checked against the new database', 3200);
+await page.mouse.wheel(0, 380);
+await wait(900);
+await caption('18 of 19 fields matched automatically; 1 is waiting for a person - never guessed', 3400);
+await page.mouse.wheel(0, 1500);
 await wait(1000);
-await caption('Adding the next report = one settings file + one SQL file. No new code.', 3600);
-await caption('Tender Report demo  ·  ready for review', 2600);
-await hideCaption();
-await wait(600);
+await caption('Hidden business rules and problems found in the old report are kept on record', 3200);
+
+// 7. Import a report
+await page.mouse.wheel(0, -3000);
+await click(page.getByRole('link', { name: 'Import report' }));
+await page.waitForSelector('text=Drop report.yaml');
+await wait(900);
+await caption('7 · Add a new report by uploading two files - no code change, no redeploy', 3200);
+await click(page.getByRole('button', { name: /Use the example/ }), 'filter');
+await caption('A settings file and its SQL for a brand-new "Paid-outs Report"', 3000);
+await click(page.getByRole('button', { name: 'Check it' }));
+for (let i = 0; i < 4; i++) sfx('click', 380 * (i + 1));
+await caption('The engine checks it safely: valid settings, read-only SQL, and a dry run on the database', 3400);
+await click(page.getByRole('button', { name: 'Publish' }));
+for (let i = 0; i < 5; i++) sfx('click', 380 * (i + 1));
+sfx('success', 380 * 5 + 80);
+await wait(2600);
+await caption('Published - it is live now', 2000);
+await click(page.getByRole('link', { name: 'Open report' }));
+await page.waitForSelector('text=By store');
+await wait(1800);
+await caption('A new report, drawn by the same engine - zero lines of code written for it', 3600);
+await page.mouse.wheel(0, 500);
+await wait(1500);
+await page.mouse.wheel(0, -500);
+await caption('Report Engine demo  ·  ready for review', 2600);
+await hide();
+await wait(700);
 
 const video = page.video();
 await context.close();
-console.log('video:', await video.path());
+writeFileSync(`${OUT}/sfx.json`, JSON.stringify(cues));
+console.log('video:', await video.path(), 'cues:', cues.length);
 await browser.close();

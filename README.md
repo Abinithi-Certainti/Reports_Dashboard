@@ -13,7 +13,8 @@ with a new design, instead of rebuilding each report by hand. Tracked on Jira **
 | Old -> new column mapping | 19 columns for the Tender Report; 1 (`CTLOCATION` -> `ct_location`) needs a person to confirm |
 | Tender Report queries on PostgreSQL | `reports/tender-report/queries.sql`; syntax and names checked, numbers NOT yet reconciled (no data access) |
 | Output method for new reports | Own website (React + Java report engine) - design in `docs/design/report-engine.md` |
-| Report engine demo | Working Tender Report on sample data (branch `claude/tender-report-demo`) - see `demo/README.md` |
+| Report engine demo | Working on sample data: 3 themes, sounds, Mapping Studio, import without code (branch `claude/tender-report-demo`) - see `demo/README.md` |
+| How it works | `docs/how-it-works.md` - the engine, field mapping and import, in plain English |
 
 ## Layout
 

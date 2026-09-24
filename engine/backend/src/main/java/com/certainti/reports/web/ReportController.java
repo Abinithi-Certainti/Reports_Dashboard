@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +39,13 @@ public class ReportController {
         this.sampleDataNotice = sampleDataNotice;
     }
 
-    public record ReportSummary(String id, String title, String subtitle) {
+    public record ReportSummary(String id, String title, String subtitle, boolean imported, int visuals) {
     }
 
     @GetMapping
     public List<ReportSummary> list() {
-        return registry.all().stream().map(s -> new ReportSummary(s.id(), s.title(), s.subtitle())).toList();
+        return registry.all().stream().map(s -> new ReportSummary(s.id(), s.title(), s.subtitle(), !registry.isBuiltIn(s.id()),
+                s.visuals() == null ? 0 : s.visuals().size())).toList();
     }
 
     @GetMapping("/{id}")
@@ -57,6 +61,15 @@ public class ReportController {
     @GetMapping("/{id}/date-bounds")
     public Map<String, Object> dateBounds(@PathVariable String id) {
         return queries.dateBounds(report(id));
+    }
+
+    /** Old -> new field mapping for a report, exported from the catalog (tools/export_mapping.sh). */
+    @GetMapping(value = "/{id}/mapping", produces = "application/json")
+    public String mapping(@PathVariable String id) throws IOException {
+        report(id);
+        Path file = registry.folderOf(id).map(f -> f.resolve("mapping.json")).filter(Files::exists)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No mapping recorded for " + id));
+        return Files.readString(file);
     }
 
     @PostMapping("/{id}/query")
