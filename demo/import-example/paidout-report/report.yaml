@@ -1,0 +1,41 @@
+# A second report, added by uploading this file and dataset.sql in the browser (Import page).
+# No Java or React code was written for it.
+id: paidout-report
+title: Paid-outs Report
+subtitle: Cash paid out of the till, by store, reason and day
+dataset: dataset.sql
+
+dimensions:
+  plaza:   { label: Plaza,  column: plaza }
+  brand:   { label: Brand,  column: brand }
+  reason:  { label: Reason, column: reason }
+  end_day: { label: Date,   column: end_day, type: date }
+
+measures:
+  amount:  { label: Paid-out amount, sql: "sum(amount)", format: currency }
+  count:   { label: Paid-outs,       sql: "count(*)",    format: number }
+
+filters:
+  - { dimension: plaza,   type: multi_select }
+  - { dimension: brand,   type: multi_select }
+  - { dimension: reason,  type: multi_select }
+  - { dimension: end_day, type: date_range, default_last_days: 30 }
+
+visuals:
+  - type: kpi
+    items:
+      - { label: Total paid out,  measure: amount, good_direction: down }
+      - { label: Number of paid-outs, measure: count, good_direction: down }
+  - type: line
+    title: Paid out per day
+    rows: [end_day]
+    values: [amount]
+  - type: bar
+    title: By reason
+    rows: [reason]
+    values: [amount]
+  - type: table
+    title: By store
+    rows: [plaza, brand]
+    values: [amount, count]
+    total_row: true

@@ -12,7 +12,9 @@ with a new design, instead of rebuilding each report by hand. Tracked on Jira **
 | Old -> new table mapping | 4 tables, confirmed present in the new DB structure |
 | Old -> new column mapping | 19 columns for the Tender Report; 1 (`CTLOCATION` -> `ct_location`) needs a person to confirm |
 | Tender Report queries on PostgreSQL | `reports/tender-report/queries.sql`; syntax and names checked, numbers NOT yet reconciled (no data access) |
-| Output method for new reports | Not decided |
+| Output method for new reports | Own website (React + Java report engine) - design in `docs/design/report-engine.md` |
+| Report engine demo | Working on sample data: 3 themes, sounds, Mapping Studio, import without code (branch `claude/tender-report-demo`) - see `demo/README.md` |
+| How it works | `docs/how-it-works.md` - the engine, field mapping and import, in plain English |
 
 ## Layout
 
@@ -25,6 +27,10 @@ extracts/<report>/  raw extraction results, one folder per report
 docs/extraction-guide.md  how to extract a report safely (read-only)
 reports/<report>/queries.sql  the report's source queries translated to PostgreSQL
 tests/check_queries.sh  runs a report's queries against an empty copy of the new tables
+reports/<report>/report.yaml + dataset.sql  the spec the engine draws the report from
+engine/backend/   Java 21 + Spring Boot report engine API
+engine/frontend/  React + TypeScript page that draws any report from its spec
+demo/             sample data and how to run the demo
 ```
 
 ## The catalog

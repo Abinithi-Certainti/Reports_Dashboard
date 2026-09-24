@@ -1,0 +1,256 @@
+{
+    "rules": [
+        {
+            "rule": "\"Cash Drop\" is merged into \"Cash\".",
+            "decision": "keep",
+            "found_in": "Payment Type Summary step 7; PaymentType Detail step 1"
+        },
+        {
+            "rule": "All paid-outs are Cash and are subtracted from the Cash row only.",
+            "decision": "keep",
+            "found_in": "Cash_Paidout step 1; Tender amount 2"
+        },
+        {
+            "rule": "Brand \"Wendy's\" / \"WENDY'S\" is shown as \"WENDYS\".",
+            "decision": "keep",
+            "found_in": "Payment Type Summary step 5; LOCATION&BRAND step 3"
+        },
+        {
+            "rule": "Payment types are shown in a fixed order: Cash, US Cash, Debit Card, Visa, Mastercard, AMEX, Discover, Tim Card, Starbucks Card, Gift Card, then others, On Account, Paid Out.",
+            "decision": "keep",
+            "found_in": "PaymentType Detail step 2"
+        },
+        {
+            "rule": "Only stores with a HostLocationID and a CTLOCATION are shown.",
+            "decision": "keep",
+            "found_in": "LOCATION&BRAND SQL and step 4"
+        },
+        {
+            "rule": "Tenders cover 1 Jan of (current year - 2) to today; paid-outs cover all history.",
+            "decision": "pending",
+            "found_in": "Payment Type Summary SQL; Cash_Paidout SQL"
+        }
+    ],
+    "report": "Tender Report",
+    "source": {
+        "schema": "dbo",
+        "server": "etlsqlservercaeprd01.database.windows.net",
+        "database": "ETLServerSQL"
+    },
+    "tables": [
+        {
+            "columns": [
+                {
+                    "method": "snake_case",
+                    "new_type": "bigint",
+                    "new_column": "order_id",
+                    "old_column": "OrderID",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "timestamp without time zone",
+                    "new_column": "end_day",
+                    "old_column": "EndDay",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "numeric",
+                    "new_column": "payment_amount",
+                    "old_column": "PaymentAmount",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "payment_type_name",
+                    "old_column": "PaymentTypeName",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "store_id",
+                    "old_column": "StoreId",
+                    "confirmed_by": null
+                }
+            ],
+            "evidence": "AG-66 mapping; present in new DB structure export 24 Sep 2026",
+            "confirmed": true,
+            "new_table": "pos_order_payments",
+            "old_table": "POS_ORDERPAYMENTS"
+        },
+        {
+            "columns": [
+                {
+                    "method": "snake_case",
+                    "new_type": "numeric",
+                    "new_column": "payment_amount",
+                    "old_column": "PaymentAmount",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "timestamp without time zone",
+                    "new_column": "end_day",
+                    "old_column": "EndDay",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "store_id",
+                    "old_column": "StoreId",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "menu_item_name",
+                    "old_column": "MenuItemName",
+                    "confirmed_by": null
+                }
+            ],
+            "evidence": "AG-66 mapping; present in new DB structure export 24 Sep 2026",
+            "confirmed": true,
+            "new_table": "pos_order_paid_outs",
+            "old_table": "POS_ORDERPAIDOUTS"
+        },
+        {
+            "columns": [
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "location_name",
+                    "old_column": "LocationName",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "brand_name",
+                    "old_column": "BrandName",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "integer",
+                    "new_column": "host_location_id",
+                    "old_column": "HostLocationID",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "store_id",
+                    "old_column": "StoreID",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "guid",
+                    "old_column": "GUID",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "manual",
+                    "new_type": "character varying",
+                    "new_column": "ct_location",
+                    "old_column": "CTLOCATION",
+                    "confirmed_by": null
+                }
+            ],
+            "evidence": "AG-66 mapping; present in new DB structure export 24 Sep 2026",
+            "confirmed": true,
+            "new_table": "netsuite_location_mapping",
+            "old_table": "NetSuiteLocation_Mapping"
+        },
+        {
+            "columns": [
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "plaza",
+                    "old_column": "Plaza",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "district",
+                    "old_column": "District",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "character varying",
+                    "new_column": "district_director",
+                    "old_column": "District_Director",
+                    "confirmed_by": null
+                },
+                {
+                    "method": "snake_case",
+                    "new_type": "integer",
+                    "new_column": "host_location_id",
+                    "old_column": "HostLocationID",
+                    "confirmed_by": null
+                }
+            ],
+            "evidence": "AG-66 mapping; present in new DB structure export 24 Sep 2026",
+            "confirmed": true,
+            "new_table": "district_directors",
+            "old_table": "District_Directors"
+        }
+    ],
+    "target": {
+        "schema": "master",
+        "database": "kios_etl"
+    },
+    "findings": [
+        {
+            "status": "open",
+            "finding": "% to Total does not add to 100% (visible rows sum to 108.66%). Cash row divides by the grand total; other rows divide by total minus cash. Cause: [Total Payment] loses the cash part on non-cash rows.",
+            "severity": "high",
+            "verified": true,
+            "decision_owner": "Business owner"
+        },
+        {
+            "status": "open",
+            "finding": "Cash_Paidout builds LB_name without the Wendy's -> WENDYS fix, so paid-outs for a brand spelled \"Wendy's\" may not link to their store.",
+            "severity": "medium",
+            "verified": false,
+            "decision_owner": null
+        },
+        {
+            "status": "open",
+            "finding": "Payment type casing is inconsistent: \"DO AMEX\" vs \"DO Amex\".",
+            "severity": "low",
+            "verified": true,
+            "decision_owner": null
+        },
+        {
+            "status": "open",
+            "finding": "cashdrop column and Cash-CashDrop measure are dead code: Cash Drop no longer exists after load.",
+            "severity": "low",
+            "verified": true,
+            "decision_owner": null
+        },
+        {
+            "status": "open",
+            "finding": "Debug Total Payment is a visible copy of Total Payment.",
+            "severity": "low",
+            "verified": true,
+            "decision_owner": null
+        },
+        {
+            "status": "open",
+            "finding": "Money columns are stored as double (floating point) rather than a fixed decimal type.",
+            "severity": "low",
+            "verified": true,
+            "decision_owner": null
+        }
+    ],
+    "extracted_on": "2026-09-24"
+}

@@ -1,0 +1,61 @@
+# Tender Report - spec for the report engine.
+# Source of truth for the old report: db/seeds/001_tender_report.sql and extracts/tender-report/.
+id: tender-report
+title: Tender Report
+subtitle: Tenders by payment type, store and day
+dataset: dataset.sql
+
+dimensions:
+  plaza:             { label: Plaza,             column: plaza }
+  district_director: { label: District Director, column: district_director }
+  brand:             { label: Brand,             column: brand }
+  payment_type:      { label: Payment Type,      column: payment_type, sort_by: sequence }
+  end_day:           { label: Date,              column: end_day, type: date }
+
+measures:
+  tender_amount: { label: Tender amount, sql: "sum(tender_amount) - sum(paidout_amount)", format: currency }  # old "Tender amount 2"
+  gross_tenders: { label: Tenders,       sql: "sum(tender_amount)",                        format: currency }
+  paidouts:      { label: Paid-outs,     sql: "sum(paidout_amount)",                       format: currency }
+
+calculations:
+  pct_to_total:
+    label: "% to Total"
+    of: tender_amount
+    format: percent
+    default_mode: legacy          # decision pending with the lead: keep the old numbers or fix them
+    modes:
+      legacy:    { type: tender_legacy_share, label: "As in Power BI today" }
+      corrected: { type: share_of_total,      label: "Corrected (adds to 100%)" }
+
+filters:
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: district_director, type: multi_select }
+  - { dimension: brand,             type: multi_select }
+  - { dimension: payment_type,      type: multi_select }
+  - { dimension: end_day,           type: date_range, default_last_days: 18 }
+
+visuals:
+  - type: kpi
+    items:
+      - { label: Total tender amount,     measure: tender_amount }
+      - { label: Cash (after paid-outs),  measure: tender_amount, include: { payment_type: [Cash] } }
+      - { label: Card and other,          measure: tender_amount, exclude: { payment_type: [Cash] } }
+      - { label: Paid-outs,               measure: paidouts, good_direction: down }
+  - type: line
+    title: Daily tender amount
+    rows: [end_day]
+    values: [tender_amount]
+  - type: table
+    title: Selected Locations - Summary
+    rows: [payment_type]
+    values: [tender_amount, pct_to_total]
+    total_row: true
+  - type: bar
+    title: Tender amount by payment type
+    rows: [payment_type]
+    values: [tender_amount]
+  - type: matrix
+    title: All Locations - Detail
+    rows: [plaza, brand, payment_type]
+    columns: [end_day]
+    values: [tender_amount]
