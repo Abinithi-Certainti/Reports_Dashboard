@@ -1,0 +1,1599 @@
+table_name	column_name	data_type	ordinal_position
+4hk_am_list_p420	unit	character varying	1
+4hk_am_list_p420	created_timestamp	timestamp without time zone	2
+4hk_am_list_p420	updated_timestamp	timestamp without time zone	3
+4hk_am_list_p420	asset_id	character varying	4
+4hk_am_list_p420	descr	character varying	5
+4hk_am_list_p420	dept	character varying	6
+4hk_am_list_p420	sum_cost	double precision	7
+4hk_am_list_p420	accum_depr	double precision	8
+4hk_am_list_p420	sum_nbv	double precision	9
+4hk_am_list_p420	category	character varying	10
+4hk_am_list_p420	run_id	character varying	11
+4hk_am_list_p420	in_service_dt	timestamp without time zone	12
+4hk_am_list_p420	life	double precision	13
+4hk_am_list_p420	book_name	character varying	14
+4hk_am_list_p420	profile_id	character varying	15
+4hk_am_list_p420	location	character varying	16
+4hk_am_list_p420	location_name	character varying	17
+4hk_am_list_p420	brand_name	character varying	18
+4hk_am_list_p420	department_type	character varying	19
+4hk_cip_data_p420	location	character varying	1
+4hk_cip_data_p420	created_timestamp	timestamp without time zone	2
+4hk_cip_data_p420	updated_timestamp	timestamp without time zone	3
+4hk_cip_data_p420	project_id	character varying	4
+4hk_cip_data_p420	concept_id	character varying	5
+4hk_cip_data_p420	concept_brand	character varying	6
+4hk_cip_data_p420	ap_dept_id	character varying	7
+4hk_cip_data_p420	ap_gl_bu	character varying	8
+4hk_cip_data_p420	concept_status	character varying	9
+4hk_cip_data_p420	turnover_date	timestamp without time zone	10
+4hk_cip_data_p420	run_currency	character varying	11
+4hk_cip_data_p420	total_authorized_amount	double precision	12
+4hk_cip_data_p420	funded_projects_forecasted_amount_at_completion	double precision	13
+4hk_cip_data_p420	total_actuals_others	double precision	14
+4hk_cip_data_p420	total_net_cip_balance	double precision	15
+4hk_cip_data_p420	closed_costs	double precision	16
+4hk_cip_data_p420	location_new	character varying	17
+4hk_cip_data_p420	location_name	character varying	18
+4hk_cip_data_p420	brand_name	character varying	19
+4hk_cip_data_p420	department_type	character varying	20
+DLH	id	uuid	1
+DLH	created_timestamp	timestamp with time zone	2
+DLH	updated_timestamp	timestamp with time zone	3
+DLH	created_by	character varying	4
+DLH	updated_by	character varying	5
+DLH	budget_year	integer	6
+DLH	Region	character varying	7
+DLH	Location	character varying	8
+DLH	Brand	character varying	9
+DLH	value	double precision	10
+DLH	TimePeriod	date	11
+DLH	TimePeriod_Date	date	12
+DLH	HostLocationID	smallint	13
+Gross Margin	id	uuid	1
+Gross Margin	created_timestamp	timestamp with time zone	2
+Gross Margin	updated_timestamp	timestamp with time zone	3
+Gross Margin	created_by	character varying	4
+Gross Margin	updated_by	character varying	5
+Gross Margin	budget_year	integer	6
+Gross Margin	Region	character varying	7
+Gross Margin	Location	character varying	8
+Gross Margin	Brand	character varying	9
+Gross Margin	value	double precision	10
+Gross Margin	TimePeriod	character varying	11
+Gross Margin	TimePeriod_Date	date	12
+Gross Margin	HostLocationID	smallint	13
+Sales	id	uuid	1
+Sales	created_timestamp	timestamp with time zone	2
+Sales	updated_timestamp	timestamp with time zone	3
+Sales	created_by	character varying	4
+Sales	updated_by	character varying	5
+Sales	budget_year	integer	6
+Sales	Region	character varying	7
+Sales	Location	character varying	8
+Sales	Brand	character varying	9
+Sales	value	numeric	10
+Sales	TimePeriod	character varying	11
+Sales	TimePeriod_Date	date	12
+Sales	HostLocationID	smallint	13
+Transactions	id	uuid	1
+Transactions	created_timestamp	timestamp with time zone	2
+Transactions	updated_timestamp	timestamp with time zone	3
+Transactions	created_by	character varying	4
+Transactions	updated_by	character varying	5
+Transactions	budget_year	integer	6
+Transactions	Region	character varying	7
+Transactions	Location	character varying	8
+Transactions	Brand	character varying	9
+Transactions	value	double precision	10
+Transactions	TimePeriod	date	11
+Transactions	TimePeriod_Date	date	12
+Transactions	HostLocationID	smallint	13
+car_count	id	bigint	1
+car_count	created_by	character varying	2
+car_count	updated_by	character varying	3
+car_count	created_at	timestamp without time zone	4
+car_count	updated_at	timestamp without time zone	5
+car_count	camera_id	integer	6
+car_count	location	character varying	7
+car_count	timestamp	timestamp without time zone	8
+car_count	entrance_count	integer	9
+car_count	exit_count	integer	10
+car_count_plaza_direction	plaza_name	character varying	1
+car_count_plaza_direction	created_timestamp	timestamp with time zone	2
+car_count_plaza_direction	updated_timestamp	timestamp with time zone	3
+car_count_plaza_direction	created_by	character varying	4
+car_count_plaza_direction	updated_by	character varying	5
+car_count_plaza_direction	entrance_direction	character varying	6
+ceridian_employees	employee_id	character varying	1
+ceridian_employees	first_name	character varying	2
+ceridian_employees	last_name	character varying	3
+ceridian_employees	birth_date	date	4
+ceridian_employees	hire_date	date	5
+ceridian_employees	termination_date	date	6
+ceridian_employees	employment_status	character varying	7
+ceridian_employees	action	character varying	8
+ceridian_employees	action_desc	character varying	9
+ceridian_employees	base_rate	numeric	10
+ceridian_employees	base_salary	numeric	11
+ceridian_employees	daily_rate	numeric	12
+ceridian_employees	pay_class	character varying	13
+ceridian_employees	job_title	character varying	14
+ceridian_employees	department	character varying	15
+ceridian_employees	location_id	character varying	16
+ceridian_employees	location_name	character varying	17
+ceridian_employees	mobile_number	character varying	18
+ceridian_employees	office_number	character varying	19
+ceridian_employees	manager_first_name	character varying	20
+ceridian_employees	manager_last_name	character varying	21
+ceridian_employees	login_name	character varying	22
+ceridian_employees	effective_date	timestamp without time zone	23
+ceridian_employees	processing_status	character varying	24
+ceridian_employees	created_timestamp	timestamp without time zone	25
+ceridian_employees	updated_timestamp	timestamp without time zone	26
+credentials_reference	created_by	character varying	1
+credentials_reference	updated_by	character varying	2
+credentials_reference	created_timestamp	timestamp without time zone	3
+credentials_reference	updated_timestamp	timestamp without time zone	4
+credentials_reference	id	uuid	5
+credentials_reference	credential_code	character varying	6
+credentials_reference	credential_type	character varying	7
+credentials_reference	keyvault_secret_name	character varying	8
+credentials_reference	description	character varying	9
+district_directors	plaza	character varying	1
+district_directors	district	character varying	2
+district_directors	district_director	character varying	3
+district_directors	host_location_id	integer	4
+employee_pay_summary	id	bigint	1
+employee_pay_summary	created_by	character varying	2
+employee_pay_summary	updated_by	character varying	3
+employee_pay_summary	created_at	timestamp without time zone	4
+employee_pay_summary	updated_at	timestamp without time zone	5
+employee_pay_summary	employee_number	numeric	6
+employee_pay_summary	employee_name	character varying	7
+employee_pay_summary	location	character varying	8
+employee_pay_summary	department	character varying	9
+employee_pay_summary	job	character varying	10
+employee_pay_summary	pay_period	character varying	11
+employee_pay_summary	pay_date	date	12
+employee_pay_summary	pay_code	character varying	13
+employee_pay_summary	pay_category	character varying	14
+employee_pay_summary	hours	numeric	15
+file_metadata	created_by	character varying	1
+file_metadata	updated_by	character varying	2
+file_metadata	created_at	timestamp without time zone	3
+file_metadata	updated_at	timestamp without time zone	4
+file_metadata	id	uuid	5
+file_metadata	execution_id	character varying	6
+file_metadata	flow_id	uuid	7
+file_metadata	container_name	character varying	8
+file_metadata	blob_path	character varying	9
+file_metadata	original_file_name	character varying	10
+file_metadata	file_size	bigint	11
+file_metadata	content_type	character varying	12
+file_metadata	checksum	character varying	13
+file_metadata	source	character varying	14
+file_metadata	correlation_id	character varying	15
+file_metadata	metadata	jsonb	16
+file_metadata	uploaded_at	timestamp without time zone	17
+flow_definition	created_by	character varying	1
+flow_definition	updated_by	character varying	2
+flow_definition	created_at	timestamp without time zone	3
+flow_definition	updated_at	timestamp without time zone	4
+flow_definition	flow_id	uuid	5
+flow_definition	flow_name	character varying	6
+flow_definition	flow_code	character varying	7
+flow_definition	description	character varying	8
+flow_definition	flow_version	character varying	9
+flow_definition	trigger_type	character varying	10
+flow_definition	status	character varying	11
+flow_definition	flow_config	jsonb	12
+flow_definition	pre_processor_config	jsonb	13
+flow_definition	extract_config	jsonb	14
+flow_definition	transform_config	jsonb	15
+flow_definition	load_config	jsonb	16
+flow_definition	post_processor_config	jsonb	17
+invoice_detail	id	uuid	1
+invoice_detail	invoice_header_id	uuid	2
+invoice_detail	invoice_number	character varying	3
+invoice_detail	vendor_number	character varying	4
+invoice_detail	vendor_product_number	character varying	5
+invoice_detail	catch_weight_indicator	character	6
+invoice_detail	invoice_qty	numeric	7
+invoice_detail	price	numeric	8
+invoice_detail	total_price	numeric	9
+invoice_detail	line_status	character varying	10
+invoice_detail	created_timestamp	timestamp with time zone	11
+invoice_detail	updated_timestamp	timestamp with time zone	12
+invoice_detail	created_by	character varying	13
+invoice_detail	updated_by	character varying	14
+invoice_header	id	uuid	1
+invoice_header	invoice_number	character varying	2
+invoice_header	vendor_number	character varying	3
+invoice_header	purchase_order_number	character varying	4
+invoice_header	location_code	character varying	5
+invoice_header	expected_delivery_date	character varying	6
+invoice_header	invoice_date	character varying	7
+invoice_header	total_price	numeric	8
+invoice_header	tax_description	character varying	9
+invoice_header	tax_amount	numeric	10
+invoice_header	adjust_by_date	date	11
+invoice_header	misc_gl_code_1	character varying	12
+invoice_header	misc_1	numeric	13
+invoice_header	misc_gl_code_2	character varying	14
+invoice_header	misc_2	numeric	15
+invoice_header	shipping_amount	numeric	16
+invoice_header	deliver_via	character varying	17
+invoice_header	created_timestamp	timestamp with time zone	18
+invoice_header	updated_timestamp	timestamp with time zone	19
+invoice_header	created_by	character varying	20
+invoice_header	updated_by	character varying	21
+ip_camera	id	integer	1
+ip_camera	created_by	character varying	2
+ip_camera	updated_by	character varying	3
+ip_camera	created_at	timestamp without time zone	4
+ip_camera	updated_at	timestamp without time zone	5
+ip_camera	name	character varying	6
+ip_camera	center	character varying	7
+location_code_mappings	id	uuid	1
+location_code_mappings	description	character varying	2
+location_code_mappings	location_code	character varying	3
+location_code_mappings	store_id	character varying	4
+location_code_mappings	brand_guid	uuid	5
+location_code_mappings	created_by	character varying	6
+location_code_mappings	updated_by	character varying	7
+location_code_mappings	created_at	timestamp without time zone	8
+location_code_mappings	updated_at	timestamp without time zone	9
+location_hierarchy_item	location_id	bigint	1
+location_hierarchy_item	created_timestamp	timestamp without time zone	2
+location_hierarchy_item	updated_timestamp	timestamp without time zone	3
+location_hierarchy_item	organization_id	bigint	4
+location_hierarchy_item	org_level_id	bigint	5
+location_hierarchy_item	name	character varying	6
+location_hierarchy_item	is_group	bigint	7
+location_hierarchy_item	source_name	character varying	8
+location_hierarchy_item	source_version	character varying	9
+location_hierarchy_item	cost_tier_id	character varying	10
+location_hierarchy_item	theo_labor_program_id	character varying	11
+location_hierarchy_item	currency_id	character varying	12
+location_hierarchy_item	weather_station	character varying	13
+location_hierarchy_item	red_book_by_rvc	character varying	14
+location_hierarchy_item	foundation_license	character varying	15
+location_hierarchy_item	num_uws	bigint	16
+location_hierarchy_item	num_uws_license	character varying	17
+location_hierarchy_item	license_expiration	character varying	18
+location_hierarchy_item	license_ref	character varying	19
+location_hierarchy_item	dirty_fp	character varying	20
+location_hierarchy_item	dirty_fp_bus_date	character varying	21
+location_hierarchy_item	dirty_fp_last_posted	character varying	22
+location_hierarchy_item	last_trans_seq_num	character varying	23
+location_hierarchy_item	missing_seq_num	character varying	24
+location_hierarchy_item	first_out_of_seq_occurrence	character varying	25
+location_hierarchy_item	latest_definitions	timestamp without time zone	26
+location_hierarchy_item	latest_boh_definitions	character varying	27
+location_hierarchy_item	latest_transactions	character varying	28
+location_hierarchy_item	latest_pos_transaction	character varying	29
+location_hierarchy_item	comp_location	character varying	30
+location_hierarchy_item	open_date	timestamp without time zone	31
+location_hierarchy_item	latest_daily_totals	character varying	32
+location_hierarchy_item	org_tax_type_override	character varying	33
+location_hierarchy_item	enable_icare_olt_pos_override	character varying	34
+location_hierarchy_item	enable_inventory_override	character varying	35
+location_hierarchy_item	current_time_clock_datetime	character varying	36
+location_hierarchy_item	labor_share_level_id	character varying	37
+location_hierarchy_item	enable_enterprise_labor	character varying	38
+location_hierarchy_item	disable_back_office_sync	character varying	39
+location_hierarchy_item	last_transaction_bus_date	character varying	40
+location_hierarchy_item	last_transaction_id	character varying	41
+location_hierarchy_item	labor_week_start_day	character varying	42
+location_hierarchy_item	schedule_week_start_day	character varying	43
+location_hierarchy_item	forecast_week_start_day	character varying	44
+location_hierarchy_item	start_business_day_fixed_period	character varying	45
+location_hierarchy_item	last_trans_id_read_by_balance	character varying	46
+location_hierarchy_item	use_standalone_terminal	character varying	47
+location_hierarchy_item	pos_ref	character varying	48
+location_hierarchy_item	latest_move_hist	character varying	49
+location_hierarchy_item	last_aligned_date	character varying	50
+location_hierarchy_item	site_id	character varying	51
+middleware_execution_history	id	bigint	1
+middleware_execution_history	caller_name	character varying	2
+middleware_execution_history	last_executed_time	timestamp without time zone	3
+middleware_execution_history	created_date	timestamp without time zone	4
+netsuite_location_mapping	location_id	integer	1
+netsuite_location_mapping	created_timestamp	timestamp without time zone	2
+netsuite_location_mapping	updated_timestamp	timestamp without time zone	3
+netsuite_location_mapping	pre_acquisition	character varying	4
+netsuite_location_mapping	post_acquisition	character varying	5
+netsuite_location_mapping	acquisition_date	timestamp without time zone	6
+netsuite_location_mapping	company	character varying	7
+netsuite_location_mapping	location	character varying	8
+netsuite_location_mapping	location_name	character varying	9
+netsuite_location_mapping	brand	character varying	10
+netsuite_location_mapping	brand_name	character varying	11
+netsuite_location_mapping	ct_location	character varying	12
+netsuite_location_mapping	ct_brand	character varying	13
+netsuite_location_mapping	ns_dept_id	integer	14
+netsuite_location_mapping	rollout	character varying	15
+netsuite_location_mapping	host_location_id	integer	16
+netsuite_location_mapping	guid	character varying	17
+netsuite_location_mapping	store_id	character varying	18
+netsuite_location_mapping	brand_w_dt	integer	19
+netsuite_location_mapping	no_of_type	integer	20
+people_count	id	bigint	1
+people_count	created_by	character varying	2
+people_count	updated_by	character varying	3
+people_count	created_at	timestamp without time zone	4
+people_count	updated_at	timestamp without time zone	5
+people_count	camera_id	integer	6
+people_count	location	character varying	7
+people_count	timestamp	timestamp without time zone	8
+people_count	entrance_count	integer	9
+pos_order_details	id	uuid	1
+pos_order_details	created_at	timestamp without time zone	2
+pos_order_details	updated_at	timestamp without time zone	3
+pos_order_details	order_detail_id	integer	4
+pos_order_details	order_id	bigint	5
+pos_order_details	menu_item_id	integer	6
+pos_order_details	menu_item_name	character varying	7
+pos_order_details	kitchen_name	character varying	8
+pos_order_details	menu_item_type	character varying	9
+pos_order_details	plu	character varying	10
+pos_order_details	price	numeric	11
+pos_order_details	quantity	integer	12
+pos_order_details	department_id	integer	13
+pos_order_details	department_name	character varying	14
+pos_order_details	discount_id	integer	15
+pos_order_details	discount_value	numeric	16
+pos_order_details	discount_amount	numeric	17
+pos_order_details	has_mods	boolean	18
+pos_order_details	sequence	integer	19
+pos_order_details	entered_time	timestamp without time zone	20
+pos_order_details	tax_exemption	boolean	21
+pos_order_details	tax_quantity	numeric	22
+pos_order_details	deposit	boolean	23
+pos_order_details	value_added_base_price	numeric	24
+pos_order_details	combo_discounted_price	numeric	25
+pos_order_details	alc_price	numeric	26
+pos_order_details	alc_max_price	numeric	27
+pos_order_details	alc_remaining_price	numeric	28
+pos_order_details	pricing_group_plu	character varying	29
+pos_order_details	pricing_group_name	character varying	30
+pos_order_details	upgrade_amount	numeric	31
+pos_order_details	combo_percent_based_price	numeric	32
+pos_order_details	combo_percent_based_discount_price	numeric	33
+pos_order_details	order_type_name	USER-DEFINED	34
+pos_order_details	order_type	smallint	35
+pos_order_details	finish_on	timestamp without time zone	36
+pos_order_details	end_day	timestamp without time zone	37
+pos_order_details	discount_type	character varying	38
+pos_order_details	price_backup	numeric	39
+pos_order_details	max_order_detail_id	integer	40
+pos_order_details	persistent_plu	integer	41
+pos_order_details	guid	uuid	42
+pos_order_details	store_id	character varying	43
+pos_order_details_trickle	id	uuid	1
+pos_order_details_trickle	created_at	timestamp without time zone	2
+pos_order_details_trickle	updated_at	timestamp without time zone	3
+pos_order_details_trickle	order_detail_id	integer	4
+pos_order_details_trickle	order_id	bigint	5
+pos_order_details_trickle	menu_item_id	integer	6
+pos_order_details_trickle	menu_item_name	character varying	7
+pos_order_details_trickle	kitchen_name	character varying	8
+pos_order_details_trickle	menu_item_type	character varying	9
+pos_order_details_trickle	plu	character varying	10
+pos_order_details_trickle	price	numeric	11
+pos_order_details_trickle	quantity	integer	12
+pos_order_details_trickle	department_id	integer	13
+pos_order_details_trickle	department_name	character varying	14
+pos_order_details_trickle	discount_id	integer	15
+pos_order_details_trickle	discount_value	numeric	16
+pos_order_details_trickle	discount_amount	numeric	17
+pos_order_details_trickle	has_mods	boolean	18
+pos_order_details_trickle	sequence	integer	19
+pos_order_details_trickle	entered_time	timestamp without time zone	20
+pos_order_details_trickle	tax_exemption	boolean	21
+pos_order_details_trickle	tax_quantity	numeric	22
+pos_order_details_trickle	deposit	boolean	23
+pos_order_details_trickle	value_added_base_price	numeric	24
+pos_order_details_trickle	combo_discounted_price	numeric	25
+pos_order_details_trickle	alc_price	numeric	26
+pos_order_details_trickle	alc_max_price	numeric	27
+pos_order_details_trickle	alc_remaining_price	numeric	28
+pos_order_details_trickle	pricing_group_plu	character varying	29
+pos_order_details_trickle	pricing_group_name	character varying	30
+pos_order_details_trickle	upgrade_amount	numeric	31
+pos_order_details_trickle	combo_percent_based_price	numeric	32
+pos_order_details_trickle	combo_percent_based_discount_price	numeric	33
+pos_order_details_trickle	order_type_name	USER-DEFINED	34
+pos_order_details_trickle	order_type	smallint	35
+pos_order_details_trickle	finish_on	timestamp without time zone	36
+pos_order_details_trickle	end_day	timestamp without time zone	37
+pos_order_details_trickle	discount_type	character varying	38
+pos_order_details_trickle	price_backup	numeric	39
+pos_order_details_trickle	max_order_detail_id	integer	40
+pos_order_details_trickle	persistent_plu	integer	41
+pos_order_details_trickle	guid	uuid	42
+pos_order_details_trickle	store_id	character varying	43
+pos_order_paid_outs	id	uuid	1
+pos_order_paid_outs	created_at	timestamp without time zone	2
+pos_order_paid_outs	updated_at	timestamp without time zone	3
+pos_order_paid_outs	order_detail_id	integer	4
+pos_order_paid_outs	order_id	bigint	5
+pos_order_paid_outs	menu_item_id	integer	6
+pos_order_paid_outs	menu_item_name	character varying	7
+pos_order_paid_outs	entered_time	timestamp without time zone	8
+pos_order_paid_outs	order_type	smallint	9
+pos_order_paid_outs	order_type_name	USER-DEFINED	10
+pos_order_paid_outs	finish_on	timestamp without time zone	11
+pos_order_paid_outs	end_day	timestamp without time zone	12
+pos_order_paid_outs	payment_amount	numeric	13
+pos_order_paid_outs	guid	uuid	14
+pos_order_paid_outs	store_id	character varying	15
+pos_order_paid_outs_trickle	id	uuid	1
+pos_order_paid_outs_trickle	created_at	timestamp without time zone	2
+pos_order_paid_outs_trickle	updated_at	timestamp without time zone	3
+pos_order_paid_outs_trickle	order_detail_id	integer	4
+pos_order_paid_outs_trickle	order_id	bigint	5
+pos_order_paid_outs_trickle	menu_item_id	integer	6
+pos_order_paid_outs_trickle	menu_item_name	character varying	7
+pos_order_paid_outs_trickle	entered_time	timestamp without time zone	8
+pos_order_paid_outs_trickle	order_type	smallint	9
+pos_order_paid_outs_trickle	finish_on	timestamp without time zone	10
+pos_order_paid_outs_trickle	end_day	timestamp without time zone	11
+pos_order_paid_outs_trickle	payment_amount	numeric	12
+pos_order_paid_outs_trickle	guid	uuid	13
+pos_order_paid_outs_trickle	store_id	character varying	14
+pos_order_paid_outs_trickle	order_type_name	USER-DEFINED	15
+pos_order_payments	id	uuid	1
+pos_order_payments	created_at	timestamp without time zone	2
+pos_order_payments	updated_at	timestamp without time zone	3
+pos_order_payments	order_id	bigint	4
+pos_order_payments	finish_on	timestamp without time zone	5
+pos_order_payments	end_day	timestamp without time zone	6
+pos_order_payments	payment_type_id	smallint	7
+pos_order_payments	payment_amount	numeric	8
+pos_order_payments	gratuity	numeric	9
+pos_order_payments	penny_rounded	numeric	10
+pos_order_payments	use_penny_rounding	boolean	11
+pos_order_payments	exchange_rate	numeric	12
+pos_order_payments	payment_type_name	character varying	13
+pos_order_payments	guid	uuid	14
+pos_order_payments	store_id	character varying	15
+pos_order_payments_trickle	id	uuid	1
+pos_order_payments_trickle	created_at	timestamp without time zone	2
+pos_order_payments_trickle	updated_at	timestamp without time zone	3
+pos_order_payments_trickle	order_id	bigint	4
+pos_order_payments_trickle	finish_on	timestamp without time zone	5
+pos_order_payments_trickle	end_day	timestamp without time zone	6
+pos_order_payments_trickle	payment_type_id	smallint	7
+pos_order_payments_trickle	payment_amount	numeric	8
+pos_order_payments_trickle	gratuity	numeric	9
+pos_order_payments_trickle	penny_rounded	numeric	10
+pos_order_payments_trickle	use_penny_rounding	boolean	11
+pos_order_payments_trickle	exchange_rate	numeric	12
+pos_order_payments_trickle	payment_type_name	character varying	13
+pos_order_payments_trickle	guid	uuid	14
+pos_order_payments_trickle	store_id	character varying	15
+pos_order_taxes	id	uuid	1
+pos_order_taxes	created_at	timestamp without time zone	2
+pos_order_taxes	updated_at	timestamp without time zone	3
+pos_order_taxes	order_id	bigint	4
+pos_order_taxes	taxation_detail_id	integer	5
+pos_order_taxes	value	numeric	6
+pos_order_taxes	name	character varying	7
+pos_order_taxes	finish_on	timestamp without time zone	8
+pos_order_taxes	end_day	timestamp without time zone	9
+pos_order_taxes	guid	uuid	10
+pos_order_taxes	store_id	character varying	11
+pos_order_taxes_trickle	id	uuid	1
+pos_order_taxes_trickle	created_at	timestamp without time zone	2
+pos_order_taxes_trickle	updated_at	timestamp without time zone	3
+pos_order_taxes_trickle	order_id	bigint	4
+pos_order_taxes_trickle	taxation_detail_id	integer	5
+pos_order_taxes_trickle	value	numeric	6
+pos_order_taxes_trickle	name	character varying	7
+pos_order_taxes_trickle	finish_on	timestamp without time zone	8
+pos_order_taxes_trickle	end_day	timestamp without time zone	9
+pos_order_taxes_trickle	guid	uuid	10
+pos_order_taxes_trickle	store_id	character varying	11
+pos_order_voids	id	uuid	1
+pos_order_voids	created_at	timestamp without time zone	2
+pos_order_voids	updated_at	timestamp without time zone	3
+pos_order_voids	void_id	bigint	4
+pos_order_voids	menu_item_id	integer	5
+pos_order_voids	item_name	character varying	6
+pos_order_voids	item_qty	integer	7
+pos_order_voids	amount	numeric	8
+pos_order_voids	operate_time	timestamp without time zone	9
+pos_order_voids	terminal_name	character varying	10
+pos_order_voids	order_id	bigint	11
+pos_order_voids	sequence	integer	12
+pos_order_voids	menu_item_type	character varying	13
+pos_order_voids	end_day	timestamp without time zone	14
+pos_order_voids	tpn	character varying	15
+pos_order_voids	persistent_tpn	character varying	16
+pos_order_voids	price_backup	numeric	17
+pos_order_voids	plu	integer	18
+pos_order_voids	value_added_base_price	numeric	19
+pos_order_voids	alc_price	numeric	20
+pos_order_voids	alc_max_price	numeric	21
+pos_order_voids	alc_remaining_price	numeric	22
+pos_order_voids	persistent_plu	integer	23
+pos_order_voids	employee_id	integer	24
+pos_order_voids	sub_department_id	integer	25
+pos_order_voids	guid	uuid	26
+pos_order_voids	store_id	character varying	27
+pos_order_voids_trickle	id	uuid	1
+pos_order_voids_trickle	created_at	timestamp without time zone	2
+pos_order_voids_trickle	updated_at	timestamp without time zone	3
+pos_order_voids_trickle	void_id	bigint	4
+pos_order_voids_trickle	menu_item_id	integer	5
+pos_order_voids_trickle	item_name	character varying	6
+pos_order_voids_trickle	item_qty	integer	7
+pos_order_voids_trickle	amount	numeric	8
+pos_order_voids_trickle	operate_time	timestamp without time zone	9
+pos_order_voids_trickle	terminal_name	character varying	10
+pos_order_voids_trickle	order_id	bigint	11
+pos_order_voids_trickle	sequence	integer	12
+pos_order_voids_trickle	menu_item_type	character varying	13
+pos_order_voids_trickle	end_day	timestamp without time zone	14
+pos_order_voids_trickle	tpn	character varying	15
+pos_order_voids_trickle	persistent_tpn	character varying	16
+pos_order_voids_trickle	price_backup	numeric	17
+pos_order_voids_trickle	plu	integer	18
+pos_order_voids_trickle	value_added_base_price	numeric	19
+pos_order_voids_trickle	alc_price	numeric	20
+pos_order_voids_trickle	alc_max_price	numeric	21
+pos_order_voids_trickle	alc_remaining_price	numeric	22
+pos_order_voids_trickle	persistent_plu	integer	23
+pos_order_voids_trickle	employee_id	integer	24
+pos_order_voids_trickle	sub_department_id	integer	25
+pos_order_voids_trickle	guid	uuid	26
+pos_order_voids_trickle	store_id	character varying	27
+pos_orders	id	uuid	1
+pos_orders	created_at	timestamp without time zone	2
+pos_orders	updated_at	timestamp without time zone	3
+pos_orders	order_id	bigint	4
+pos_orders	start_on	timestamp without time zone	5
+pos_orders	finish_on	timestamp without time zone	6
+pos_orders	order_type	smallint	7
+pos_orders	order_type_name	USER-DEFINED	8
+pos_orders	tax	numeric	9
+pos_orders	subtotal	numeric	10
+pos_orders	grand_total	numeric	11
+pos_orders	total	numeric	12
+pos_orders	discount	numeric	13
+pos_orders	combo_saved	numeric	14
+pos_orders	is_refund	boolean	15
+pos_orders	end_day	timestamp without time zone	16
+pos_orders	gross	numeric	17
+pos_orders	net	numeric	18
+pos_orders	receipt_number	integer	19
+pos_orders	order_number_id	integer	20
+pos_orders	start_person	character varying	21
+pos_orders	close_person	character varying	22
+pos_orders	start_person_employee_id	integer	23
+pos_orders	close_person_employee_id	integer	24
+pos_orders	third_party_order_id	character varying	25
+pos_orders	target_computer	character varying	26
+pos_orders	guid	uuid	27
+pos_orders	store_id	character varying	28
+pos_orders_trickle	id	uuid	1
+pos_orders_trickle	created_at	timestamp without time zone	2
+pos_orders_trickle	updated_at	timestamp without time zone	3
+pos_orders_trickle	order_id	bigint	4
+pos_orders_trickle	start_on	timestamp without time zone	5
+pos_orders_trickle	finish_on	timestamp without time zone	6
+pos_orders_trickle	order_type	smallint	7
+pos_orders_trickle	tax	numeric	8
+pos_orders_trickle	subtotal	numeric	9
+pos_orders_trickle	grand_total	numeric	10
+pos_orders_trickle	total	numeric	11
+pos_orders_trickle	discount	numeric	12
+pos_orders_trickle	combo_saved	numeric	13
+pos_orders_trickle	is_refund	boolean	14
+pos_orders_trickle	end_day	timestamp without time zone	15
+pos_orders_trickle	gross	numeric	16
+pos_orders_trickle	net	numeric	17
+pos_orders_trickle	receipt_number	integer	18
+pos_orders_trickle	order_number_id	integer	19
+pos_orders_trickle	start_person	character varying	20
+pos_orders_trickle	close_person	character varying	21
+pos_orders_trickle	start_person_employee_id	integer	22
+pos_orders_trickle	close_person_employee_id	integer	23
+pos_orders_trickle	third_party_order_id	character varying	24
+pos_orders_trickle	target_computer	character varying	25
+pos_orders_trickle	guid	uuid	26
+pos_orders_trickle	store_id	character varying	27
+pos_orders_trickle	order_type_name	USER-DEFINED	28
+qrtz_blob_triggers	sched_name	character varying	1
+qrtz_blob_triggers	trigger_name	character varying	2
+qrtz_blob_triggers	trigger_group	character varying	3
+qrtz_blob_triggers	blob_data	bytea	4
+qrtz_calendars	sched_name	character varying	1
+qrtz_calendars	calendar_name	character varying	2
+qrtz_calendars	calendar	bytea	3
+qrtz_cron_triggers	sched_name	character varying	1
+qrtz_cron_triggers	trigger_name	character varying	2
+qrtz_cron_triggers	trigger_group	character varying	3
+qrtz_cron_triggers	cron_expression	character varying	4
+qrtz_cron_triggers	time_zone_id	character varying	5
+qrtz_fired_triggers	sched_name	character varying	1
+qrtz_fired_triggers	entry_id	character varying	2
+qrtz_fired_triggers	trigger_name	character varying	3
+qrtz_fired_triggers	trigger_group	character varying	4
+qrtz_fired_triggers	instance_name	character varying	5
+qrtz_fired_triggers	fired_time	bigint	6
+qrtz_fired_triggers	sched_time	bigint	7
+qrtz_fired_triggers	priority	integer	8
+qrtz_fired_triggers	state	character varying	9
+qrtz_fired_triggers	job_name	character varying	10
+qrtz_fired_triggers	job_group	character varying	11
+qrtz_fired_triggers	is_nonconcurrent	boolean	12
+qrtz_fired_triggers	requests_recovery	boolean	13
+qrtz_job_details	sched_name	character varying	1
+qrtz_job_details	job_name	character varying	2
+qrtz_job_details	job_group	character varying	3
+qrtz_job_details	description	character varying	4
+qrtz_job_details	job_class_name	character varying	5
+qrtz_job_details	is_durable	boolean	6
+qrtz_job_details	is_nonconcurrent	boolean	7
+qrtz_job_details	is_update_data	boolean	8
+qrtz_job_details	requests_recovery	boolean	9
+qrtz_job_details	job_data	bytea	10
+qrtz_locks	sched_name	character varying	1
+qrtz_locks	lock_name	character varying	2
+qrtz_paused_trigger_grps	sched_name	character varying	1
+qrtz_paused_trigger_grps	trigger_group	character varying	2
+qrtz_scheduler_state	sched_name	character varying	1
+qrtz_scheduler_state	instance_name	character varying	2
+qrtz_scheduler_state	last_checkin_time	bigint	3
+qrtz_scheduler_state	checkin_interval	bigint	4
+qrtz_simple_triggers	sched_name	character varying	1
+qrtz_simple_triggers	trigger_name	character varying	2
+qrtz_simple_triggers	trigger_group	character varying	3
+qrtz_simple_triggers	repeat_count	bigint	4
+qrtz_simple_triggers	repeat_interval	bigint	5
+qrtz_simple_triggers	times_triggered	bigint	6
+qrtz_simprop_triggers	sched_name	character varying	1
+qrtz_simprop_triggers	trigger_name	character varying	2
+qrtz_simprop_triggers	trigger_group	character varying	3
+qrtz_simprop_triggers	str_prop_1	character varying	4
+qrtz_simprop_triggers	str_prop_2	character varying	5
+qrtz_simprop_triggers	str_prop_3	character varying	6
+qrtz_simprop_triggers	int_prop_1	integer	7
+qrtz_simprop_triggers	int_prop_2	integer	8
+qrtz_simprop_triggers	long_prop_1	bigint	9
+qrtz_simprop_triggers	long_prop_2	bigint	10
+qrtz_simprop_triggers	dec_prop_1	numeric	11
+qrtz_simprop_triggers	dec_prop_2	numeric	12
+qrtz_simprop_triggers	bool_prop_1	boolean	13
+qrtz_simprop_triggers	bool_prop_2	boolean	14
+qrtz_triggers	sched_name	character varying	1
+qrtz_triggers	trigger_name	character varying	2
+qrtz_triggers	trigger_group	character varying	3
+qrtz_triggers	job_name	character varying	4
+qrtz_triggers	job_group	character varying	5
+qrtz_triggers	description	character varying	6
+qrtz_triggers	next_fire_time	bigint	7
+qrtz_triggers	prev_fire_time	bigint	8
+qrtz_triggers	priority	integer	9
+qrtz_triggers	trigger_state	character varying	10
+qrtz_triggers	trigger_type	character varying	11
+qrtz_triggers	start_time	bigint	12
+qrtz_triggers	end_time	bigint	13
+qrtz_triggers	calendar_name	character varying	14
+qrtz_triggers	misfire_instr	smallint	15
+qrtz_triggers	job_data	bytea	16
+revenue_center	revenue_center_id	bigint	1
+revenue_center	created_timestamp	timestamp without time zone	2
+revenue_center	updated_timestamp	timestamp without time zone	3
+revenue_center	organization_id	bigint	4
+revenue_center	location_id	bigint	5
+revenue_center	revenue_center_master_id	bigint	6
+revenue_center	revenue_center_report_id	bigint	7
+revenue_center	name	character varying	8
+revenue_center	name_master	character varying	9
+revenue_center	category_group_id1	integer	10
+revenue_center	category_group_id2	integer	11
+revenue_center	category_group_id3	integer	12
+revenue_center	category_group_id4	integer	13
+revenue_center	type	character varying	14
+revenue_center	revenue_center_pos_ref	character varying	15
+revenue_center	num_tables	character varying	16
+revenue_center	report_flag	character varying	17
+revenue_center	align	character varying	18
+revenue_center	master_alias	character varying	19
+revenue_center	auto_service_charge_pos_ref	character varying	20
+revenue_center	definition_srvc_pos_ref	character varying	21
+revenue_center	last_used_datetime	timestamp without time zone	22
+revenue_center	sim_update_flag	integer	23
+revenue_center	temp_flag	character varying	24
+staging_810_invoice_detail	id	uuid	1
+staging_810_invoice_detail	created_timestamp	timestamp without time zone	2
+staging_810_invoice_detail	updated_timestamp	timestamp without time zone	3
+staging_810_invoice_detail	created_by	character varying	4
+staging_810_invoice_detail	updated_by	character varying	5
+staging_810_invoice_detail	staging_header_id	uuid	6
+staging_810_invoice_detail	execution_id	uuid	7
+staging_810_invoice_detail	transaction_type	character varying	8
+staging_810_invoice_detail	vendor_id	character varying	9
+staging_810_invoice_detail	invoice_number	character varying	10
+staging_810_invoice_detail	line_sequence	integer	11
+staging_810_invoice_detail	transformed_payload	jsonb	12
+staging_810_invoice_detail	processing_status	character varying	13
+staging_810_invoice_detail	error_message	character varying	14
+staging_810_invoice_header	id	uuid	1
+staging_810_invoice_header	created_timestamp	timestamp without time zone	2
+staging_810_invoice_header	updated_timestamp	timestamp without time zone	3
+staging_810_invoice_header	created_by	character varying	4
+staging_810_invoice_header	updated_by	character varying	5
+staging_810_invoice_header	execution_id	uuid	6
+staging_810_invoice_header	execution_file_id	uuid	7
+staging_810_invoice_header	raw_content_id	uuid	8
+staging_810_invoice_header	transaction_type	character varying	9
+staging_810_invoice_header	vendor_id	character varying	10
+staging_810_invoice_header	vendor_number	character varying	11
+staging_810_invoice_header	invoice_number	character varying	12
+staging_810_invoice_header	transformed_payload	jsonb	13
+staging_810_invoice_header	validation_status	character varying	14
+staging_810_invoice_header	validation_errors	jsonb	15
+staging_810_invoice_header	processing_status	character varying	16
+staging_810_invoice_header	retry_count	integer	17
+staging_810_invoice_header	error_message	character varying	18
+staging_850_purchase_order	id	uuid	1
+staging_850_purchase_order	source_filename	character varying	2
+staging_850_purchase_order	archive_filename	character varying	3
+staging_850_purchase_order	vendor_id	character varying	4
+staging_850_purchase_order	trading_partner_agreement	character varying	5
+staging_850_purchase_order	po_number	character varying	6
+staging_850_purchase_order	location_code	character varying	7
+staging_850_purchase_order	requested_delivery_date	date	8
+staging_850_purchase_order	po_date	date	9
+staging_850_purchase_order	po_type	character	10
+staging_850_purchase_order	payment_terms_net_days	smallint	11
+staging_850_purchase_order	additional_dtm_qualifier	character varying	12
+staging_850_purchase_order	additional_dtm_date	date	13
+staging_850_purchase_order	edi_line_number	character varying	14
+staging_850_purchase_order	product_identifier	character varying	15
+staging_850_purchase_order	quantity_ordered	numeric	16
+staging_850_purchase_order	unit_of_measure	character varying	17
+staging_850_purchase_order	product_qualifier_scheme	character varying	18
+staging_850_purchase_order	processing_status	character varying	19
+staging_850_purchase_order	edi_output_filename	character varying	20
+staging_850_purchase_order	error_message	text	21
+staging_850_purchase_order	processed_at	timestamp with time zone	22
+staging_850_purchase_order	created_timestamp	timestamp with time zone	23
+staging_850_purchase_order	updated_timestamp	timestamp with time zone	24
+staging_850_purchase_order	created_by	character varying	25
+staging_850_purchase_order	updated_by	character varying	26
+staging_ceridian_employees	employee_id	character varying	1
+staging_ceridian_employees	execution_id	uuid	2
+staging_ceridian_employees	created_timestamp	timestamp without time zone	3
+staging_ceridian_employees	updated_timestamp	timestamp without time zone	4
+staging_ceridian_employees	created_by	character varying	5
+staging_ceridian_employees	first_name	character varying	6
+staging_ceridian_employees	last_name	character varying	7
+staging_ceridian_employees	hire_date	date	8
+staging_ceridian_employees	termination_date	date	9
+staging_ceridian_employees	employment_status	character varying	10
+staging_ceridian_employees	action	character varying	11
+staging_ceridian_employees	effective_date	timestamp without time zone	12
+staging_ceridian_employees	status	character varying	13
+staging_ceridian_employees	error_message	character varying	14
+staging_ceridian_employees	payload	jsonb	15
+staging_employee_pay_summary	employee_number	character varying	1
+staging_employee_pay_summary	employee_name	character varying	2
+staging_employee_pay_summary	department	character varying	3
+staging_employee_pay_summary	job	character varying	4
+staging_employee_pay_summary	location	character varying	5
+staging_employee_pay_summary	hours	numeric	6
+staging_employee_pay_summary	pay_amount	numeric	7
+staging_employee_pay_summary	pay_category	character varying	8
+staging_employee_pay_summary	pay_code	character varying	9
+staging_employee_pay_summary	pay_date	character varying	10
+staging_employee_pay_summary	retrieve_date	character varying	11
+staging_employee_pay_summary	rounded_in_out	character varying	12
+staging_employee_pay_summary	created_timestamp	timestamp without time zone	13
+staging_employee_pay_summary	updated_timestamp	timestamp without time zone	14
+store_pairing_config	id	uuid	1
+store_pairing_config	created_at	timestamp without time zone	2
+store_pairing_config	pair_group	character varying	3
+store_pairing_config	primary_store_id	character varying	4
+store_pairing_config	secondary_store_id	character varying	5
+store_pairing_config	brand_guid	uuid	6
+store_pairing_config	sorting_required	boolean	7
+store_pairing_config	sort_column	character varying	8
+system_definition	created_by	character varying	1
+system_definition	updated_by	character varying	2
+system_definition	created_at	timestamp without time zone	3
+system_definition	updated_at	timestamp without time zone	4
+system_definition	id	uuid	5
+system_definition	system_code	character varying	6
+system_definition	system_name	character varying	7
+system_definition	system_type	character varying	8
+system_definition	status	character varying	9
+system_definition	description	character varying	10
+system_definition	base_url	character varying	11
+system_definition	connection_config	jsonb	12
+temp_car_count_staging	id	uuid	1
+temp_car_count_staging	created_timestamp	timestamp with time zone	2
+temp_car_count_staging	updated_timestamp	timestamp with time zone	3
+temp_car_count_staging	created_by	character varying	4
+temp_car_count_staging	updated_by	character varying	5
+temp_car_count_staging	execution_id	uuid	6
+temp_car_count_staging	execution_file_id	uuid	7
+temp_car_count_staging	plaza_name	character varying	8
+temp_car_count_staging	sensor_id	character varying	9
+temp_car_count_staging	zone_id	character varying	10
+temp_car_count_staging	data_type	character varying	11
+temp_car_count_staging	reading_time	timestamp without time zone	12
+temp_car_count_staging	volume	integer	13
+temp_car_count_staging	occupancy	numeric	14
+temp_car_count_staging	average_speed	numeric	15
+temp_car_count_staging	status	character varying	16
+temp_car_count_staging	error_message	character varying	17
+temp_car_count_staging	processed_at	timestamp without time zone	18
+temp_dlh	id	bigint	1
+temp_dlh	created_by	character varying	2
+temp_dlh	updated_by	character varying	3
+temp_dlh	created_at	timestamp without time zone	4
+temp_dlh	updated_at	timestamp without time zone	5
+temp_dlh	plaza	character varying	6
+temp_dlh	brand	character varying	7
+temp_dlh	dlh_date	date	8
+temp_dlh	dlh	numeric	9
+temp_tlog_staging_orderdetails_ct	id	uuid	1
+temp_tlog_staging_orderdetails_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_orderdetails_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderdetails_ct	created_by	character varying	4
+temp_tlog_staging_orderdetails_ct	updated_by	character varying	5
+temp_tlog_staging_orderdetails_ct	execution_id	uuid	6
+temp_tlog_staging_orderdetails_ct	execution_file_id	uuid	7
+temp_tlog_staging_orderdetails_ct	order_detail_id	integer	8
+temp_tlog_staging_orderdetails_ct	order_id	bigint	9
+temp_tlog_staging_orderdetails_ct	menu_item_id	integer	10
+temp_tlog_staging_orderdetails_ct	menu_item_name	character varying	11
+temp_tlog_staging_orderdetails_ct	kitchen_name	character varying	12
+temp_tlog_staging_orderdetails_ct	menu_item_type	character varying	13
+temp_tlog_staging_orderdetails_ct	plu	character varying	14
+temp_tlog_staging_orderdetails_ct	price	numeric	15
+temp_tlog_staging_orderdetails_ct	quantity	integer	16
+temp_tlog_staging_orderdetails_ct	department_id	integer	17
+temp_tlog_staging_orderdetails_ct	department_name	character varying	18
+temp_tlog_staging_orderdetails_ct	discount_id	integer	19
+temp_tlog_staging_orderdetails_ct	discount_value	numeric	20
+temp_tlog_staging_orderdetails_ct	discount_amount	numeric	21
+temp_tlog_staging_orderdetails_ct	has_mods	boolean	22
+temp_tlog_staging_orderdetails_ct	sequence	integer	23
+temp_tlog_staging_orderdetails_ct	entered_time	timestamp without time zone	24
+temp_tlog_staging_orderdetails_ct	tax_exemption	boolean	25
+temp_tlog_staging_orderdetails_ct	tax_quantity	numeric	26
+temp_tlog_staging_orderdetails_ct	deposit	boolean	27
+temp_tlog_staging_orderdetails_ct	value_added_base_price	numeric	28
+temp_tlog_staging_orderdetails_ct	combo_discounted_price	numeric	29
+temp_tlog_staging_orderdetails_ct	alc_price	numeric	30
+temp_tlog_staging_orderdetails_ct	alc_max_price	numeric	31
+temp_tlog_staging_orderdetails_ct	alc_remaining_price	numeric	32
+temp_tlog_staging_orderdetails_ct	pricing_group_plu	character varying	33
+temp_tlog_staging_orderdetails_ct	pricing_group_name	character varying	34
+temp_tlog_staging_orderdetails_ct	upgrade_amount	numeric	35
+temp_tlog_staging_orderdetails_ct	combo_percent_based_price	numeric	36
+temp_tlog_staging_orderdetails_ct	combo_percent_based_discount_price	numeric	37
+temp_tlog_staging_orderdetails_ct	order_type_name	USER-DEFINED	38
+temp_tlog_staging_orderdetails_ct	order_type	smallint	39
+temp_tlog_staging_orderdetails_ct	finish_on	timestamp without time zone	40
+temp_tlog_staging_orderdetails_ct	end_day	timestamp without time zone	41
+temp_tlog_staging_orderdetails_ct	discount_type	character varying	42
+temp_tlog_staging_orderdetails_ct	price_backup	numeric	43
+temp_tlog_staging_orderdetails_ct	max_order_detail_id	integer	44
+temp_tlog_staging_orderdetails_ct	persistent_plu	integer	45
+temp_tlog_staging_orderdetails_ct	guid	uuid	46
+temp_tlog_staging_orderdetails_ct	store_id	character varying	47
+temp_tlog_staging_orderdetails_ct	status	character varying	48
+temp_tlog_staging_orderdetails_ct	error_message	character varying	49
+temp_tlog_staging_orderdetails_etl	id	uuid	1
+temp_tlog_staging_orderdetails_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderdetails_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderdetails_etl	created_by	character varying	4
+temp_tlog_staging_orderdetails_etl	updated_by	character varying	5
+temp_tlog_staging_orderdetails_etl	execution_id	uuid	6
+temp_tlog_staging_orderdetails_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderdetails_etl	order_detail_id	integer	8
+temp_tlog_staging_orderdetails_etl	order_id	bigint	9
+temp_tlog_staging_orderdetails_etl	menu_item_id	integer	10
+temp_tlog_staging_orderdetails_etl	menu_item_name	character varying	11
+temp_tlog_staging_orderdetails_etl	kitchen_name	character varying	12
+temp_tlog_staging_orderdetails_etl	menu_item_type	character varying	13
+temp_tlog_staging_orderdetails_etl	plu	character varying	14
+temp_tlog_staging_orderdetails_etl	price	numeric	15
+temp_tlog_staging_orderdetails_etl	quantity	integer	16
+temp_tlog_staging_orderdetails_etl	department_id	integer	17
+temp_tlog_staging_orderdetails_etl	department_name	character varying	18
+temp_tlog_staging_orderdetails_etl	discount_id	integer	19
+temp_tlog_staging_orderdetails_etl	discount_value	numeric	20
+temp_tlog_staging_orderdetails_etl	discount_amount	numeric	21
+temp_tlog_staging_orderdetails_etl	has_mods	boolean	22
+temp_tlog_staging_orderdetails_etl	sequence	integer	23
+temp_tlog_staging_orderdetails_etl	entered_time	timestamp without time zone	24
+temp_tlog_staging_orderdetails_etl	tax_exemption	boolean	25
+temp_tlog_staging_orderdetails_etl	tax_quantity	numeric	26
+temp_tlog_staging_orderdetails_etl	deposit	boolean	27
+temp_tlog_staging_orderdetails_etl	value_added_base_price	numeric	28
+temp_tlog_staging_orderdetails_etl	combo_discounted_price	numeric	29
+temp_tlog_staging_orderdetails_etl	alc_price	numeric	30
+temp_tlog_staging_orderdetails_etl	alc_max_price	numeric	31
+temp_tlog_staging_orderdetails_etl	alc_remaining_price	numeric	32
+temp_tlog_staging_orderdetails_etl	pricing_group_plu	character varying	33
+temp_tlog_staging_orderdetails_etl	pricing_group_name	character varying	34
+temp_tlog_staging_orderdetails_etl	upgrade_amount	numeric	35
+temp_tlog_staging_orderdetails_etl	combo_percent_based_price	numeric	36
+temp_tlog_staging_orderdetails_etl	combo_percent_based_discount_price	numeric	37
+temp_tlog_staging_orderdetails_etl	order_type_name	USER-DEFINED	38
+temp_tlog_staging_orderdetails_etl	order_type	smallint	39
+temp_tlog_staging_orderdetails_etl	finish_on	timestamp without time zone	40
+temp_tlog_staging_orderdetails_etl	end_day	timestamp without time zone	41
+temp_tlog_staging_orderdetails_etl	discount_type	character varying	42
+temp_tlog_staging_orderdetails_etl	price_backup	numeric	43
+temp_tlog_staging_orderdetails_etl	max_order_detail_id	integer	44
+temp_tlog_staging_orderdetails_etl	persistent_plu	integer	45
+temp_tlog_staging_orderdetails_etl	guid	uuid	46
+temp_tlog_staging_orderdetails_etl	store_id	character varying	47
+temp_tlog_staging_orderdetails_etl	status	character varying	48
+temp_tlog_staging_orderdetails_etl	error_message	character varying	49
+temp_tlog_staging_orderdetails_trickle_etl	id	uuid	1
+temp_tlog_staging_orderdetails_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderdetails_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderdetails_trickle_etl	created_by	character varying	4
+temp_tlog_staging_orderdetails_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_orderdetails_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_orderdetails_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderdetails_trickle_etl	order_detail_id	integer	8
+temp_tlog_staging_orderdetails_trickle_etl	order_id	bigint	9
+temp_tlog_staging_orderdetails_trickle_etl	menu_item_id	integer	10
+temp_tlog_staging_orderdetails_trickle_etl	menu_item_name	character varying	11
+temp_tlog_staging_orderdetails_trickle_etl	kitchen_name	character varying	12
+temp_tlog_staging_orderdetails_trickle_etl	menu_item_type	character varying	13
+temp_tlog_staging_orderdetails_trickle_etl	plu	character varying	14
+temp_tlog_staging_orderdetails_trickle_etl	price	numeric	15
+temp_tlog_staging_orderdetails_trickle_etl	quantity	integer	16
+temp_tlog_staging_orderdetails_trickle_etl	department_id	integer	17
+temp_tlog_staging_orderdetails_trickle_etl	department_name	character varying	18
+temp_tlog_staging_orderdetails_trickle_etl	discount_id	integer	19
+temp_tlog_staging_orderdetails_trickle_etl	discount_value	numeric	20
+temp_tlog_staging_orderdetails_trickle_etl	discount_amount	numeric	21
+temp_tlog_staging_orderdetails_trickle_etl	has_mods	boolean	22
+temp_tlog_staging_orderdetails_trickle_etl	sequence	integer	23
+temp_tlog_staging_orderdetails_trickle_etl	entered_time	timestamp without time zone	24
+temp_tlog_staging_orderdetails_trickle_etl	tax_exemption	boolean	25
+temp_tlog_staging_orderdetails_trickle_etl	tax_quantity	numeric	26
+temp_tlog_staging_orderdetails_trickle_etl	deposit	boolean	27
+temp_tlog_staging_orderdetails_trickle_etl	value_added_base_price	numeric	28
+temp_tlog_staging_orderdetails_trickle_etl	combo_discounted_price	numeric	29
+temp_tlog_staging_orderdetails_trickle_etl	alc_price	numeric	30
+temp_tlog_staging_orderdetails_trickle_etl	alc_max_price	numeric	31
+temp_tlog_staging_orderdetails_trickle_etl	alc_remaining_price	numeric	32
+temp_tlog_staging_orderdetails_trickle_etl	pricing_group_plu	character varying	33
+temp_tlog_staging_orderdetails_trickle_etl	pricing_group_name	character varying	34
+temp_tlog_staging_orderdetails_trickle_etl	upgrade_amount	numeric	35
+temp_tlog_staging_orderdetails_trickle_etl	combo_percent_based_price	numeric	36
+temp_tlog_staging_orderdetails_trickle_etl	combo_percent_based_discount_price	numeric	37
+temp_tlog_staging_orderdetails_trickle_etl	order_type_name	USER-DEFINED	38
+temp_tlog_staging_orderdetails_trickle_etl	order_type	smallint	39
+temp_tlog_staging_orderdetails_trickle_etl	finish_on	timestamp without time zone	40
+temp_tlog_staging_orderdetails_trickle_etl	end_day	timestamp without time zone	41
+temp_tlog_staging_orderdetails_trickle_etl	discount_type	character varying	42
+temp_tlog_staging_orderdetails_trickle_etl	price_backup	numeric	43
+temp_tlog_staging_orderdetails_trickle_etl	max_order_detail_id	integer	44
+temp_tlog_staging_orderdetails_trickle_etl	persistent_plu	integer	45
+temp_tlog_staging_orderdetails_trickle_etl	guid	uuid	46
+temp_tlog_staging_orderdetails_trickle_etl	store_id	character varying	47
+temp_tlog_staging_orderdetails_trickle_etl	status	character varying	48
+temp_tlog_staging_orderdetails_trickle_etl	error_message	character varying	49
+temp_tlog_staging_orderpaidouts_ct	id	uuid	1
+temp_tlog_staging_orderpaidouts_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpaidouts_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpaidouts_ct	created_by	character varying	4
+temp_tlog_staging_orderpaidouts_ct	updated_by	character varying	5
+temp_tlog_staging_orderpaidouts_ct	execution_id	uuid	6
+temp_tlog_staging_orderpaidouts_ct	execution_file_id	uuid	7
+temp_tlog_staging_orderpaidouts_ct	order_detail_id	integer	8
+temp_tlog_staging_orderpaidouts_ct	order_id	bigint	9
+temp_tlog_staging_orderpaidouts_ct	menu_item_id	integer	10
+temp_tlog_staging_orderpaidouts_ct	menu_item_name	character varying	11
+temp_tlog_staging_orderpaidouts_ct	entered_time	timestamp without time zone	12
+temp_tlog_staging_orderpaidouts_ct	order_type	smallint	13
+temp_tlog_staging_orderpaidouts_ct	order_type_name	USER-DEFINED	14
+temp_tlog_staging_orderpaidouts_ct	finish_on	timestamp without time zone	15
+temp_tlog_staging_orderpaidouts_ct	end_day	timestamp without time zone	16
+temp_tlog_staging_orderpaidouts_ct	payment_amount	numeric	17
+temp_tlog_staging_orderpaidouts_ct	guid	uuid	18
+temp_tlog_staging_orderpaidouts_ct	store_id	character varying	19
+temp_tlog_staging_orderpaidouts_ct	status	character varying	20
+temp_tlog_staging_orderpaidouts_ct	error_message	character varying	21
+temp_tlog_staging_orderpaidouts_etl	id	uuid	1
+temp_tlog_staging_orderpaidouts_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpaidouts_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpaidouts_etl	created_by	character varying	4
+temp_tlog_staging_orderpaidouts_etl	updated_by	character varying	5
+temp_tlog_staging_orderpaidouts_etl	execution_id	uuid	6
+temp_tlog_staging_orderpaidouts_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderpaidouts_etl	order_detail_id	integer	8
+temp_tlog_staging_orderpaidouts_etl	order_id	bigint	9
+temp_tlog_staging_orderpaidouts_etl	menu_item_id	integer	10
+temp_tlog_staging_orderpaidouts_etl	menu_item_name	character varying	11
+temp_tlog_staging_orderpaidouts_etl	entered_time	timestamp without time zone	12
+temp_tlog_staging_orderpaidouts_etl	order_type	smallint	13
+temp_tlog_staging_orderpaidouts_etl	order_type_name	USER-DEFINED	14
+temp_tlog_staging_orderpaidouts_etl	finish_on	timestamp without time zone	15
+temp_tlog_staging_orderpaidouts_etl	end_day	timestamp without time zone	16
+temp_tlog_staging_orderpaidouts_etl	payment_amount	numeric	17
+temp_tlog_staging_orderpaidouts_etl	guid	uuid	18
+temp_tlog_staging_orderpaidouts_etl	store_id	character varying	19
+temp_tlog_staging_orderpaidouts_etl	status	character varying	20
+temp_tlog_staging_orderpaidouts_etl	error_message	character varying	21
+temp_tlog_staging_orderpaidouts_trickle_etl	id	uuid	1
+temp_tlog_staging_orderpaidouts_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpaidouts_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpaidouts_trickle_etl	created_by	character varying	4
+temp_tlog_staging_orderpaidouts_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_orderpaidouts_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_orderpaidouts_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderpaidouts_trickle_etl	order_detail_id	integer	8
+temp_tlog_staging_orderpaidouts_trickle_etl	order_id	bigint	9
+temp_tlog_staging_orderpaidouts_trickle_etl	menu_item_id	integer	10
+temp_tlog_staging_orderpaidouts_trickle_etl	menu_item_name	character varying	11
+temp_tlog_staging_orderpaidouts_trickle_etl	entered_time	timestamp without time zone	12
+temp_tlog_staging_orderpaidouts_trickle_etl	order_type	smallint	13
+temp_tlog_staging_orderpaidouts_trickle_etl	order_type_name	USER-DEFINED	14
+temp_tlog_staging_orderpaidouts_trickle_etl	finish_on	timestamp without time zone	15
+temp_tlog_staging_orderpaidouts_trickle_etl	end_day	timestamp without time zone	16
+temp_tlog_staging_orderpaidouts_trickle_etl	payment_amount	numeric	17
+temp_tlog_staging_orderpaidouts_trickle_etl	guid	uuid	18
+temp_tlog_staging_orderpaidouts_trickle_etl	store_id	character varying	19
+temp_tlog_staging_orderpaidouts_trickle_etl	status	character varying	20
+temp_tlog_staging_orderpaidouts_trickle_etl	error_message	character varying	21
+temp_tlog_staging_orderpayments_ct	id	uuid	1
+temp_tlog_staging_orderpayments_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpayments_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpayments_ct	created_by	character varying	4
+temp_tlog_staging_orderpayments_ct	updated_by	character varying	5
+temp_tlog_staging_orderpayments_ct	execution_id	uuid	6
+temp_tlog_staging_orderpayments_ct	execution_file_id	uuid	7
+temp_tlog_staging_orderpayments_ct	order_id	bigint	8
+temp_tlog_staging_orderpayments_ct	finish_on	timestamp without time zone	9
+temp_tlog_staging_orderpayments_ct	end_day	timestamp without time zone	10
+temp_tlog_staging_orderpayments_ct	payment_type_id	smallint	11
+temp_tlog_staging_orderpayments_ct	payment_amount	numeric	12
+temp_tlog_staging_orderpayments_ct	gratuity	numeric	13
+temp_tlog_staging_orderpayments_ct	penny_rounded	numeric	14
+temp_tlog_staging_orderpayments_ct	use_penny_rounding	boolean	15
+temp_tlog_staging_orderpayments_ct	exchange_rate	numeric	16
+temp_tlog_staging_orderpayments_ct	payment_type_name	character varying	17
+temp_tlog_staging_orderpayments_ct	guid	uuid	18
+temp_tlog_staging_orderpayments_ct	store_id	character varying	19
+temp_tlog_staging_orderpayments_ct	status	character varying	20
+temp_tlog_staging_orderpayments_ct	error_message	character varying	21
+temp_tlog_staging_orderpayments_etl	id	uuid	1
+temp_tlog_staging_orderpayments_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpayments_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpayments_etl	created_by	character varying	4
+temp_tlog_staging_orderpayments_etl	updated_by	character varying	5
+temp_tlog_staging_orderpayments_etl	execution_id	uuid	6
+temp_tlog_staging_orderpayments_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderpayments_etl	order_id	bigint	8
+temp_tlog_staging_orderpayments_etl	finish_on	timestamp without time zone	9
+temp_tlog_staging_orderpayments_etl	end_day	timestamp without time zone	10
+temp_tlog_staging_orderpayments_etl	payment_type_id	smallint	11
+temp_tlog_staging_orderpayments_etl	payment_amount	numeric	12
+temp_tlog_staging_orderpayments_etl	gratuity	numeric	13
+temp_tlog_staging_orderpayments_etl	penny_rounded	numeric	14
+temp_tlog_staging_orderpayments_etl	use_penny_rounding	boolean	15
+temp_tlog_staging_orderpayments_etl	exchange_rate	numeric	16
+temp_tlog_staging_orderpayments_etl	payment_type_name	character varying	17
+temp_tlog_staging_orderpayments_etl	guid	uuid	18
+temp_tlog_staging_orderpayments_etl	store_id	character varying	19
+temp_tlog_staging_orderpayments_etl	status	character varying	20
+temp_tlog_staging_orderpayments_etl	error_message	character varying	21
+temp_tlog_staging_orderpayments_trickle_etl	id	uuid	1
+temp_tlog_staging_orderpayments_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orderpayments_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orderpayments_trickle_etl	created_by	character varying	4
+temp_tlog_staging_orderpayments_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_orderpayments_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_orderpayments_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_orderpayments_trickle_etl	order_id	bigint	8
+temp_tlog_staging_orderpayments_trickle_etl	finish_on	timestamp without time zone	9
+temp_tlog_staging_orderpayments_trickle_etl	end_day	timestamp without time zone	10
+temp_tlog_staging_orderpayments_trickle_etl	payment_type_id	smallint	11
+temp_tlog_staging_orderpayments_trickle_etl	payment_amount	numeric	12
+temp_tlog_staging_orderpayments_trickle_etl	gratuity	numeric	13
+temp_tlog_staging_orderpayments_trickle_etl	penny_rounded	numeric	14
+temp_tlog_staging_orderpayments_trickle_etl	use_penny_rounding	boolean	15
+temp_tlog_staging_orderpayments_trickle_etl	exchange_rate	numeric	16
+temp_tlog_staging_orderpayments_trickle_etl	payment_type_name	character varying	17
+temp_tlog_staging_orderpayments_trickle_etl	guid	uuid	18
+temp_tlog_staging_orderpayments_trickle_etl	store_id	character varying	19
+temp_tlog_staging_orderpayments_trickle_etl	status	character varying	20
+temp_tlog_staging_orderpayments_trickle_etl	error_message	character varying	21
+temp_tlog_staging_orders_ct	id	uuid	1
+temp_tlog_staging_orders_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_orders_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_orders_ct	created_by	character varying	4
+temp_tlog_staging_orders_ct	updated_by	character varying	5
+temp_tlog_staging_orders_ct	execution_id	uuid	6
+temp_tlog_staging_orders_ct	execution_file_id	uuid	7
+temp_tlog_staging_orders_ct	order_id	bigint	8
+temp_tlog_staging_orders_ct	start_on	timestamp without time zone	9
+temp_tlog_staging_orders_ct	finish_on	timestamp without time zone	10
+temp_tlog_staging_orders_ct	order_type	smallint	11
+temp_tlog_staging_orders_ct	order_type_name	USER-DEFINED	12
+temp_tlog_staging_orders_ct	tax	numeric	13
+temp_tlog_staging_orders_ct	subtotal	numeric	14
+temp_tlog_staging_orders_ct	grand_total	numeric	15
+temp_tlog_staging_orders_ct	total	numeric	16
+temp_tlog_staging_orders_ct	discount	numeric	17
+temp_tlog_staging_orders_ct	combo_saved	numeric	18
+temp_tlog_staging_orders_ct	is_refund	boolean	19
+temp_tlog_staging_orders_ct	end_day	timestamp without time zone	20
+temp_tlog_staging_orders_ct	gross	numeric	21
+temp_tlog_staging_orders_ct	net	numeric	22
+temp_tlog_staging_orders_ct	receipt_number	integer	23
+temp_tlog_staging_orders_ct	order_number_id	integer	24
+temp_tlog_staging_orders_ct	start_person	character varying	25
+temp_tlog_staging_orders_ct	close_person	character varying	26
+temp_tlog_staging_orders_ct	start_person_employee_id	integer	27
+temp_tlog_staging_orders_ct	close_person_employee_id	integer	28
+temp_tlog_staging_orders_ct	third_party_order_id	character varying	29
+temp_tlog_staging_orders_ct	target_computer	character varying	30
+temp_tlog_staging_orders_ct	guid	uuid	31
+temp_tlog_staging_orders_ct	store_id	character varying	32
+temp_tlog_staging_orders_ct	status	character varying	33
+temp_tlog_staging_orders_ct	error_message	character varying	34
+temp_tlog_staging_orders_etl	id	uuid	1
+temp_tlog_staging_orders_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orders_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orders_etl	created_by	character varying	4
+temp_tlog_staging_orders_etl	updated_by	character varying	5
+temp_tlog_staging_orders_etl	execution_id	uuid	6
+temp_tlog_staging_orders_etl	execution_file_id	uuid	7
+temp_tlog_staging_orders_etl	order_id	bigint	8
+temp_tlog_staging_orders_etl	start_on	timestamp without time zone	9
+temp_tlog_staging_orders_etl	finish_on	timestamp without time zone	10
+temp_tlog_staging_orders_etl	order_type	smallint	11
+temp_tlog_staging_orders_etl	order_type_name	USER-DEFINED	12
+temp_tlog_staging_orders_etl	tax	numeric	13
+temp_tlog_staging_orders_etl	subtotal	numeric	14
+temp_tlog_staging_orders_etl	grand_total	numeric	15
+temp_tlog_staging_orders_etl	total	numeric	16
+temp_tlog_staging_orders_etl	discount	numeric	17
+temp_tlog_staging_orders_etl	combo_saved	numeric	18
+temp_tlog_staging_orders_etl	is_refund	boolean	19
+temp_tlog_staging_orders_etl	end_day	timestamp without time zone	20
+temp_tlog_staging_orders_etl	gross	numeric	21
+temp_tlog_staging_orders_etl	net	numeric	22
+temp_tlog_staging_orders_etl	receipt_number	integer	23
+temp_tlog_staging_orders_etl	order_number_id	integer	24
+temp_tlog_staging_orders_etl	start_person	character varying	25
+temp_tlog_staging_orders_etl	close_person	character varying	26
+temp_tlog_staging_orders_etl	start_person_employee_id	integer	27
+temp_tlog_staging_orders_etl	close_person_employee_id	integer	28
+temp_tlog_staging_orders_etl	third_party_order_id	character varying	29
+temp_tlog_staging_orders_etl	target_computer	character varying	30
+temp_tlog_staging_orders_etl	guid	uuid	31
+temp_tlog_staging_orders_etl	store_id	character varying	32
+temp_tlog_staging_orders_etl	status	character varying	33
+temp_tlog_staging_orders_etl	error_message	character varying	34
+temp_tlog_staging_orders_trickle_etl	id	uuid	1
+temp_tlog_staging_orders_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_orders_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_orders_trickle_etl	created_by	character varying	4
+temp_tlog_staging_orders_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_orders_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_orders_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_orders_trickle_etl	order_id	bigint	8
+temp_tlog_staging_orders_trickle_etl	start_on	timestamp without time zone	9
+temp_tlog_staging_orders_trickle_etl	finish_on	timestamp without time zone	10
+temp_tlog_staging_orders_trickle_etl	order_type	smallint	11
+temp_tlog_staging_orders_trickle_etl	order_type_name	USER-DEFINED	12
+temp_tlog_staging_orders_trickle_etl	tax	numeric	13
+temp_tlog_staging_orders_trickle_etl	subtotal	numeric	14
+temp_tlog_staging_orders_trickle_etl	grand_total	numeric	15
+temp_tlog_staging_orders_trickle_etl	total	numeric	16
+temp_tlog_staging_orders_trickle_etl	discount	numeric	17
+temp_tlog_staging_orders_trickle_etl	combo_saved	numeric	18
+temp_tlog_staging_orders_trickle_etl	is_refund	boolean	19
+temp_tlog_staging_orders_trickle_etl	end_day	timestamp without time zone	20
+temp_tlog_staging_orders_trickle_etl	gross	numeric	21
+temp_tlog_staging_orders_trickle_etl	net	numeric	22
+temp_tlog_staging_orders_trickle_etl	receipt_number	integer	23
+temp_tlog_staging_orders_trickle_etl	order_number_id	integer	24
+temp_tlog_staging_orders_trickle_etl	start_person	character varying	25
+temp_tlog_staging_orders_trickle_etl	close_person	character varying	26
+temp_tlog_staging_orders_trickle_etl	start_person_employee_id	integer	27
+temp_tlog_staging_orders_trickle_etl	close_person_employee_id	integer	28
+temp_tlog_staging_orders_trickle_etl	third_party_order_id	character varying	29
+temp_tlog_staging_orders_trickle_etl	target_computer	character varying	30
+temp_tlog_staging_orders_trickle_etl	guid	uuid	31
+temp_tlog_staging_orders_trickle_etl	store_id	character varying	32
+temp_tlog_staging_orders_trickle_etl	status	character varying	33
+temp_tlog_staging_orders_trickle_etl	error_message	character varying	34
+temp_tlog_staging_ordertaxes_ct	id	uuid	1
+temp_tlog_staging_ordertaxes_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_ordertaxes_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordertaxes_ct	created_by	character varying	4
+temp_tlog_staging_ordertaxes_ct	updated_by	character varying	5
+temp_tlog_staging_ordertaxes_ct	execution_id	uuid	6
+temp_tlog_staging_ordertaxes_ct	execution_file_id	uuid	7
+temp_tlog_staging_ordertaxes_ct	order_id	bigint	8
+temp_tlog_staging_ordertaxes_ct	taxation_detail_id	integer	9
+temp_tlog_staging_ordertaxes_ct	value	numeric	10
+temp_tlog_staging_ordertaxes_ct	name	character varying	11
+temp_tlog_staging_ordertaxes_ct	finish_on	timestamp without time zone	12
+temp_tlog_staging_ordertaxes_ct	end_day	timestamp without time zone	13
+temp_tlog_staging_ordertaxes_ct	guid	uuid	14
+temp_tlog_staging_ordertaxes_ct	store_id	character varying	15
+temp_tlog_staging_ordertaxes_ct	status	character varying	16
+temp_tlog_staging_ordertaxes_ct	error_message	character varying	17
+temp_tlog_staging_ordertaxes_etl	id	uuid	1
+temp_tlog_staging_ordertaxes_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_ordertaxes_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordertaxes_etl	created_by	character varying	4
+temp_tlog_staging_ordertaxes_etl	updated_by	character varying	5
+temp_tlog_staging_ordertaxes_etl	execution_id	uuid	6
+temp_tlog_staging_ordertaxes_etl	execution_file_id	uuid	7
+temp_tlog_staging_ordertaxes_etl	order_id	bigint	8
+temp_tlog_staging_ordertaxes_etl	taxation_detail_id	integer	9
+temp_tlog_staging_ordertaxes_etl	value	numeric	10
+temp_tlog_staging_ordertaxes_etl	name	character varying	11
+temp_tlog_staging_ordertaxes_etl	finish_on	timestamp without time zone	12
+temp_tlog_staging_ordertaxes_etl	end_day	timestamp without time zone	13
+temp_tlog_staging_ordertaxes_etl	guid	uuid	14
+temp_tlog_staging_ordertaxes_etl	store_id	character varying	15
+temp_tlog_staging_ordertaxes_etl	status	character varying	16
+temp_tlog_staging_ordertaxes_etl	error_message	character varying	17
+temp_tlog_staging_ordertaxes_trickle_etl	id	uuid	1
+temp_tlog_staging_ordertaxes_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_ordertaxes_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordertaxes_trickle_etl	created_by	character varying	4
+temp_tlog_staging_ordertaxes_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_ordertaxes_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_ordertaxes_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_ordertaxes_trickle_etl	order_id	bigint	8
+temp_tlog_staging_ordertaxes_trickle_etl	taxation_detail_id	integer	9
+temp_tlog_staging_ordertaxes_trickle_etl	value	numeric	10
+temp_tlog_staging_ordertaxes_trickle_etl	name	character varying	11
+temp_tlog_staging_ordertaxes_trickle_etl	finish_on	timestamp without time zone	12
+temp_tlog_staging_ordertaxes_trickle_etl	end_day	timestamp without time zone	13
+temp_tlog_staging_ordertaxes_trickle_etl	guid	uuid	14
+temp_tlog_staging_ordertaxes_trickle_etl	store_id	character varying	15
+temp_tlog_staging_ordertaxes_trickle_etl	status	character varying	16
+temp_tlog_staging_ordertaxes_trickle_etl	error_message	character varying	17
+temp_tlog_staging_ordervoids_ct	id	uuid	1
+temp_tlog_staging_ordervoids_ct	created_at	timestamp without time zone	2
+temp_tlog_staging_ordervoids_ct	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordervoids_ct	created_by	character varying	4
+temp_tlog_staging_ordervoids_ct	updated_by	character varying	5
+temp_tlog_staging_ordervoids_ct	execution_id	uuid	6
+temp_tlog_staging_ordervoids_ct	execution_file_id	uuid	7
+temp_tlog_staging_ordervoids_ct	void_id	bigint	8
+temp_tlog_staging_ordervoids_ct	menu_item_id	integer	9
+temp_tlog_staging_ordervoids_ct	item_name	character varying	10
+temp_tlog_staging_ordervoids_ct	item_qty	integer	11
+temp_tlog_staging_ordervoids_ct	amount	numeric	12
+temp_tlog_staging_ordervoids_ct	operate_time	timestamp without time zone	13
+temp_tlog_staging_ordervoids_ct	terminal_name	character varying	14
+temp_tlog_staging_ordervoids_ct	order_id	bigint	15
+temp_tlog_staging_ordervoids_ct	sequence	integer	16
+temp_tlog_staging_ordervoids_ct	menu_item_type	character varying	17
+temp_tlog_staging_ordervoids_ct	end_day	timestamp without time zone	18
+temp_tlog_staging_ordervoids_ct	tpn	character varying	19
+temp_tlog_staging_ordervoids_ct	persistent_tpn	character varying	20
+temp_tlog_staging_ordervoids_ct	price_backup	numeric	21
+temp_tlog_staging_ordervoids_ct	plu	integer	22
+temp_tlog_staging_ordervoids_ct	value_added_base_price	numeric	23
+temp_tlog_staging_ordervoids_ct	alc_price	numeric	24
+temp_tlog_staging_ordervoids_ct	alc_max_price	numeric	25
+temp_tlog_staging_ordervoids_ct	alc_remaining_price	numeric	26
+temp_tlog_staging_ordervoids_ct	persistent_plu	integer	27
+temp_tlog_staging_ordervoids_ct	employee_id	integer	28
+temp_tlog_staging_ordervoids_ct	sub_department_id	integer	29
+temp_tlog_staging_ordervoids_ct	guid	uuid	30
+temp_tlog_staging_ordervoids_ct	store_id	character varying	31
+temp_tlog_staging_ordervoids_ct	status	character varying	32
+temp_tlog_staging_ordervoids_ct	error_message	character varying	33
+temp_tlog_staging_ordervoids_etl	id	uuid	1
+temp_tlog_staging_ordervoids_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_ordervoids_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordervoids_etl	created_by	character varying	4
+temp_tlog_staging_ordervoids_etl	updated_by	character varying	5
+temp_tlog_staging_ordervoids_etl	execution_id	uuid	6
+temp_tlog_staging_ordervoids_etl	execution_file_id	uuid	7
+temp_tlog_staging_ordervoids_etl	void_id	bigint	8
+temp_tlog_staging_ordervoids_etl	menu_item_id	integer	9
+temp_tlog_staging_ordervoids_etl	item_name	character varying	10
+temp_tlog_staging_ordervoids_etl	item_qty	integer	11
+temp_tlog_staging_ordervoids_etl	amount	numeric	12
+temp_tlog_staging_ordervoids_etl	operate_time	timestamp without time zone	13
+temp_tlog_staging_ordervoids_etl	terminal_name	character varying	14
+temp_tlog_staging_ordervoids_etl	order_id	bigint	15
+temp_tlog_staging_ordervoids_etl	sequence	integer	16
+temp_tlog_staging_ordervoids_etl	menu_item_type	character varying	17
+temp_tlog_staging_ordervoids_etl	end_day	timestamp without time zone	18
+temp_tlog_staging_ordervoids_etl	tpn	character varying	19
+temp_tlog_staging_ordervoids_etl	persistent_tpn	character varying	20
+temp_tlog_staging_ordervoids_etl	price_backup	numeric	21
+temp_tlog_staging_ordervoids_etl	plu	integer	22
+temp_tlog_staging_ordervoids_etl	value_added_base_price	numeric	23
+temp_tlog_staging_ordervoids_etl	alc_price	numeric	24
+temp_tlog_staging_ordervoids_etl	alc_max_price	numeric	25
+temp_tlog_staging_ordervoids_etl	alc_remaining_price	numeric	26
+temp_tlog_staging_ordervoids_etl	persistent_plu	integer	27
+temp_tlog_staging_ordervoids_etl	employee_id	integer	28
+temp_tlog_staging_ordervoids_etl	sub_department_id	integer	29
+temp_tlog_staging_ordervoids_etl	guid	uuid	30
+temp_tlog_staging_ordervoids_etl	store_id	character varying	31
+temp_tlog_staging_ordervoids_etl	status	character varying	32
+temp_tlog_staging_ordervoids_etl	error_message	character varying	33
+temp_tlog_staging_ordervoids_trickle_etl	id	uuid	1
+temp_tlog_staging_ordervoids_trickle_etl	created_at	timestamp without time zone	2
+temp_tlog_staging_ordervoids_trickle_etl	updated_at	timestamp without time zone	3
+temp_tlog_staging_ordervoids_trickle_etl	created_by	character varying	4
+temp_tlog_staging_ordervoids_trickle_etl	updated_by	character varying	5
+temp_tlog_staging_ordervoids_trickle_etl	execution_id	uuid	6
+temp_tlog_staging_ordervoids_trickle_etl	execution_file_id	uuid	7
+temp_tlog_staging_ordervoids_trickle_etl	void_id	bigint	8
+temp_tlog_staging_ordervoids_trickle_etl	menu_item_id	integer	9
+temp_tlog_staging_ordervoids_trickle_etl	item_name	character varying	10
+temp_tlog_staging_ordervoids_trickle_etl	item_qty	integer	11
+temp_tlog_staging_ordervoids_trickle_etl	amount	numeric	12
+temp_tlog_staging_ordervoids_trickle_etl	operate_time	timestamp without time zone	13
+temp_tlog_staging_ordervoids_trickle_etl	terminal_name	character varying	14
+temp_tlog_staging_ordervoids_trickle_etl	order_id	bigint	15
+temp_tlog_staging_ordervoids_trickle_etl	sequence	integer	16
+temp_tlog_staging_ordervoids_trickle_etl	menu_item_type	character varying	17
+temp_tlog_staging_ordervoids_trickle_etl	end_day	timestamp without time zone	18
+temp_tlog_staging_ordervoids_trickle_etl	tpn	character varying	19
+temp_tlog_staging_ordervoids_trickle_etl	persistent_tpn	character varying	20
+temp_tlog_staging_ordervoids_trickle_etl	price_backup	numeric	21
+temp_tlog_staging_ordervoids_trickle_etl	plu	integer	22
+temp_tlog_staging_ordervoids_trickle_etl	value_added_base_price	numeric	23
+temp_tlog_staging_ordervoids_trickle_etl	alc_price	numeric	24
+temp_tlog_staging_ordervoids_trickle_etl	alc_max_price	numeric	25
+temp_tlog_staging_ordervoids_trickle_etl	alc_remaining_price	numeric	26
+temp_tlog_staging_ordervoids_trickle_etl	persistent_plu	integer	27
+temp_tlog_staging_ordervoids_trickle_etl	employee_id	integer	28
+temp_tlog_staging_ordervoids_trickle_etl	sub_department_id	integer	29
+temp_tlog_staging_ordervoids_trickle_etl	guid	uuid	30
+temp_tlog_staging_ordervoids_trickle_etl	store_id	character varying	31
+temp_tlog_staging_ordervoids_trickle_etl	status	character varying	32
+temp_tlog_staging_ordervoids_trickle_etl	error_message	character varying	33
+temp_vena_budget_staging	id	uuid	1
+temp_vena_budget_staging	created_timestamp	timestamp with time zone	2
+temp_vena_budget_staging	updated_timestamp	timestamp with time zone	3
+temp_vena_budget_staging	created_by	character varying	4
+temp_vena_budget_staging	updated_by	character varying	5
+temp_vena_budget_staging	execution_id	uuid	6
+temp_vena_budget_staging	execution_file_id	uuid	7
+temp_vena_budget_staging	account	character varying	8
+temp_vena_budget_staging	entity	character varying	9
+temp_vena_budget_staging	department	character varying	10
+temp_vena_budget_staging	location_id	character varying	11
+temp_vena_budget_staging	abbr_brand	character varying	12
+temp_vena_budget_staging	hour	character varying	13
+temp_vena_budget_staging	day	character varying	14
+temp_vena_budget_staging	year	character varying	15
+temp_vena_budget_staging	period	character varying	16
+temp_vena_budget_staging	scenario	character varying	17
+temp_vena_budget_staging	currency	character varying	18
+temp_vena_budget_staging	measure	character varying	19
+temp_vena_budget_staging	value	numeric	20
+temp_vena_budget_staging	time_period	character varying	21
+temp_vena_budget_staging	time_period_date	character varying	22
+temp_vena_budget_staging	status	character varying	23
+temp_vena_budget_staging	error_message	character varying	24
+temp_weekly_cogs_staging	id	uuid	1
+temp_weekly_cogs_staging	created_timestamp	timestamp with time zone	2
+temp_weekly_cogs_staging	updated_timestamp	timestamp with time zone	3
+temp_weekly_cogs_staging	created_by	character varying	4
+temp_weekly_cogs_staging	updated_by	character varying	5
+temp_weekly_cogs_staging	execution_id	uuid	6
+temp_weekly_cogs_staging	execution_file_id	uuid	7
+temp_weekly_cogs_staging	parsed_data	jsonb	8
+temp_weekly_cogs_staging	status	character varying	9
+temp_weekly_cogs_staging	error_message	character varying	10
+temp_weekly_cogs_staging	processed_at	timestamp without time zone	11
+v_vena_car_count_daily_load	_Account	text	1
+v_vena_car_count_daily_load	_Entity	integer	2
+v_vena_car_count_daily_load	_Department	text	3
+v_vena_car_count_daily_load	_Location	character varying	4
+v_vena_car_count_daily_load	_Brand	text	5
+v_vena_car_count_daily_load	_Date	date	6
+v_vena_car_count_daily_load	_Plaza	bigint	7
+v_vena_car_count_daily_load	_Gas	bigint	8
+v_vena_car_count_daily_load	_Highway	bigint	9
+v_vena_cogs_weekly_load	_Account	text	1
+v_vena_cogs_weekly_load	_Entity	integer	2
+v_vena_cogs_weekly_load	_Department	text	3
+v_vena_cogs_weekly_load	_Location	character varying	4
+v_vena_cogs_weekly_load	_Brand	character varying	5
+v_vena_cogs_weekly_load	_Date	date	6
+v_vena_cogs_weekly_load	_Value	numeric	7
+v_vena_inventory_weekly_load	_Account	text	1
+v_vena_inventory_weekly_load	_Entity	integer	2
+v_vena_inventory_weekly_load	_Department	text	3
+v_vena_inventory_weekly_load	_Location	character varying	4
+v_vena_inventory_weekly_load	_Brand	character varying	5
+v_vena_inventory_weekly_load	_Date	date	6
+v_vena_inventory_weekly_load	_Value	numeric	7
+v_vena_labour_daily_load	_Account	text	1
+v_vena_labour_daily_load	_Entity	integer	2
+v_vena_labour_daily_load	_Department	text	3
+v_vena_labour_daily_load	_Location	character varying	4
+v_vena_labour_daily_load	_Brand	character varying	5
+v_vena_labour_daily_load	_Date	date	6
+v_vena_labour_daily_load	_Value	numeric	7
+v_vena_people_count_daily_load	_Account	text	1
+v_vena_people_count_daily_load	_Entity	integer	2
+v_vena_people_count_daily_load	_Department	text	3
+v_vena_people_count_daily_load	_Location	character varying	4
+v_vena_people_count_daily_load	_Brand	text	5
+v_vena_people_count_daily_load	_Date	date	6
+v_vena_people_count_daily_load	_Value	bigint	7
+v_vena_receipts_weekly_load	_Account	text	1
+v_vena_receipts_weekly_load	_Entity	integer	2
+v_vena_receipts_weekly_load	_Department	text	3
+v_vena_receipts_weekly_load	_Location	character varying	4
+v_vena_receipts_weekly_load	_Brand	character varying	5
+v_vena_receipts_weekly_load	_Date	date	6
+v_vena_receipts_weekly_load	_Value	numeric	7
+v_vena_sales_hourly_load	_Account	text	1
+v_vena_sales_hourly_load	_Entity	integer	2
+v_vena_sales_hourly_load	_Department	text	3
+v_vena_sales_hourly_load	_Location	character varying	4
+v_vena_sales_hourly_load	_Brand	character varying	5
+v_vena_sales_hourly_load	_Date	date	6
+v_vena_sales_hourly_load	_Hour	integer	7
+v_vena_sales_hourly_load	_Counter	numeric	8
+v_vena_sales_hourly_load	_DT	numeric	9
+v_vena_sales_hourly_load	_Digital	numeric	10
+v_vena_sales_hourly_load	_PBI Value	numeric	11
+v_vena_transactions_hourly_load	_Account	text	1
+v_vena_transactions_hourly_load	_Entity	integer	2
+v_vena_transactions_hourly_load	_Department	text	3
+v_vena_transactions_hourly_load	_Location	character varying	4
+v_vena_transactions_hourly_load	_Brand	character varying	5
+v_vena_transactions_hourly_load	_Date	date	6
+v_vena_transactions_hourly_load	_Hour	integer	7
+v_vena_transactions_hourly_load	_Counter	bigint	8
+v_vena_transactions_hourly_load	_DT	bigint	9
+v_vena_transactions_hourly_load	_Digital	bigint	10
+v_vena_transactions_hourly_load	_PBI Value	bigint	11
+vena_brand_codes	brand_id	character varying	1
+vena_brand_codes	created_by	character varying	2
+vena_brand_codes	updated_by	character varying	3
+vena_brand_codes	created_at	timestamp without time zone	4
+vena_brand_codes	updated_at	timestamp without time zone	5
+vena_brand_codes	brand_code	character varying	6
+vena_budget_region_mapping	id	uuid	1
+vena_budget_region_mapping	created_timestamp	timestamp with time zone	2
+vena_budget_region_mapping	updated_timestamp	timestamp with time zone	3
+vena_budget_region_mapping	created_by	character varying	4
+vena_budget_region_mapping	updated_by	character varying	5
+vena_budget_region_mapping	plaza	character varying	6
+vena_budget_region_mapping	brand	character varying	7
+vena_budget_region_mapping	value	numeric	8
+vena_budget_region_mapping	time_period_date	character varying	9
+vena_budget_region_mapping	host_location_id	character varying	10
+vena_budget_region_mapping	lbrand	character varying	11
+vena_budget_region_mapping	retail_period	character varying	12
+vena_budget_region_mapping	week_of_year	character varying	13
+vena_budget_region_mapping	retail_weeknum	character varying	14
+vena_budget_region_mapping	region	character varying	15
+vena_gross_margin	id	uuid	1
+vena_gross_margin	created_timestamp	timestamp with time zone	2
+vena_gross_margin	updated_timestamp	timestamp with time zone	3
+vena_gross_margin	created_by	character varying	4
+vena_gross_margin	updated_by	character varying	5
+vena_gross_margin	budget_year	integer	6
+vena_gross_margin	Region	character varying	7
+vena_gross_margin	Location	character varying	8
+vena_gross_margin	Brand	character varying	9
+vena_gross_margin	value	double precision	10
+vena_gross_margin	TimePeriod	character varying	11
+vena_gross_margin	TimePeriod_Date	date	12
+vena_gross_margin	HostLocationID	smallint	13
+vena_labour_hours	id	uuid	1
+vena_labour_hours	created_timestamp	timestamp with time zone	2
+vena_labour_hours	updated_timestamp	timestamp with time zone	3
+vena_labour_hours	created_by	character varying	4
+vena_labour_hours	updated_by	character varying	5
+vena_labour_hours	budget_year	integer	6
+vena_labour_hours	Region	character varying	7
+vena_labour_hours	Location	character varying	8
+vena_labour_hours	Brand	character varying	9
+vena_labour_hours	value	double precision	10
+vena_labour_hours	TimePeriod	date	11
+vena_labour_hours	TimePeriod_Date	date	12
+vena_labour_hours	HostLocationID	smallint	13
+vena_labour_hours_dump	id	uuid	1
+vena_labour_hours_dump	created_timestamp	timestamp with time zone	2
+vena_labour_hours_dump	updated_timestamp	timestamp with time zone	3
+vena_labour_hours_dump	created_by	character varying	4
+vena_labour_hours_dump	updated_by	character varying	5
+vena_labour_hours_dump	budget_year	integer	6
+vena_labour_hours_dump	Region	character varying	7
+vena_labour_hours_dump	Location	character varying	8
+vena_labour_hours_dump	Brand	character varying	9
+vena_labour_hours_dump	value	double precision	10
+vena_labour_hours_dump	TimePeriod	date	11
+vena_labour_hours_dump	TimePeriod_Date	date	12
+vena_labour_hours_dump	HostLocationID	smallint	13
+vena_labour_hours_dump_1	id	uuid	1
+vena_labour_hours_dump_1	created_timestamp	timestamp with time zone	2
+vena_labour_hours_dump_1	updated_timestamp	timestamp with time zone	3
+vena_labour_hours_dump_1	created_by	character varying	4
+vena_labour_hours_dump_1	updated_by	character varying	5
+vena_labour_hours_dump_1	budget_year	integer	6
+vena_labour_hours_dump_1	Region	character varying	7
+vena_labour_hours_dump_1	Location	character varying	8
+vena_labour_hours_dump_1	Brand	character varying	9
+vena_labour_hours_dump_1	value	double precision	10
+vena_labour_hours_dump_1	TimePeriod	date	11
+vena_labour_hours_dump_1	TimePeriod_Date	date	12
+vena_labour_hours_dump_1	HostLocationID	smallint	13
+vena_plaza_mapping	location_id	character varying	1
+vena_plaza_mapping	created_by	character varying	2
+vena_plaza_mapping	updated_by	character varying	3
+vena_plaza_mapping	created_at	timestamp without time zone	4
+vena_plaza_mapping	updated_at	timestamp without time zone	5
+vena_plaza_mapping	plaza_code	character varying	6
+vena_plaza_mapping	plaza_name	character varying	7
+vena_plaza_mapping	waiv_plaza_name_reference	character varying	8
+vena_sales	id	uuid	1
+vena_sales	created_timestamp	timestamp with time zone	2
+vena_sales	updated_timestamp	timestamp with time zone	3
+vena_sales	created_by	character varying	4
+vena_sales	updated_by	character varying	5
+vena_sales	budget_year	integer	6
+vena_sales	Region	character varying	7
+vena_sales	Location	character varying	8
+vena_sales	Brand	character varying	9
+vena_sales	value	numeric	10
+vena_sales	TimePeriod	character varying	11
+vena_sales	TimePeriod_Date	date	12
+vena_sales	HostLocationID	smallint	13
+vena_transactions	id	uuid	1
+vena_transactions	created_timestamp	timestamp with time zone	2
+vena_transactions	updated_timestamp	timestamp with time zone	3
+vena_transactions	created_by	character varying	4
+vena_transactions	updated_by	character varying	5
+vena_transactions	budget_year	integer	6
+vena_transactions	Region	character varying	7
+vena_transactions	Location	character varying	8
+vena_transactions	Brand	character varying	9
+vena_transactions	value	double precision	10
+vena_transactions	TimePeriod	date	11
+vena_transactions	TimePeriod_Date	date	12
+vena_transactions	HostLocationID	smallint	13
+weekly_cogs	id	bigint	1
+weekly_cogs	created_by	character varying	2
+weekly_cogs	updated_by	character varying	3
+weekly_cogs	created_at	timestamp without time zone	4
+weekly_cogs	updated_at	timestamp without time zone	5
+weekly_cogs	loc_code	character varying	6
+weekly_cogs	period	date	7
+weekly_cogs	cogs	numeric	8
+weekly_cogs	end_value	numeric	9
+weekly_cogs	purchase_value	numeric	10
+weekly_cogs_prod_num	product_num	character varying	1
+weekly_cogs_prod_num	created_timestamp	timestamp with time zone	2
+weekly_cogs_prod_num	updated_timestamp	timestamp with time zone	3
+weekly_cogs_prod_num	created_by	character varying	4
+weekly_cogs_prod_num	updated_by	character varying	5
+weekly_cogs_prod_num	product_name	character varying	6
+weekly_cogs_prod_num	category	character varying	7
+weekly_cogs_prod_num	sub_category	character varying	8
+weekly_cogs_prod_num	micro_category	character varying	9
+weekly_cogs_prod_num	inv_unit	character varying	10

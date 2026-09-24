@@ -9,8 +9,9 @@ with a new design, instead of rebuilding each report by hand. Tracked on Jira **
 |---|---|
 | Extract old report structure | Done for **Tender Report** (1 of fewer than 50) |
 | Report catalog database | Done: schema + Tender Report seed, verified locally |
-| Old -> new table mapping | 4 tables, from AG-66, not yet checked against the new DB |
-| Old -> new column mapping | Not started. Needs read access to the new PostgreSQL DEV DB |
+| Old -> new table mapping | 4 tables, confirmed present in the new DB structure |
+| Old -> new column mapping | 19 columns for the Tender Report; 1 (`CTLOCATION` -> `ct_location`) needs a person to confirm |
+| Tender Report queries on PostgreSQL | `reports/tender-report/queries.sql`; syntax and names checked, numbers NOT yet reconciled (no data access) |
 | Output method for new reports | Not decided |
 
 ## Layout
@@ -22,6 +23,8 @@ db/
   setup-local.sh  rebuilds a throwaway local catalog DB from these files
 extracts/<report>/  raw extraction results, one folder per report
 docs/extraction-guide.md  how to extract a report safely (read-only)
+reports/<report>/queries.sql  the report's source queries translated to PostgreSQL
+tests/check_queries.sh  runs a report's queries against an empty copy of the new tables
 ```
 
 ## The catalog
@@ -37,4 +40,8 @@ Structure only: no production data rows are stored in this repo.
 ```bash
 bash db/setup-local.sh
 psql -h /tmp -p 5434 -U postgres -d report_catalog -c "select * from catalog.finding"
+bash tests/check_queries.sh reports/tender-report/queries.sql
 ```
+
+This environment cannot reach the DEV database directly (only HTTPS leaves the sandbox), so the new DB structure
+is loaded from an `information_schema.columns` export in `extracts/new-db/`.
