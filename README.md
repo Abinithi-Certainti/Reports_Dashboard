@@ -12,7 +12,7 @@ with a new design, instead of rebuilding each report by hand. Tracked on Jira **
 | Old -> new table mapping | 4 tables, confirmed present in the new DB structure |
 | Old -> new column mapping | 19 columns for the Tender Report; 1 (`CTLOCATION` -> `ct_location`) needs a person to confirm |
 | Tender Report queries on PostgreSQL | `reports/tender-report/queries.sql`; syntax and names checked, numbers NOT yet reconciled (no data access) |
-| Output method for new reports | Not decided |
+| Output method for new reports | Own website (React + Java report engine) - design in `docs/design/report-engine.md`, waiting for approval |
 
 ## Layout
 
