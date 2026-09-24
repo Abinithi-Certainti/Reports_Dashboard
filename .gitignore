@@ -1,0 +1,8 @@
+# Report files and exports carry real company data; keep them out of the repo
+*.pbix
+*.abf
+*.pdf
+*.png
+# Secrets
+.env
+.env.*
