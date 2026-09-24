@@ -1,0 +1,10 @@
+ID	Name	DataCategory	IsHidden	StorageMode	TableStorage	Expression	ShowAsVariationOnly	IsPrivate
+12	Payment Type Summary	Regular	false	Import	Query1 (12)		false	false
+15	DateTableTemplate_bf5eb258-b90e-40a3-96e1-bdc4605cc713	Regular	true	Import	DateTableTemplate (15)	Calendar(Date(2015,1,1), Date(2015,1,1))	false	true
+6269	Date	Regular	false	Import	Table (6269)	CALENDAR("2019-01-01", TODAY())	false	false
+6327	LocalDateTable_a9ed2af1-8244-479d-84e2-dcaeb2f4847c	Regular	true	Import	LocalDateTable (6327)	Calendar(Date(Year(MIN('Date'[Date])), 1, 1), Date(Year(MAX('Date'[Date])), 12, 31))	true	false
+29332	LOCATION&BRAND	Regular	false	Import	LOCATION BRAND (29332)		false	false
+33977	Cash_Paidout	Regular	true	Import	Cash Paidout (33977)		false	false
+37911	PaymentType Detail	Regular	false	Import	PaymentType (37911)		false	false
+79926	District	Regular	true	Import	District (79926)		false	false
+95455	Report	Regular	false	Import	Table (95455)	Row("Column", BLANK())	false	false

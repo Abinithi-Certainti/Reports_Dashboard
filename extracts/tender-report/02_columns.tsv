@@ -1,0 +1,37 @@
+# Tender Report - columns (from EVALUATE INFO.COLUMNS(), 24 Sep 2026)
+# DataType: 2=Text 6=Whole number 8=Decimal(double) 9=Date/time 1=Automatic
+# Kind: Data=from source, Calculated=DAX column, CalcTable=column of a DAX table
+# Auto date tables (DateTableTemplate_*, LocalDateTable_*) and RowNumber columns omitted
+Table	Column	DataType	Kind	Hidden	SortBy	Expression
+Payment Type Summary	LocationName	Text	Data	true		
+Payment Type Summary	BrandName	Text	Data	true		
+Payment Type Summary	OrderID	Whole number	Data	true		
+Payment Type Summary	Tender Amount	Decimal(double)	Data	true		
+Payment Type Summary	hostlocationid	Text	Data	true		
+Payment Type Summary	LB_name	Text	Data	true		
+Payment Type Summary	Payment Type	Text	Data	false	sequence 2	
+Payment Type Summary	endday	Date/time	Data	true		
+Payment Type Summary	sequence 2	Whole number	Calculated	true		RELATED('PaymentType Detail'[sequence])
+Payment Type Summary	cashdrop	Decimal(double)	Calculated	true		CALCULATE(SUM('Payment Type Summary'[Tender Amount]), 'Payment Type Summary'[Payment Type] = "Cash Drop")
+LOCATION&BRAND	Plaza	Text	Data	false		
+LOCATION&BRAND	Brand	Text	Data	false		
+LOCATION&BRAND	hostlocationid	Whole number	Data	true		
+LOCATION&BRAND	GUID	Text	Data	true		
+LOCATION&BRAND	LOCATIONID&BRAND	Text	Data	false		
+LOCATION&BRAND	CTLOCATION	Text	Data	true		
+LOCATION&BRAND	District Director	Text	Data	false		
+Cash_Paidout	LocationName	Text	Data	true		
+Cash_Paidout	BrandName	Text	Data	true		
+Cash_Paidout	PaymentAmount	Decimal(double)	Data	true		
+Cash_Paidout	LB_name	Text	Data	true		
+Cash_Paidout	endday	Date/time	Data	true		
+Cash_Paidout	PaymentTypeName	Text	Data	true		
+PaymentType Detail	PaymentTypeName	Text	Data	false	sequence	
+PaymentType Detail	sequence	Whole number	Data	true		
+District	Plaza	Text	Data	true		
+District	District	Text	Data	true		
+District	District_Director	Text	Data	false		
+District	hostlocationid	Whole number	Data	false		
+Date	Date	Date/time	CalcTable	false		CALENDAR("2019-01-01", TODAY())
+Date	ex today	Whole number	Calculated	false		'Date'[Date]-MAX('Date'[Date])
+Report	Column	Whole number	CalcTable	false		Row("Column", BLANK())  (placeholder table for measures)
