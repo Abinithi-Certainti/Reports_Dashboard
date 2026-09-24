@@ -119,6 +119,8 @@ const round = (n: number) => Math.round(n * 100) / 100;
 // ---------- validation (same rules and messages as ReportRegistry.validate) ----------
 const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
 const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
+const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard'];
+const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
 const STARTS_WITH_SELECT = /^\s*(--[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*(select|with)\b/i;
 
 function cleanSql(sql: string) {
@@ -153,9 +155,15 @@ function validate(spec: FullSpec, sql: string) {
   const calcs = spec.calculations ?? {};
   for (const [id, c] of Object.entries(calcs)) require(spec.measures[c.of], `calculation ${id} refers to unknown measure ${c.of}`);
   for (const v of spec.visuals ?? []) {
+    require(v?.type && VISUAL_TYPES.includes(v.type), `visual type must be one of ${[...VISUAL_TYPES].sort().join(', ')} (found ${v?.type})`);
+    require(v.span == null || (Number.isInteger(v.span) && v.span >= 1 && v.span <= 12), `visual '${v.title}' span must be 1 to 12`);
+    require(v.limit == null || (Number.isInteger(v.limit) && v.limit >= 1 && v.limit <= 50), `visual '${v.title}' limit must be 1 to 50`);
     for (const d of [...(v.rows ?? []), ...(v.columns ?? [])]) require(spec.dimensions[d], `visual '${v.title}' uses unknown dimension ${d}`);
     for (const val of v.values ?? []) require(spec.measures[val] || calcs[val], `visual '${v.title}' uses unknown value ${val}`);
-    for (const it of v.items ?? []) require(spec.measures[it.measure], `KPI '${it.label}' uses unknown measure ${it.measure}`);
+    for (const it of v.items ?? []) {
+      require(spec.measures[it.measure], `KPI '${it.label}' uses unknown measure ${it.measure}`);
+      require(!it.icon || KPI_ICONS.includes(it.icon), `KPI '${it.label}' icon must be one of ${[...KPI_ICONS].sort().join(', ')}`);
+    }
   }
 }
 

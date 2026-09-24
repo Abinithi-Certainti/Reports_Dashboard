@@ -36,7 +36,7 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
   );
 
   return (
-    <Paper sx={{ p: 2, overflow: 'hidden' }}>
+    <Paper sx={{ p: 2, overflow: 'hidden', height: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
         <Typography variant="h2">{visual.title}</Typography>
         {calcIds.map((c) => (
@@ -75,7 +75,17 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
                 <TableRow key={i}><TableCell colSpan={rowDims.length + values.length}><Skeleton /></TableCell></TableRow>
               ))}
             {rowsQuery.rows?.map((r, i) => (
-              <TableRow key={i} hover>
+              <TableRow
+                key={i}
+                hover
+                sx={{
+                  animation: 'rowIn .45s ease both', animationDelay: `${i * 40}ms`,
+                  '@keyframes rowIn': { from: { opacity: 0, transform: 'translateX(-6px)' }, to: { opacity: 1, transform: 'none' } },
+                  '&:nth-of-type(even)': { bgcolor: tokens.mode === 'light' ? 'rgba(15,23,42,0.018)' : 'rgba(148,163,184,0.03)' },
+                  '& td:first-of-type': { boxShadow: 'inset 3px 0 0 transparent', transition: 'box-shadow .2s ease' },
+                  '&:hover td:first-of-type': { boxShadow: `inset 3px 0 0 ${tokens.accent}` },
+                }}
+              >
                 {rowDims.map((d) => <TableCell key={d} sx={{ fontWeight: 500 }}>{r[d] ?? '(Blank)'}</TableCell>)}
                 {values.map((v) => {
                   const isBar = v === measures[0] && maxOf[v] > 0;
@@ -86,9 +96,9 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
                         <Box
                           aria-hidden
                           sx={{
-                            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', height: 18, borderRadius: '4px',
+                            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', height: 20, borderRadius: '6px',
                             width: `calc(${(share * 100).toFixed(1)}% - 16px)`, minWidth: 2,
-                            background: `linear-gradient(90deg, ${tokens.series1}12, ${tokens.series1Light}${tokens.mode === 'light' ? '38' : '52'})`,
+                            background: `linear-gradient(90deg, ${tokens.series1}10, ${tokens.series1Light}${tokens.mode === 'light' ? '33' : '4d'}, ${tokens.accent2}${tokens.mode === 'light' ? '40' : '66'})`,
                             transition: 'width .6s ease',
                           }}
                         />

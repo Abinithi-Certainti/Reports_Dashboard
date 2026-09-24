@@ -13,7 +13,9 @@ import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { api, isStaticDemo, ReportSummary } from './api';
+import { alpha } from '@mui/material/styles';
 import { ThemeName, useTokens } from './theme';
+import Aurora from './components/Aurora';
 import { useSound } from './sound';
 import { PrefsContext } from './prefs';
 import ReportPage from './ReportPage';
@@ -45,14 +47,14 @@ function NavItem({ href, icon, label, active, badge }: { href: string; icon: JSX
       sx={{
         width: '100%', justifyContent: 'flex-start', gap: 1.5, px: 1.5, py: 1.1, borderRadius: '12px', mb: 0.5,
         color: active ? t.textPrimary : t.textSecondary, fontWeight: active ? 650 : 500, fontSize: '0.92rem',
-        background: active ? (t.mode === 'light' ? '#e8f1fc' : 'rgba(56,189,248,0.10)') : 'transparent',
-        boxShadow: active && t.glow ? `inset 0 0 0 1px rgba(56,189,248,0.35), 0 0 18px -6px ${t.glow}` : 'none',
+        background: active ? `linear-gradient(90deg, ${alpha(t.accent, t.mode === 'light' ? 0.12 : 0.16)}, ${alpha(t.accent2, 0.06)})` : 'transparent',
+        boxShadow: active ? `inset 0 0 0 1px ${alpha(t.accent, t.glow ? 0.35 : 0.18)}${t.glow ? `, 0 0 18px -6px ${t.glow}` : ''}` : 'none',
         position: 'relative', transition: 'background .2s ease, color .2s ease',
-        '&:hover': { background: t.mode === 'light' ? '#f1f5fb' : 'rgba(148,163,184,0.08)', color: t.textPrimary },
+        '&:hover': { background: alpha(t.accent, 0.07), color: t.textPrimary, '& .nav-icon': { transform: 'scale(1.12)' } },
         '&::before': active ? { content: '""', position: 'absolute', left: -12, top: 10, bottom: 10, width: 3, borderRadius: 3, background: t.accent } : {},
       }}
     >
-      <Box sx={{ display: 'grid', placeItems: 'center', color: active ? t.accent : 'inherit' }}>{icon}</Box>
+      <Box className="nav-icon" sx={{ display: 'grid', placeItems: 'center', color: active ? t.accent : 'inherit', transition: 'transform .2s ease' }}>{icon}</Box>
       <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</Box>
       {badge && <Chip size="small" label={badge} sx={{ height: 20, fontSize: '0.68rem', bgcolor: `${t.accent}22`, color: t.accent }} />}
     </ButtonBase>
@@ -80,12 +82,13 @@ export default function App() {
           : <HomePage reports={reports} search={search} />;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+      <Aurora />
       {/* ---------------- sidebar ---------------- */}
       <Box
         component="nav"
         sx={{
-          width: 248, flexShrink: 0, position: 'sticky', top: 0, height: '100vh', p: 2, pl: 2.5, display: { xs: 'none', md: 'flex' },
+          width: 248, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', p: 2, pl: 2.5, display: { xs: 'none', md: 'flex' },
           flexDirection: 'column', background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`,
           transition: 'background .4s ease',
         }}
@@ -95,7 +98,7 @@ export default function App() {
             aria-hidden
             sx={{
               width: 34, height: 34, borderRadius: '11px', display: 'grid', placeItems: 'center',
-              background: `conic-gradient(from 200deg, #38bdf8, #a78bfa, #3987e5, #38bdf8)`,
+              background: `conic-gradient(from 200deg, ${t.accent}, ${t.accent2}, ${t.series1}, ${t.accent})`,
               boxShadow: t.glow ? `0 0 20px ${t.glow}` : 'none',
               animation: 'spin 12s linear infinite', '@keyframes spin': { to: { filter: 'hue-rotate(360deg)' } },
             }}
@@ -139,12 +142,12 @@ export default function App() {
       </Box>
 
       {/* ---------------- main ---------------- */}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
         <Box
           component="header"
           sx={{
             position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: 1.5, px: { xs: 2, md: 3 }, py: 1.5,
-            background: t.mode === 'light' ? 'rgba(243,245,249,0.85)' : 'rgba(7,11,20,0.55)', backdropFilter: 'blur(14px)',
+            background: t.headerBar, backdropFilter: 'blur(14px) saturate(140%)',
             borderBottom: `1px solid ${t.panelBorder}`,
           }}
         >

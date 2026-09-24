@@ -13,15 +13,18 @@ export type KpiItem = {
   include?: Record<string, string[]>;
   exclude?: Record<string, string[]>;
   good_direction?: 'up' | 'down' | null;
+  icon?: 'total' | 'cash' | 'card' | 'paidout' | 'count' | 'store' | 'trend' | null;
 };
 export type Visual = {
-  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line';
+  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard';
   title?: string;
   rows?: string[];
   columns?: string[];
   values?: string[];
   items?: KpiItem[];
   total_row?: boolean;
+  span?: number | null;  // width on a 12-column grid; each type has a default
+  limit?: number | null; // leaderboard: how many rows
 };
 export type Spec = {
   id: string;

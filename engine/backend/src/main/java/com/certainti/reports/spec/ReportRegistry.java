@@ -33,6 +33,8 @@ public class ReportRegistry {
     private static final Pattern REPORT_ID = Pattern.compile("^[a-z0-9][a-z0-9-]{1,60}$");
     private static final Pattern STARTS_WITH_SELECT = Pattern.compile("^\\s*(--[^\\n]*\\n\\s*|/\\*.*?\\*/\\s*)*(select|with)\\b",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard");
+    static final java.util.Set<String> KPI_ICONS = java.util.Set.of("total", "cash", "card", "paidout", "count", "store", "trend");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     private final Map<String, ReportSpec> reports = new ConcurrentSkipListMap<>();
@@ -152,6 +154,10 @@ public class ReportRegistry {
         }
         if (spec.visuals() != null) {
             for (ReportSpec.Visual v : spec.visuals()) {
+                require(v.type() != null && VISUAL_TYPES.contains(v.type()), file,
+                        "visual type must be one of " + String.join(", ", new java.util.TreeSet<>(VISUAL_TYPES)) + " (found " + v.type() + ")");
+                require(v.span() == null || (v.span() >= 1 && v.span() <= 12), file, "visual '" + v.title() + "' span must be 1 to 12");
+                require(v.limit() == null || (v.limit() >= 1 && v.limit() <= 50), file, "visual '" + v.title() + "' limit must be 1 to 50");
                 for (String d : concat(v.rows(), v.columns())) {
                     require(spec.dimensions().containsKey(d), file, "visual '" + v.title() + "' uses unknown dimension " + d);
                 }
@@ -162,8 +168,11 @@ public class ReportRegistry {
                     }
                 }
                 if (v.items() != null) {
-                    v.items().forEach(i -> require(spec.measures().containsKey(i.measure()), file,
-                            "KPI '" + i.label() + "' uses unknown measure " + i.measure()));
+                    v.items().forEach(i -> {
+                        require(spec.measures().containsKey(i.measure()), file, "KPI '" + i.label() + "' uses unknown measure " + i.measure());
+                        require(i.icon() == null || KPI_ICONS.contains(i.icon()), file,
+                                "KPI '" + i.label() + "' icon must be one of " + String.join(", ", new java.util.TreeSet<>(KPI_ICONS)));
+                    });
                 }
             }
         }

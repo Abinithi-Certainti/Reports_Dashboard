@@ -37,14 +37,20 @@ filters:
 visuals:
   - type: kpi
     items:
-      - { label: Total tender amount,     measure: tender_amount }
-      - { label: Cash (after paid-outs),  measure: tender_amount, include: { payment_type: [Cash] } }
-      - { label: Card and other,          measure: tender_amount, exclude: { payment_type: [Cash] } }
-      - { label: Paid-outs,               measure: paidouts, good_direction: down }
+      - { label: Total tender amount,     measure: tender_amount, icon: total }
+      - { label: Cash (after paid-outs),  measure: tender_amount, include: { payment_type: [Cash] }, icon: cash }
+      - { label: Card and other,          measure: tender_amount, exclude: { payment_type: [Cash] }, icon: card }
+      - { label: Paid-outs,               measure: paidouts, good_direction: down, icon: paidout }
   - type: line
     title: Daily tender amount
     rows: [end_day]
     values: [tender_amount]
+    span: 8
+  - type: donut
+    title: Share by brand
+    rows: [brand]
+    values: [tender_amount]
+    span: 4
   - type: table
     title: Selected Locations - Summary
     rows: [payment_type]
@@ -54,6 +60,11 @@ visuals:
     title: Tender amount by payment type
     rows: [payment_type]
     values: [tender_amount]
+  - type: leaderboard
+    title: Top stores
+    rows: [plaza, brand]
+    values: [tender_amount, paidouts]
+    limit: 8
   - type: matrix
     title: All Locations - Detail
     rows: [plaza, brand, payment_type]

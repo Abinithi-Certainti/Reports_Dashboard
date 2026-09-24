@@ -87,17 +87,26 @@ saved in the import folder (`REPORTS_IMPORT_DIR`) so it survives a restart.
 
 | Visual | Settings | Example |
 |---|---|---|
-| `kpi` | number cards with animated value, daily trend, change vs the previous period, `good_direction: up/down` | Total tender amount |
+| `kpi` | number cards with animated value, daily trend, change vs the previous period, `good_direction: up/down`, optional `icon` (total, cash, card, paidout, count, store, trend) | Total tender amount |
 | `line` | one measure over the date field | Daily tender amount |
 | `table` | grouped rows, total row, optional calculation modes | Summary by payment type |
 | `bar` | one measure by one field | Tender amount by payment type |
 | `matrix` | rows by one or more fields, one column per value of another (for example per day), heat shading | Detail by store and day |
+| `donut` | share of one measure by one field, as a ring; total in the centre, slice details on hover | Share by brand |
+| `leaderboard` | groups ranked biggest first, top `limit` (default 8), with a second value under each name | Top stores |
+
+Layout: visuals appear in the order the settings file lists them, on a 12-column grid. `span: 1-12` sets a visual's
+width (defaults: kpi, line, matrix and leaderboard full width; table 5; bar 7; donut 4). On phones every visual is
+full width. The engine refuses an unknown visual type, a `span` outside 1-12, a `limit` outside 1-50, or an unknown
+KPI icon.
 
 Filters: `multi_select` for any field, `date_range` for the date field.
 
 ## 6. Look and feel
 
-- Three themes - **Light**, **Midnight**, **Neon** - switched in the top bar and remembered per browser.
+- Three themes - **Light**, **Midnight**, **Neon** - switched in the top bar and remembered per browser. Each has its
+  own colour set for charts and cards, and a slow-moving background glow.
+- Blocks fade in one after another when a page opens; cards lift and glow on hover; bars and rows grow in.
 - Sound effects for clicks, filters, theme changes and publishing; switch them off with the speaker button.
   Sounds are generated in the browser (no sound files) and never play until the user has clicked.
 - Animations respect the operating system's "reduce motion" setting.

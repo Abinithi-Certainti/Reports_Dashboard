@@ -13,15 +13,21 @@ export type Tokens = {
   bgImage: string;
   panel: string;
   panelSolid: string;
+  panelHighlight: string; // soft light along the top edge of every panel (depth)
   panelBorder: string;
   panelBorderHover: string;
   sidebar: string;
+  headerBar: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
   accent: string;       // interactive accent (buttons, focus, highlights)
-  series1: string;      // chart series colour (data-viz reference palette, series 1, per mode)
+  accent2: string;      // second accent, for gradients
+  series1: string;      // chart series colour (single-series charts)
   series1Light: string; // lighter end of the bar gradient
+  palette: string[];    // categorical colours, in order (donut slices, KPI tiles)
+  aurora: [string, string, string]; // three slow-moving background glows
+  auroraOpacity: number;
   glow: string;         // '' = no glow in this theme
   grid: string;
   headerCell: string;
@@ -32,41 +38,46 @@ export type Tokens = {
 };
 
 const mono = '"JetBrains Mono Variable", ui-monospace, monospace';
+const gridLines = (c: string) => [`linear-gradient(${c} 1px, transparent 1px)`, `linear-gradient(90deg, ${c} 1px, transparent 1px)`].join(',');
 
-// Light: clean white cards on soft grey, like the reference dashboards. Midnight: navy wallboard style.
-// Neon: deep space with glass panels and glow.
+// Light: bright glass on a cool wash. Midnight: deep navy wallboard with a soft aurora.
+// Neon: deep space, glass panels, glow and a moving aurora.
 export const themes: Record<ThemeName, Tokens> = {
   light: {
     name: 'light', label: 'Light', mode: 'light',
-    bg: '#f3f5f9', bgImage: 'none',
-    panel: '#ffffff', panelSolid: '#ffffff', panelBorder: '#e6e9f0', panelBorderHover: '#b9d3f5', sidebar: '#ffffff',
-    textPrimary: '#0f172a', textSecondary: '#5b6475', textMuted: '#8a93a4',
-    accent: '#2a78d6', series1: '#2a78d6', series1Light: '#5b9ce6', glow: '',
-    grid: '#eceff4', headerCell: '#f6f8fb', good: '#0f8a4f', bad: '#c93434', mono, blur: 'none',
+    bg: '#eef2f8', bgImage: 'none',
+    panel: 'rgba(255,255,255,0.86)', panelSolid: '#ffffff', panelHighlight: 'linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0) 40%)',
+    panelBorder: '#e2e7f0', panelBorderHover: '#a9c4f5', sidebar: 'rgba(255,255,255,0.78)', headerBar: 'rgba(238,242,248,0.78)',
+    textPrimary: '#0b1324', textSecondary: '#4e5a70', textMuted: '#8390a5',
+    accent: '#2563eb', accent2: '#7c3aed', series1: '#2563eb', series1Light: '#60a5fa',
+    palette: ['#2563eb', '#7c3aed', '#0891b2', '#db2777', '#d97706', '#059669'],
+    aurora: ['#93c5fd', '#c4b5fd', '#99f6e4'], auroraOpacity: 0.45, glow: '',
+    grid: '#e8ecf3', headerCell: '#f5f7fb', good: '#0f8a4f', bad: '#c93434', mono, blur: 'blur(12px) saturate(160%)',
   },
   midnight: {
     name: 'midnight', label: 'Midnight', mode: 'dark',
-    bg: '#111827', bgImage: 'none',
-    panel: '#1a2334', panelSolid: '#1a2334', panelBorder: 'rgba(148,163,184,0.12)', panelBorderHover: 'rgba(56,189,248,0.40)',
-    sidebar: '#0d1422',
+    bg: '#0a1120', bgImage: 'none',
+    panel: 'rgba(21,30,48,0.82)', panelSolid: '#151e30', panelHighlight: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0) 35%)',
+    panelBorder: 'rgba(148,163,184,0.13)', panelBorderHover: 'rgba(96,165,250,0.45)',
+    sidebar: 'rgba(8,13,26,0.85)', headerBar: 'rgba(10,17,32,0.7)',
     textPrimary: '#f1f5f9', textSecondary: '#a3adbf', textMuted: '#6b7588',
-    accent: '#38bdf8', series1: '#3987e5', series1Light: '#38bdf8', glow: '',
-    grid: 'rgba(148,163,184,0.10)', headerCell: '#151e2e', good: '#34d399', bad: '#f87171', mono, blur: 'none',
+    accent: '#60a5fa', accent2: '#a78bfa', series1: '#3b82f6', series1Light: '#60a5fa',
+    palette: ['#60a5fa', '#a78bfa', '#22d3ee', '#f472b6', '#fbbf24', '#34d399'],
+    aurora: ['#1d4ed8', '#6d28d9', '#0e7490'], auroraOpacity: 0.28, glow: '',
+    grid: 'rgba(148,163,184,0.10)', headerCell: '#121a2b', good: '#34d399', bad: '#f87171', mono, blur: 'blur(10px) saturate(130%)',
   },
   neon: {
     name: 'neon', label: 'Neon', mode: 'dark',
-    bg: '#070b14',
-    bgImage: [
-      'radial-gradient(900px 500px at 12% -10%, rgba(57,135,229,0.22), transparent 60%)',
-      'radial-gradient(700px 420px at 95% 5%, rgba(167,139,250,0.16), transparent 60%)',
-      'linear-gradient(rgba(148,163,184,0.07) 1px, transparent 1px)',
-      'linear-gradient(90deg, rgba(148,163,184,0.07) 1px, transparent 1px)',
-    ].join(','),
-    panel: 'rgba(17,24,39,0.62)', panelSolid: '#0f1623', panelBorder: 'rgba(148,163,184,0.14)', panelBorderHover: 'rgba(56,189,248,0.45)',
-    sidebar: 'rgba(7,11,20,0.72)',
+    bg: '#04060d',
+    bgImage: gridLines('rgba(148,163,184,0.06)'),
+    panel: 'rgba(12,18,32,0.58)', panelSolid: '#0c1220', panelHighlight: 'linear-gradient(180deg, rgba(34,211,238,0.07), rgba(34,211,238,0) 30%)',
+    panelBorder: 'rgba(148,163,184,0.15)', panelBorderHover: 'rgba(34,211,238,0.55)',
+    sidebar: 'rgba(4,6,13,0.7)', headerBar: 'rgba(4,6,13,0.5)',
     textPrimary: '#f1f5f9', textSecondary: '#94a3b8', textMuted: '#64748b',
-    accent: '#38bdf8', series1: '#3987e5', series1Light: '#38bdf8', glow: 'rgba(56,189,248,0.35)',
-    grid: 'rgba(148,163,184,0.10)', headerCell: '#0d1422', good: '#34d399', bad: '#f87171', mono, blur: 'blur(14px) saturate(140%)',
+    accent: '#22d3ee', accent2: '#a78bfa', series1: '#3b82f6', series1Light: '#22d3ee',
+    palette: ['#22d3ee', '#a78bfa', '#f472b6', '#60a5fa', '#facc15', '#4ade80'],
+    aurora: ['#0891b2', '#7c3aed', '#db2777'], auroraOpacity: 0.34, glow: 'rgba(34,211,238,0.35)',
+    grid: 'rgba(148,163,184,0.10)', headerCell: '#0a1020', good: '#34d399', bad: '#f87171', mono, blur: 'blur(16px) saturate(150%)',
   },
 };
 
@@ -76,12 +87,13 @@ export const useTokens = () => useContext(TokensContext);
 export function panelSx(t: Tokens) {
   return {
     background: t.panel,
+    backgroundImage: t.panelHighlight,
     backdropFilter: t.blur,
     border: `1px solid ${t.panelBorder}`,
     borderRadius: '18px',
     boxShadow: t.mode === 'light'
-      ? '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)'
-      : '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 40px -24px rgba(0,0,0,0.7)',
+      ? '0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(30,58,138,0.18)'
+      : '0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 48px -28px rgba(0,0,0,0.8)',
     transition: 'border-color .25s ease, box-shadow .25s ease, transform .25s ease, background-color .4s ease',
   } as const;
 }
@@ -110,7 +122,7 @@ export function buildTheme(t: Tokens): Theme {
           body: {
             backgroundColor: t.bg,
             backgroundImage: t.bgImage,
-            backgroundSize: t.name === 'neon' ? 'auto, auto, 44px 44px, 44px 44px' : undefined,
+            backgroundSize: t.name === 'neon' ? '44px 44px, 44px 44px' : undefined,
             backgroundAttachment: 'fixed',
             transition: 'background-color .4s ease',
           },
@@ -118,13 +130,25 @@ export function buildTheme(t: Tokens): Theme {
           '::-webkit-scrollbar-thumb': { background: alpha(t.textMuted, 0.35), borderRadius: 10 },
           '::-webkit-scrollbar-track': { background: 'transparent' },
           '@media (prefers-reduced-motion: reduce)': {
-            '*, *::before, *::after': { animationDuration: '0.01ms !important', transitionDuration: '0.01ms !important' },
+            '*, *::before, *::after': {
+              animationDuration: '0.01ms !important', animationIterationCount: '1 !important', transitionDuration: '0.01ms !important',
+            },
           },
         },
       },
       MuiPaper: {
         defaultProps: { elevation: 0 },
-        styleOverrides: { root: { ...panelSx(t), backgroundImage: 'none', '&:hover': { borderColor: t.panelBorderHover } } },
+        styleOverrides: {
+          root: {
+            ...panelSx(t),
+            '&:hover': {
+              borderColor: t.panelBorderHover,
+              boxShadow: t.mode === 'light'
+                ? `0 1px 2px rgba(15,23,42,0.04), 0 18px 40px -18px ${alpha(t.accent, 0.35)}`
+                : `0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 48px -28px rgba(0,0,0,0.8), 0 0 0 1px ${alpha(t.accent, 0.12)}, 0 0 32px -12px ${t.glow || alpha(t.accent, 0.35)}`,
+            },
+          },
+        },
       },
       MuiTableCell: {
         styleOverrides: {
@@ -168,6 +192,7 @@ export function chartTheme(t: Tokens) {
   return {
     series1: t.series1,
     series1Light: t.series1Light,
+    palette: t.palette,
     grid: t.grid,
     axisText: t.textSecondary,
     tooltip: {
