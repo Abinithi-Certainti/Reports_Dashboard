@@ -66,4 +66,20 @@ class ImportValidationTest {
         assertThatThrownBy(() -> registry().parse("id: [unclosed", "SELECT 1"))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("not valid YAML");
     }
+
+    @Test
+    void acceptsTheNewVisualTypes() {
+        String ok = YAML.replace("visuals:\n", "visuals:\n"
+                + "  - { type: donut, title: Share, rows: [plaza], values: [amount], span: 4 }\n"
+                + "  - { type: leaderboard, title: Top, rows: [plaza], values: [amount], limit: 5 }\n");
+        assertThat(registry().parse(ok, "SELECT 1 AS amount, 'A' AS plaza").visuals()).hasSize(3);
+    }
+
+    @Test
+    void rejectsAnUnknownVisualTypeOrBadWidth() {
+        assertThatThrownBy(() -> registry().parse(YAML.replace("type: table", "type: pie3d"), "SELECT 1 AS amount, 'A' AS plaza"))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("visual type must be one of");
+        assertThatThrownBy(() -> registry().parse(YAML.replace("type: table,", "type: table, span: 13,"), "SELECT 1 AS amount, 'A' AS plaza"))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("span must be 1 to 12");
+    }
 }

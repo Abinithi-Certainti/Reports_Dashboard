@@ -14,3 +14,6 @@ engine/frontend/*.tsbuildinfo
 *.webm
 *.mp4
 engine/backend/imported-reports/
+engine/frontend/dist-static/
+# Real figures (QA/PROD) - never commit; the repo is public
+demo/private-data/

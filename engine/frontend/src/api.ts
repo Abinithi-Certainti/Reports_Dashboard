@@ -1,3 +1,5 @@
+import { staticApi } from './static/staticApi';
+
 // Talks to the report engine API. The browser only ever sends names from the spec and filter values - never SQL.
 
 export type Dimension = { label: string; type: string | null };
@@ -11,21 +13,25 @@ export type KpiItem = {
   include?: Record<string, string[]>;
   exclude?: Record<string, string[]>;
   good_direction?: 'up' | 'down' | null;
+  icon?: 'total' | 'cash' | 'card' | 'paidout' | 'count' | 'store' | 'trend' | null;
 };
 export type Visual = {
-  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line';
+  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard';
   title?: string;
   rows?: string[];
   columns?: string[];
   values?: string[];
   items?: KpiItem[];
   total_row?: boolean;
+  span?: number | null;  // width on a 12-column grid; each type has a default
+  limit?: number | null; // leaderboard: how many rows
 };
 export type Spec = {
   id: string;
   title: string;
   subtitle?: string;
   sampleDataNotice?: string;
+  dataNoticeTitle?: string; // banner heading; "Sample data." when not set
   dimensions: Record<string, Dimension>;
   measures: Record<string, Measure>;
   calculations: Record<string, Calculation>;
@@ -67,7 +73,7 @@ async function json<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const api = {
+const httpApi = {
   reports: () => fetch('/api/reports').then((r) => json<ReportSummary[]>(r)),
   spec: (id: string) => fetch(`/api/reports/${id}`).then((r) => json<Spec>(r)),
   values: (id: string, dim: string) => fetch(`/api/reports/${id}/values/${dim}`).then((r) => json<string[]>(r)),
@@ -87,3 +93,8 @@ export const api = {
       body: JSON.stringify(body),
     }).then((r) => json<Row[]>(r)),
 };
+
+// VITE_STATIC_DEMO=1 builds the online demo: same calls, answered in the browser from bundled sample data.
+// The flag is fixed at build time, so the normal build does not carry the demo data.
+export const isStaticDemo = import.meta.env.VITE_STATIC_DEMO === '1';
+export const api: typeof httpApi = isStaticDemo ? staticApi : httpApi;

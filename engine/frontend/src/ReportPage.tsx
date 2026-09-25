@@ -9,6 +9,16 @@ import SummaryTable from './components/SummaryTable';
 import BarChartVisual from './components/BarChartVisual';
 import MatrixVisual from './components/MatrixVisual';
 import LineChartVisual from './components/LineChartVisual';
+import DonutVisual from './components/DonutVisual';
+import LeaderboardVisual from './components/LeaderboardVisual';
+import Reveal from './components/Reveal';
+import { Visual } from './api';
+
+/** Default width of each visual on the 12-column grid (a report can override it with `span`). */
+const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12 };
+const COMPONENTS = {
+  table: SummaryTable, bar: BarChartVisual, matrix: MatrixVisual, line: LineChartVisual, donut: DonutVisual, leaderboard: LeaderboardVisual,
+} as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
 export default function ReportPage({ reportId }: { reportId: string }) {
@@ -50,9 +60,6 @@ export default function ReportPage({ reportId }: { reportId: string }) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box>;
   }
 
-  const tables = spec.visuals.filter((v) => v.type === 'table');
-  const bars = spec.visuals.filter((v) => v.type === 'bar');
-
   return (
     <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
       <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
@@ -60,7 +67,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
           <Typography
             variant="h1"
             sx={{
-              background: `linear-gradient(90deg, ${tokens.textPrimary} 30%, ${tokens.accent})`,
+              background: `linear-gradient(90deg, ${tokens.textPrimary} 25%, ${tokens.accent} 70%, ${tokens.accent2})`,
               WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
             }}
           >
@@ -85,28 +92,29 @@ export default function ReportPage({ reportId }: { reportId: string }) {
           variant="outlined"
           sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.08)', borderColor: 'rgba(245,158,11,0.45)', color: tokens.mode === 'light' ? '#92400e' : '#fde68a' }}
         >
-          <strong>Sample data.</strong> {spec.sampleDataNotice}
+          <strong>{spec.dataNoticeTitle ?? 'Sample data.'}</strong> {spec.sampleDataNotice}
         </Alert>
       )}
 
       <FilterBar reportId={reportId} spec={spec} value={filters} onChange={setFilters} onReset={() => setFilters(defaults)} />
 
-      {spec.visuals
-        .filter((v) => v.type === 'kpi')
-        .map((v, i) => <KpiRow key={`kpi-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
-
-      {spec.visuals
-        .filter((v) => v.type === 'line')
-        .map((v, i) => <Box key={`l-${i}`} sx={{ mb: 2 }}><LineChartVisual reportId={reportId} spec={spec} visual={v} base={base} /></Box>)}
-
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: tables.length && bars.length ? '5fr 7fr' : '1fr' }, gap: 2, mb: 2 }}>
-        {tables.map((v, i) => <SummaryTable key={`t-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
-        {bars.map((v, i) => <BarChartVisual key={`b-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
+      {/* Every visual in the order the settings file lists them, on a 12-column grid (one column on phones). */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2, alignItems: 'stretch' }}>
+        {spec.visuals.map((v, i) => {
+          const span = v.span ?? DEFAULT_SPAN[v.type] ?? 12;
+          const body = v.type === 'kpi'
+            ? <KpiRow reportId={reportId} spec={spec} visual={v} base={base} />
+            : (() => {
+              const C = COMPONENTS[v.type];
+              return C ? <C reportId={reportId} spec={spec} visual={v} base={base} /> : null;
+            })();
+          return (
+            <Reveal key={`${v.type}-${i}`} index={i} sx={{ gridColumn: { xs: 'span 12', md: span < 6 ? 'span 6' : 'span 12', lg: `span ${span}` } }}>
+              {body}
+            </Reveal>
+          );
+        })}
       </Box>
-
-      {spec.visuals
-        .filter((v) => v.type === 'matrix')
-        .map((v, i) => <MatrixVisual key={`m-${i}`} reportId={reportId} spec={spec} visual={v} base={base} />)}
     </Container>
   );
 }

@@ -12,8 +12,10 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import { api, ReportSummary } from './api';
+import { api, isStaticDemo, ReportSummary } from './api';
+import { alpha } from '@mui/material/styles';
 import { ThemeName, useTokens } from './theme';
+import Aurora from './components/Aurora';
 import { useSound } from './sound';
 import { PrefsContext } from './prefs';
 import ReportPage from './ReportPage';
@@ -45,14 +47,14 @@ function NavItem({ href, icon, label, active, badge }: { href: string; icon: JSX
       sx={{
         width: '100%', justifyContent: 'flex-start', gap: 1.5, px: 1.5, py: 1.1, borderRadius: '12px', mb: 0.5,
         color: active ? t.textPrimary : t.textSecondary, fontWeight: active ? 650 : 500, fontSize: '0.92rem',
-        background: active ? (t.mode === 'light' ? '#e8f1fc' : 'rgba(56,189,248,0.10)') : 'transparent',
-        boxShadow: active && t.glow ? `inset 0 0 0 1px rgba(56,189,248,0.35), 0 0 18px -6px ${t.glow}` : 'none',
+        background: active ? `linear-gradient(90deg, ${alpha(t.accent, t.mode === 'light' ? 0.12 : 0.16)}, ${alpha(t.accent2, 0.06)})` : 'transparent',
+        boxShadow: active ? `inset 0 0 0 1px ${alpha(t.accent, t.glow ? 0.35 : 0.18)}${t.glow ? `, 0 0 18px -6px ${t.glow}` : ''}` : 'none',
         position: 'relative', transition: 'background .2s ease, color .2s ease',
-        '&:hover': { background: t.mode === 'light' ? '#f1f5fb' : 'rgba(148,163,184,0.08)', color: t.textPrimary },
+        '&:hover': { background: alpha(t.accent, 0.07), color: t.textPrimary, '& .nav-icon': { transform: 'scale(1.12)' } },
         '&::before': active ? { content: '""', position: 'absolute', left: -12, top: 10, bottom: 10, width: 3, borderRadius: 3, background: t.accent } : {},
       }}
     >
-      <Box sx={{ display: 'grid', placeItems: 'center', color: active ? t.accent : 'inherit' }}>{icon}</Box>
+      <Box className="nav-icon" sx={{ display: 'grid', placeItems: 'center', color: active ? t.accent : 'inherit', transition: 'transform .2s ease' }}>{icon}</Box>
       <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</Box>
       {badge && <Chip size="small" label={badge} sx={{ height: 20, fontSize: '0.68rem', bgcolor: `${t.accent}22`, color: t.accent }} />}
     </ButtonBase>
@@ -80,12 +82,13 @@ export default function App() {
           : <HomePage reports={reports} search={search} />;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+      <Aurora />
       {/* ---------------- sidebar ---------------- */}
       <Box
         component="nav"
         sx={{
-          width: 248, flexShrink: 0, position: 'sticky', top: 0, height: '100vh', p: 2, pl: 2.5, display: { xs: 'none', md: 'flex' },
+          width: 248, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', p: 2, pl: 2.5, display: { xs: 'none', md: 'flex' },
           flexDirection: 'column', background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`,
           transition: 'background .4s ease',
         }}
@@ -95,7 +98,7 @@ export default function App() {
             aria-hidden
             sx={{
               width: 34, height: 34, borderRadius: '11px', display: 'grid', placeItems: 'center',
-              background: `conic-gradient(from 200deg, #38bdf8, #a78bfa, #3987e5, #38bdf8)`,
+              background: `conic-gradient(from 200deg, ${t.accent}, ${t.accent2}, ${t.series1}, ${t.accent})`,
               boxShadow: t.glow ? `0 0 20px ${t.glow}` : 'none',
               animation: 'spin 12s linear infinite', '@keyframes spin': { to: { filter: 'hue-rotate(360deg)' } },
             }}
@@ -104,7 +107,7 @@ export default function App() {
           </Box>
           <Box>
             <Typography sx={{ fontWeight: 750, lineHeight: 1.1, color: t.textPrimary }}>Report Engine</Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>Certainti · Reports 2.0</Typography>
+            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Online demo' : 'Certainti · Reports 2.0'}</Typography>
           </Box>
         </Box>
 
@@ -130,21 +133,21 @@ export default function App() {
         </Box>
 
         <Box sx={{ ...{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' } }}>
-          <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>Connected to</Typography>
+          <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Runs in' : 'Connected to'}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: t.good, boxShadow: `0 0 8px ${t.good}` }} />
-            <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary, whiteSpace: 'nowrap' }}>PostgreSQL · read-only</Typography>
+            <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary, whiteSpace: 'nowrap' }}>{isStaticDemo ? 'your browser · no server' : 'PostgreSQL · read-only'}</Typography>
           </Box>
         </Box>
       </Box>
 
       {/* ---------------- main ---------------- */}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
         <Box
           component="header"
           sx={{
             position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: 1.5, px: { xs: 2, md: 3 }, py: 1.5,
-            background: t.mode === 'light' ? 'rgba(243,245,249,0.85)' : 'rgba(7,11,20,0.55)', backdropFilter: 'blur(14px)',
+            background: t.headerBar, backdropFilter: 'blur(14px) saturate(140%)',
             borderBottom: `1px solid ${t.panelBorder}`,
           }}
         >

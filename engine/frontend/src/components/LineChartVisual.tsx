@@ -1,5 +1,5 @@
 import ReactECharts from 'echarts-for-react';
-import { Paper, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Skeleton, Typography } from '@mui/material';
 import { QueryRequest, Spec, Visual } from '../api';
 import { formatCompactCurrency, formatDay, formatValue } from '../format';
 import { useQuery } from '../useQuery';
@@ -44,24 +44,41 @@ export default function LineChartVisual({ reportId, spec, visual, base }: { repo
         smooth: 0.35,
         showSymbol: false,
         symbolSize: 8,
-        lineStyle: { width: 2, color: c.series1Light, shadowColor: t.glow || 'transparent', shadowBlur: t.glow ? 10 : 0 },
-        itemStyle: { color: c.series1Light, borderColor: t.panelSolid, borderWidth: 2 },
+        lineStyle: {
+          width: 2.5, shadowColor: t.glow || 'transparent', shadowBlur: t.glow ? 12 : 0,
+          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: c.series1Light }, { offset: 1, color: t.accent2 }] },
+        },
+        emphasis: { focus: 'series', scale: 1.6 },
+        // A dashed average line, so good and bad days stand out.
+        markLine: {
+          silent: true, symbol: 'none',
+          lineStyle: { type: 'dashed', color: t.textMuted, width: 1 },
+          label: { position: 'insideEndTop', color: t.textSecondary, fontFamily: t.mono, fontSize: 10, formatter: (p: { value: number }) => `avg ${format === 'currency' ? formatCompactCurrency(p.value) : formatValue(Math.round(p.value), format)}` },
+          data: [{ type: 'average' }],
+        },
+        itemStyle: { color: t.accent, borderColor: t.panelSolid, borderWidth: 2 },
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [{ offset: 0, color: `${c.series1Light}40` }, { offset: 1, color: `${c.series1Light}00` }],
           },
         },
-        animationDuration: 1100,
+        animationDuration: 1600,
+        animationEasing: 'cubicOut',
       },
     ],
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
-      {option ? <ReactECharts option={option} style={{ height: 240 }} notMerge /> : <Skeleton variant="rectangular" height={240} />}
+      {/* Grows to the height of its row (for example next to a donut), never below 260px. */}
+      <Box sx={{ flex: 1, minHeight: 260, position: 'relative' }}>
+        {option
+          ? <ReactECharts option={option} style={{ position: 'absolute', inset: 0, height: '100%' }} notMerge />
+          : <Skeleton variant="rectangular" height="100%" />}
+      </Box>
     </Paper>
   );
 }

@@ -40,15 +40,18 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
       {
         type: 'bar',
         data: rows.map((r) => Number(r[measure] ?? 0)),
-        barMaxWidth: 20,
+        barMaxWidth: 18,
+        showBackground: true,
+        backgroundStyle: { color: tokens.mode === 'light' ? 'rgba(15,23,42,0.035)' : 'rgba(148,163,184,0.06)', borderRadius: 9 },
         itemStyle: {
-          borderRadius: [0, 4, 4, 0],
+          borderRadius: 9,
           color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [
-            { offset: 0, color: chartColors.series1 }, { offset: 1, color: chartColors.series1Light }] },
+            { offset: 0, color: chartColors.series1 }, { offset: 0.7, color: chartColors.series1Light }, { offset: 1, color: tokens.accent2 }] },
           shadowColor: tokens.glow || 'transparent', shadowBlur: tokens.glow ? 10 : 0,
         },
-        animationDuration: 900,
+        animationDuration: 1000,
         animationEasing: 'cubicOut',
+        animationDelay: (i: number) => i * 70, // bars grow one after another
         label: {
           show: true,
           position: 'right',
@@ -63,7 +66,7 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, height: '100%' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
       {option ? (

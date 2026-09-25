@@ -54,14 +54,18 @@ public record ReportSpec(
     public record Filter(String dimension, String type, @JsonProperty("default_last_days") Integer defaultLastDays) {
     }
 
+    /**
+     * One block on the page. {@code span} is its width on a 12-column grid (default per type); {@code limit} caps a
+     * leaderboard's rows.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Visual(String type, String title, List<String> rows, List<String> columns, List<String> values,
-                         List<KpiItem> items, @JsonProperty("total_row") Boolean totalRow) {
+                         List<KpiItem> items, @JsonProperty("total_row") Boolean totalRow, Integer span, Integer limit) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record KpiItem(String label, String measure, Map<String, List<String>> include,
                           Map<String, List<String>> exclude,
-                          @JsonProperty("good_direction") String goodDirection) {
+                          @JsonProperty("good_direction") String goodDirection, String icon) {
     }
 }

@@ -24,18 +24,20 @@ filters:
 visuals:
   - type: kpi
     items:
-      - { label: Total paid out,  measure: amount, good_direction: down }
-      - { label: Number of paid-outs, measure: count, good_direction: down }
+      - { label: Total paid out,  measure: amount, good_direction: down, icon: paidout }
+      - { label: Number of paid-outs, measure: count, good_direction: down, icon: count }
   - type: line
     title: Paid out per day
     rows: [end_day]
     values: [amount]
-  - type: bar
+  - type: donut
     title: By reason
     rows: [reason]
     values: [amount]
+    span: 5
   - type: table
     title: By store
     rows: [plaza, brand]
     values: [amount, count]
     total_row: true
+    span: 7
