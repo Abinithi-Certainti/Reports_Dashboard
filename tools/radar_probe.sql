@@ -1,6 +1,6 @@
 -- Radar Car Count (AG-72): what car-count data does the new database hold?
 -- READ-ONLY. Every statement is a SELECT that returns counts, dates or lookup rows - no order or sensor detail.
--- Run each block on QA (kios_etl) as readonly_user and send back the results (copy the grid, or save as CSV).
+-- Run each of the 7 blocks on QA (kios_etl) as readonly_user and send back the results (copy the grid, or save as CSV).
 
 -- 1. Any table, in ANY schema, with vehicle / volume / zone / class columns (the old radar data had these)
 SELECT table_schema, table_name, string_agg(column_name, ', ' ORDER BY ordinal_position) AS matching_columns
@@ -31,12 +31,12 @@ ORDER BY 1;
 SELECT count(*) AS rows, count(DISTINCT location) AS locations, min("timestamp") AS first_time, max("timestamp") AS last_time
 FROM master.car_count;
 
--- 7. car_count: looks like the old people_count (same columns). Which locations and cameras, per day?
+-- 6. car_count: looks like the old people_count (same columns). Which locations and cameras, per day?
 SELECT location, count(DISTINCT camera_id) AS cameras, min("timestamp")::date AS first_day, max("timestamp")::date AS last_day
 FROM master.car_count
 GROUP BY location
 ORDER BY location;
 
--- 6. v_vena_car_count_daily_load (daily view): date range and size
+-- 7. v_vena_car_count_daily_load (daily view): date range and size
 SELECT count(*) AS rows, min("_Date") AS first_day, max("_Date") AS last_day
 FROM master.v_vena_car_count_daily_load;
