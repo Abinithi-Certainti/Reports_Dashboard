@@ -48,16 +48,16 @@ FROM WeeklyCogsProdNum a JOIN (SELECT DISTINCT product_num FROM WeeklyCogs) b ON
 |---|---|---|
 | Unit Price | Unit Price $ | `SUM(unit_price)` |
 | Begin $ | FirstWeek Begin $ | `SUM(begin_value)` for the FIRST retail week in the selected range |
-| Purchase $ | (Purchase value) | `SUM(purchase_value)` |
+| Purchase $ | column used directly | `SUM(purchase_value)` |
 | Adj $ | (see finding 3) | |
-| Var Adj Value | | `SUM(var_adj_value)` |
+| Var Adj Value | column used directly | `SUM(var_adj_value)` |
 | End $ | LastWeek End $ | `SUM(end_value)` for the LAST retail week in the selected range |
 | COGS $ | COGS $ | `SUM(cogs)` |
 | Theocost $ | Theocost $ | `SUM(theo_cost)` |
 | Waste $ | Waste $ | `SUM(waste_value) + SUM(new_inv_adj_value)` |
 | Variance | Variance | `[COGS $] - [Theocost $] - [Waste $]` |
 
-The model has 39 measures. **22 are broken** (State = InvalidExpression): they point at tables that no longer exist
+The model has 40 measures. **23 are broken** (State = InvalidExpression): they point at tables that no longer exist
 (`piranha`, `Market Sale`, `Market Sale-2`, `PLU and product number`) - every Sales, GP, WTD, LW/LLW/LLLW, MTD and YTD
 measure. They are not on this page and should not be migrated.
 
@@ -83,4 +83,4 @@ Arithmetic checked on all 12 plazas and the total:
 4. The Products column "Product Name" was renamed **"heavy cream"** on 2026-07-06 - looks accidental.
 5. Plaza names keep " ON S" for Bainsville and Morrisburg on purpose (the replaces are undone for those two).
 6. A hard-coded fake location "3640-Utility" at Newcastle is added to the plaza list.
-7. 22 broken measures (see above).
+7. 23 broken measures (see above).
