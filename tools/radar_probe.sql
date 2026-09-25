@@ -40,3 +40,20 @@ ORDER BY location;
 -- 7. v_vena_car_count_daily_load (daily view): date range and size
 SELECT count(*) AS rows, min("_Date") AS first_day, max("_Date") AS last_day
 FROM master.v_vena_car_count_daily_load;
+
+-- ===== Detailed Waste Report (AG-74) =====
+-- 8. weekly_cogs: how much data, which weeks (the new table has only cogs, end_value, purchase_value)
+SELECT count(*) AS rows, count(DISTINCT loc_code) AS locations, min(period) AS first_week, max(period) AS last_week
+FROM master.weekly_cogs;
+
+-- 9. temp_weekly_cogs_staging: does parsed_data still hold the full row (waste, theo cost, product...)?
+SELECT status, count(*) AS rows, min(processed_at) AS first_processed, max(processed_at) AS last_processed
+FROM master.temp_weekly_cogs_staging
+GROUP BY status;
+
+-- 10. the field names inside parsed_data (names only, no values)
+SELECT k AS field_name, count(*) AS rows_with_it
+FROM master.temp_weekly_cogs_staging, jsonb_object_keys(parsed_data) AS k
+WHERE jsonb_typeof(parsed_data) = 'object'
+GROUP BY k
+ORDER BY k;
