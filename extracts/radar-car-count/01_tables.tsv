@@ -1,0 +1,8 @@
+id	name	storage_mode	is_hidden	note
+832634	report data	Import	false	empty holder table for measures (Column1 only)
+833680	POS_ORDERS	Import	false	SQL Server ETLServerSQL - orders counted per plaza / day / hour
+1980790	Radar	Import	false	MySQL 52.138.56.151:3306 onroutenew.smats_raw - radar vehicle counts
+1986922	Plaza	Import	false	SQL Server - distinct LocationName where ROLLOUT in Yes/Suspended
+1991420	Date	Import	false	SQL Server dbo.date_table - retail calendar, last 12 months up to yesterday
+15	DateTableTemplate_005bd160-...	Import	true	Power BI auto date template (internal)
+1991423..1991444	LocalDateTable_* (8 tables)	Import	true	Power BI auto date tables (internal), one per Date column
