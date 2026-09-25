@@ -1,0 +1,61 @@
+# Detailed Waste Report - spec for the report engine (AG-74).
+# Source of truth for the old report: extracts/waste-report/01_model.md.
+id: waste-report
+title: Detailed Waste Report
+subtitle: Weekly stock, cost and waste by plaza
+dataset: dataset.sql
+
+dimensions:
+  plaza:             { label: Plaza,             column: plaza }
+  brand:             { label: Brand,             column: brand }
+  district_director: { label: District Director, column: district_director }
+  category:          { label: Category,          column: category }
+  item_description:  { label: Item,              column: item_description }
+  period:            { label: Week ending,       column: period, type: date }
+
+# Begin $ and End $ are plain sums: correct for ONE week. Over several weeks the old report takes the first week's
+# begin and the last week's end - the engine needs a first/last-period measure for that (open item on AG-74).
+measures:
+  unit_price:     { label: Unit Price,   sql: "sum(unit_price)",     format: currency }  # summed like the old report; the total has no meaning
+  begin_value:    { label: Begin $,      sql: "sum(begin_value)",    format: currency }
+  purchase_value: { label: Purchase $,   sql: "sum(purchase_value)", format: currency }
+  var_adj_value:  { label: Var Adj $,    sql: "sum(var_adj_value)",  format: currency }
+  end_value:      { label: End $,        sql: "sum(end_value)",      format: currency }
+  transfer_out:   { label: Transfers out $, sql: "sum(transfer_out_value)", format: currency }  # not in the old report; completes COGS
+  cogs:           { label: COGS $,       sql: "sum(cogs)",           format: currency }
+  theo_cost:      { label: Theocost $,   sql: "sum(theo_cost)",      format: currency }
+  waste:          { label: Waste $,      sql: "sum(waste_value) + sum(waste_adj_value)", format: currency }
+  variance:       { label: Variance $,   sql: "sum(cogs) - sum(theo_cost) - sum(waste_value) - sum(waste_adj_value)", format: currency }
+
+filters:
+  - { dimension: district_director, type: multi_select }
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: brand,             type: multi_select }
+  - { dimension: category,          type: multi_select }
+  - { dimension: item_description,  type: multi_select }
+  - { dimension: period,            type: date_range, default_last_days: 7 }
+
+visuals:
+  - type: kpi
+    items:
+      - { label: COGS,               measure: cogs,      icon: total }
+      - { label: Theoretical cost,   measure: theo_cost, icon: trend }
+      - { label: Waste,              measure: waste,     good_direction: down, icon: paidout }
+      - { label: Variance,           measure: variance,  good_direction: down, icon: count }
+  - type: bar
+    title: Variance by plaza
+    rows: [plaza]
+    values: [variance]
+    span: 7
+  - type: leaderboard
+    title: Highest waste
+    rows: [plaza]
+    values: [waste, cogs]
+    limit: 7
+    span: 5
+  - type: table
+    title: Detailed Waste - by plaza
+    rows: [plaza]
+    values: [unit_price, begin_value, purchase_value, waste, var_adj_value, end_value, transfer_out, cogs, theo_cost, variance]
+    total_row: true
+    span: 12

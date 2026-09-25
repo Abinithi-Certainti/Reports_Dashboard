@@ -92,7 +92,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
           variant="outlined"
           sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.08)', borderColor: 'rgba(245,158,11,0.45)', color: tokens.mode === 'light' ? '#92400e' : '#fde68a' }}
         >
-          <strong>Sample data.</strong> {spec.sampleDataNotice}
+          <strong>{spec.dataNoticeTitle ?? 'Sample data.'}</strong> {spec.sampleDataNotice}
         </Alert>
       )}
 

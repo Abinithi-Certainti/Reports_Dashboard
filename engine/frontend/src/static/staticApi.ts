@@ -12,6 +12,13 @@ import tenderMapping from '../../../../reports/tender-report/mapping.json';
 import tenderRows from '../../../../demo/static-data/tender-rows.json';
 import paidoutSql from '../../../../demo/import-example/paidout-report/dataset.sql?raw';
 import paidoutRows from '../../../../demo/static-data/paidout-rows.json';
+import wasteYaml from '../../../../reports/waste-report/report.yaml?raw';
+import wasteSql from '../../../../reports/waste-report/dataset.sql?raw';
+
+// Real figures live in demo/private-data/ (git-ignored - the repository is public). The glob is empty when the
+// folder is absent, so a build from a fresh clone simply leaves the real-data report out.
+const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, DataRow[]>;
+const wasteRows = Object.entries(privateData).find(([path]) => path.endsWith('/waste-rows.json'))?.[1];
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
@@ -24,6 +31,14 @@ type FullSpec = Omit<Spec, 'dimensions' | 'measures' | 'sampleDataNotice'> & {
 type Report = { spec: FullSpec; rows: DataRow[]; builtIn: boolean; yaml: string; sql: string; eval: Record<string, Agg> };
 type Agg = (rows: DataRow[]) => number | null;
 
+/** Banner per report: real-data reports say so plainly; everything else is sample data. */
+const REAL_DATA_NOTICES: Record<string, { title: string; text: string }> = {
+  'waste-report': {
+    title: 'Real QA data.',
+    text: 'Burger King, week ending Saturday 27 June 2026: one total per plaza from the new database (kios_etl, QA), '
+      + 'not yet compared with Power BI. Category, item and district detail are not included in this copy.',
+  },
+};
 const NOTICE = 'All stores, names and amounts on this page are made up. The layout and calculations are real; the numbers are not.';
 const STORE_KEY = 're.imported';
 
@@ -34,6 +49,7 @@ const normalise = (sql: string) => cleanSql(sql).replace(/--[^\n]*/g, '').replac
 const DATASETS: { sql: string; rows: DataRow[] }[] = [
   { sql: normalise(tenderSql), rows: tenderRows as DataRow[] },
   { sql: normalise(paidoutSql), rows: paidoutRows as DataRow[] },
+  ...(wasteRows ? [{ sql: normalise(wasteSql), rows: wasteRows }] : []),
 ];
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
@@ -208,6 +224,14 @@ function register(yaml: string, sql: string, builtIn: boolean) {
   reports.set(p.spec.id, { spec: p.spec, rows: d.rows, eval: d.eval, builtIn, yaml, sql });
 }
 register(tenderYaml, tenderSql, true);
+// A report that fails its checks is left out and logged; it must never stop the other reports from loading.
+if (wasteRows) {
+  try {
+    register(wasteYaml, wasteSql, true);
+  } catch (e) {
+    console.error('waste-report not loaded:', (e as Error).message);
+  }
+}
 
 function loadImported(): { yaml: string; sql: string }[] {
   try {
@@ -355,7 +379,8 @@ function publicSpec(r: Report): Spec {
   const measures: Spec['measures'] = {};
   for (const [id, m] of Object.entries(r.spec.measures)) measures[id] = { label: m.label, format: (m.format ?? null) as Spec['measures'][string]['format'] };
   const { id, title, subtitle, calculations, filters, visuals } = r.spec;
-  return { id, title, subtitle, sampleDataNotice: NOTICE, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
+  const real = REAL_DATA_NOTICES[id];
+  return { id, title, subtitle, sampleDataNotice: real ? real.text : NOTICE, dataNoticeTitle: real ? real.title : undefined, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
 }
 
 // Answers arrive a moment later, like a real request, so loading states still show.

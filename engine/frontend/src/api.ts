@@ -31,6 +31,7 @@ export type Spec = {
   title: string;
   subtitle?: string;
   sampleDataNotice?: string;
+  dataNoticeTitle?: string; // banner heading; "Sample data." when not set
   dimensions: Record<string, Dimension>;
   measures: Record<string, Measure>;
   calculations: Record<string, Calculation>;

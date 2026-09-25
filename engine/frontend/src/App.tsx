@@ -107,7 +107,7 @@ export default function App() {
           </Box>
           <Box>
             <Typography sx={{ fontWeight: 750, lineHeight: 1.1, color: t.textPrimary }}>Report Engine</Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Online demo · sample data' : 'Certainti · Reports 2.0'}</Typography>
+            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Online demo' : 'Certainti · Reports 2.0'}</Typography>
           </Box>
         </Box>
 

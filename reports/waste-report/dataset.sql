@@ -1,5 +1,5 @@
 -- Detailed Waste Report dataset: one row per plaza / brand / product / week, from the new PostgreSQL model.
--- PROTOTYPE SOURCE: the full detail currently exists only in master.temp_weekly_cogs_staging.parsed_data (jsonb);
+-- PROTOTYPE SOURCE: the full detail currently exists only in master.temp_weekly_cogs_staging.parsed_data (jsonb) -
 -- master.weekly_cogs keeps just cogs / end_value / purchase_value and no product (AG-74, decision pending).
 -- The same week can be loaded more than once (QA: 3 identical loads of 2026-06-27), so only the LATEST load of each
 -- week is read - otherwise every number is multiplied by the number of loads.
