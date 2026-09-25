@@ -31,6 +31,12 @@ ORDER BY 1;
 SELECT count(*) AS rows, count(DISTINCT location) AS locations, min("timestamp") AS first_time, max("timestamp") AS last_time
 FROM master.car_count;
 
+-- 7. car_count: looks like the old people_count (same columns). Which locations and cameras, per day?
+SELECT location, count(DISTINCT camera_id) AS cameras, min("timestamp")::date AS first_day, max("timestamp")::date AS last_day
+FROM master.car_count
+GROUP BY location
+ORDER BY location;
+
 -- 6. v_vena_car_count_daily_load (daily view): date range and size
 SELECT count(*) AS rows, min("_Date") AS first_day, max("_Date") AS last_day
 FROM master.v_vena_car_count_daily_load;
