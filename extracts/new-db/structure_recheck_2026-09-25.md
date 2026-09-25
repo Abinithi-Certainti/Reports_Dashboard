@@ -22,3 +22,9 @@ with `NEW_DB_COLUMNS=demo/private-data/master_columns_2026-09-25.tsv bash tests/
 | People Count (AG-73) | guessed car_count holds the camera counts | **correction**: master.people_count (camera_id, location, timestamp, entrance_count) and master.ip_camera (center) exist - the same names as the old MySQL tables; they were in the old file too and were missed |
 | Waste Report (AG-74) | full detail only in staging | weekly_cogs now has it: candidate reports/waste-report/dataset_weekly_cogs.sql; tools/waste_source_check.sql compares both sources. Retail calendar now available |
 | Market Category (AG-75) | blocked: PLU -> product mapping | still blocked on the PLU mapping; retail calendar now available |
+
+## Follow-up checks on QA (same day)
+- tools/waste_source_check.sql: weekly_cogs and the staging table give **identical** results for week 2026-06-27
+  (28,778 rows, all with product, COGS 1,659,260.49, theo cost 1,529,415.32, inv adj 24,682.91, begin 2,882,733.82).
+  The Waste Report now reads master.weekly_cogs.
+- master.people_count on QA: **0 rows**. The People Count report has no camera data to show yet.
