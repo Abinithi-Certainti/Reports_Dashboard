@@ -22,3 +22,24 @@ var_adj_quantity, var_adj_value, waste_quantity, waste_value.
 - Only one week (2026-06-27) is on QA, so the PDF check values (2025 weeks 1-2) cannot be reproduced. A Power BI
   export filtered to the week of 2026-06-27 would give check values that can be.
 - transfer_out_value is in the data; it may explain why Begin + Purchase - End differs from COGS at 5 plazas.
+
+## Queries 11-12 (same day)
+| Load (execution_id) | Status | Rows | Loaded at | Distinct location+product | COGS | Waste value | Theo cost |
+|---|---|---|---|---|---|---|---|
+| f435ff5b... | TRANSFORMED | 28,778 | 2026-09-24 15:11:16 | 28,778 | 1,659,260.49 | 0.00 | 1,529,415.32 |
+| b6e937c4... | LOADED | 28,778 | 2026-09-24 15:31:20 | 28,778 | 1,659,260.49 | 0.00 | 1,529,415.32 |
+| f78460f2... | LOADED | 28,778 | 2026-09-24 15:35:52 | 28,778 | 1,659,260.49 | 0.00 | 1,529,415.32 |
+
+Confirmed: **three identical loads of the same week** (no duplicates inside a load). `waste_value` is 0 on every row,
+so all waste is in `inv_adj_value` - which is why "Adj $" equals "Waste $" in the old report. `period` is text in
+MM-DD-YYYY form.
+
+## Prototype
+`reports/waste-report/dataset.sql` reads only the latest load of each week. `reports/waste-report/check_totals.sql`
+gives per-plaza totals for Burger King, week of 2026-06-27, to compare with a Power BI export of the same week.
+Both ran against the new table structure (tests/check_queries.sh), and a test with 3 identical fake loads gave
+single (not tripled) totals.
+
+## Engine gaps for this report (not built yet)
+- Begin $ / End $ need "first week" / "last week" measures; the engine has only sum/count/min/max/avg.
+- Retail Year / Retail week filters need the retail calendar (dbo.date_table), which is not in the new DB.
