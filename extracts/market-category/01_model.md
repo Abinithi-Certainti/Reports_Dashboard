@@ -11,7 +11,7 @@ Check values from the PDF are kept outside git (demo/private-data/) - the reposi
 | Products | WeeklyCogsProdNum for `loc_code LIKE 'MKT%'` **UNION ~60 hard-coded promotion rows and ~16 hard-coded LCBO alcohol rows** | a promotion or beer SKU is added by editing the SQL |
 | Market Sale (hidden) | SQL Server `POS_ORDERDETAILS`, Market stores, **2021-01-01 to 2022-05-01 only** | old history, loaded once |
 | Market Sale-2 | incremental-refresh table; partitions 2024, 2025, 2026 by quarter/month/day | **its source SQL is not in INFO.PARTITIONS** (policy partitions carry none) - needs INFO.REFRESHPOLICIES |
-| PLU and product number (hidden) | **Oracle `ocon.net-chef.com` (Net-Chef)**: t_recipe_location.plu_number -> t_product_company.product_name_number for locations `MKT%`, + hard-coded PROMOTIONS60000055 | a 4th source system |
+| PLU and product number (hidden) | **Oracle (Net-Chef recipe system)**: t_recipe_location.plu_number -> t_product_company.product_name_number for locations `MKT%`, + hard-coded PROMOTIONS60000055 | a 4th source system |
 | Date | dbo.date_table retail calendar, 2021 on, up to today | "Week filter across reports" slicer |
 
 Sales rows (Market Sale query, same shape expected for Market Sale-2):
