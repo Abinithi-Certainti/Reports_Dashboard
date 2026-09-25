@@ -28,4 +28,4 @@ Pattern: every measure is a filtered SUM. Names below are grouped; the DAX is ex
 | Radar_Turn_In_Cars / _Trucks | same with the _cars / _trucks measures |
 | TurnIn_07_to_11 ... TurnIn_22_to_07 (and _cars / _trucks) | same per hour band |
 
-Total: 5 transaction measures, 47 radar / turn-in measures (52 in all).
+Total: 5 transaction measures, 45 radar / turn-in measures (50 in all).
