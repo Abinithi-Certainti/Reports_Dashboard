@@ -57,3 +57,18 @@ FROM master.temp_weekly_cogs_staging, jsonb_object_keys(parsed_data) AS k
 WHERE jsonb_typeof(parsed_data) = 'object'
 GROUP BY k
 ORDER BY k;
+
+-- 11. Is the staging week loaded more than once? One row per load (execution), with its size
+SELECT execution_id, status, count(*) AS rows, min(created_timestamp) AS loaded_at,
+       count(DISTINCT (parsed_data->>'loc_code') || '|' || (parsed_data->>'product_num')) AS distinct_location_products
+FROM master.temp_weekly_cogs_staging
+GROUP BY execution_id, status
+ORDER BY loaded_at;
+
+-- 12. Do the loads carry the same numbers? Totals per load (no row detail)
+SELECT execution_id, status, parsed_data->>'period' AS period,
+       sum((parsed_data->>'cogs')::numeric) AS cogs, sum((parsed_data->>'waste_value')::numeric) AS waste,
+       sum((parsed_data->>'theo_cost')::numeric) AS theo_cost
+FROM master.temp_weekly_cogs_staging
+GROUP BY execution_id, status, parsed_data->>'period'
+ORDER BY 1;
