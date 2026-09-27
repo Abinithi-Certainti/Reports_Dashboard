@@ -34,8 +34,8 @@ type Agg = (rows: DataRow[]) => number | null;
 /** Banner per report: real-data reports say so plainly; everything else is sample data. */
 const REAL_DATA_NOTICES: Record<string, { title: string; text: string }> = {
   'waste-report': {
-    title: 'Real QA data.',
-    text: 'Burger King, week ending Saturday 27 June 2026: one total per plaza from the new database (kios_etl, QA), '
+    title: 'Real DEV data.',
+    text: 'Burger King, week ending Saturday 27 June 2026: one total per plaza from the new database (kios_etl, DEV), '
       + 'not yet compared with Power BI. Category, item and district detail are not included in this copy.',
   },
 };

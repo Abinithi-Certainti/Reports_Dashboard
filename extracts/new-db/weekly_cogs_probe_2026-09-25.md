@@ -1,5 +1,7 @@
 # Weekly COGS on QA (kios_etl) - probe results, 2026-09-25 (queries 8-10 of tools/radar_probe.sql)
 
+> **Correction (2026-09-27):** every result in this file was run on the **DEV** database, not QA. The user confirmed they were connected to DEV on 2026-09-25. Where the text below says "QA", read "DEV".
+
 | # | Check | Result |
 |---|---|---|
 | 8 | master.weekly_cogs | 28,778 rows, 103 locations, **one week only: 2026-06-27** |

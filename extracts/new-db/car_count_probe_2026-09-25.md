@@ -1,5 +1,7 @@
 # Car-count tables on QA (kios_etl) - probe results, 2026-09-25
 
+> **Correction (2026-09-27):** every result in this file was run on the **DEV** database, not QA. The user confirmed they were connected to DEV on 2026-09-25. Where the text below says "QA", read "DEV".
+
 Run by Abinithi with tools/radar_probe.sql (read-only, as readonly_user).
 
 | # | Check | Result |

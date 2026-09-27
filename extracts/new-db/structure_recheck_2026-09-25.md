@@ -1,5 +1,7 @@
 # Re-check of all reports against QA's structure of 2026-09-25
 
+> **Correction (2026-09-27):** every result in this file was run on the **DEV** database, not QA. The user confirmed they were connected to DEV on 2026-09-25. Where the text below says "QA", read "DEV".
+
 The structure file extracts/new-db/master_columns.tsv (2026-09-24) is out of date. The fresh export (97 tables,
 master + public) is kept in demo/private-data/ (git-ignored) until the repository is private; run checks against it
 with `NEW_DB_COLUMNS=demo/private-data/master_columns_2026-09-25.tsv bash tests/check_queries.sh <file>`.

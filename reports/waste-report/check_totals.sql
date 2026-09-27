@@ -14,7 +14,7 @@ SELECT plaza,
        round(sum(begin_value) + sum(purchase_value) - sum(end_value) - sum(transfer_out_value) - sum(cogs), 2) AS cogs_gap_after_transfers
 FROM (
     -- Detailed Waste Report dataset: one row per plaza / brand / product / week, from master.weekly_cogs (AG-74).
-    -- Verified on QA 2026-09-25 (tools/waste_source_check.sql): week 2026-06-27 gives the same rows and totals as the
+    -- Verified on DEV 2026-09-25 (tools/waste_source_check.sql): week 2026-06-27 gives the same rows and totals as the
     -- staging table the first prototype read (28,778 rows, COGS 1,659,260.49, theo cost 1,529,415.32).
     -- Single statement, no semicolons: the engine wraps it as WITH d AS (...).
     WITH loc AS (

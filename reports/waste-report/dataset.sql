@@ -1,5 +1,5 @@
 -- Detailed Waste Report dataset: one row per plaza / brand / product / week, from master.weekly_cogs (AG-74).
--- Verified on QA 2026-09-25 (tools/waste_source_check.sql): week 2026-06-27 gives the same rows and totals as the
+-- Verified on DEV 2026-09-25 (tools/waste_source_check.sql): week 2026-06-27 gives the same rows and totals as the
 -- staging table the first prototype read (28,778 rows, COGS 1,659,260.49, theo cost 1,529,415.32).
 -- Single statement, no semicolons: the engine wraps it as WITH d AS (...).
 WITH loc AS (
