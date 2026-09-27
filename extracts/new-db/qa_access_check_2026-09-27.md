@@ -38,3 +38,14 @@ weekly_cogs, pos_order_details and the structure export (master_columns_2026-09-
 The team chooses the database: whichever of DEV or QA has enough data for a report is the one we use. This is not
 a question for the tech lead. Every result must record which database it came from. Scope: 10 reports, prioritised
 by the business team.
+
+## Sales Report 1 tables on QA (2026-09-27, pg_class lookup as readonly_user)
+| Table | On QA | approx_rows | readonly_user can read |
+|---|---|---|---|
+| employee_pay_summary | yes | 68,666 | no |
+| pos_order_details | yes | 89,310 | no |
+| pos_orders | yes | 18,649 | no |
+| temp_dlh, v_vena_labour_daily_load, netsuite_location_mapping, district_directors, date_table | **not found** | | |
+
+Decision: the report is NOT checked on QA with a read-write login. Read-only access stays the rule. The way forward is
+SELECT for readonly_user (granted by whoever owns QA), or DEV.
