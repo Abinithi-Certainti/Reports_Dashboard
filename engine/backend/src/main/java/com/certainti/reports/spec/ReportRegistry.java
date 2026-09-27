@@ -35,7 +35,7 @@ public class ReportRegistry {
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard");
     static final java.util.Set<String> FILTER_TYPES = java.util.Set.of("multi_select", "date_range", "retail_week");
-    static final java.util.Set<String> WINDOWS = java.util.Set.of("wtd", "ptd", "ytd");
+    static final java.util.Set<String> WINDOWS = java.util.Set.of("wtd", "ptd", "ytd", "py", "yoy", "yoy_pct");
     static final java.util.Set<String> KPI_ICONS = java.util.Set.of("total", "cash", "card", "paidout", "count", "store", "trend");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
@@ -176,7 +176,7 @@ public class ReportRegistry {
         spec.measures().forEach((id, m) -> {
             require(IDENTIFIER.matcher(id).matches(), file, "bad measure name " + id);
             if (m.isWindowed()) {
-                require(WINDOWS.contains(m.window()), file, "measure " + id + " window must be one of ptd, wtd, ytd (found " + m.window() + ")");
+                require(WINDOWS.contains(m.window()), file, "measure " + id + " window must be one of " + String.join(", ", new java.util.TreeSet<>(WINDOWS)) + " (found " + m.window() + ")");
                 ReportSpec.Measure base = m.of() == null ? null : spec.measures().get(m.of());
                 require(base != null && !base.isWindowed(), file, "measure " + id + " must be 'of' a measure that has its own sql");
                 require(spec.calendar() != null, file, "measure " + id + " uses a window, so the report needs calendar: retail");

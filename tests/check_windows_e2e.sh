@@ -61,6 +61,33 @@ check("total row WTD sales", total[0]["wtd_sales"], 1029)
 check("total row YTD GP % (from sums, not an average)", total[0]["ytd_gp_pct"], (25900 + 259 * 47 - 37 * 280) / (25900 + 259 * 47))
 dd = post({"filters": {"district_director": ["DD B"]}, "dateFrom": "2026-09-06", "dateTo": "2026-09-12", "groupBy": [], "measures": ["ytd_sales"]})
 check("filters apply inside every window", dd[0]["ytd_sales"], 259 * 47)
+# ---- Sales Report 1: last year (PY), YOY, labour, weekday and week ending ----
+SR = "http://localhost:18080/api/reports/sales-report-1"
+def post1(body):
+    req = urllib.request.Request(SR + "/query", json.dumps(body).encode(), {"content-type": "application/json"})
+    return json.load(urllib.request.urlopen(req))
+june = {"dateFrom": "2026-06-01", "dateTo": "2026-06-16"}
+t = post1({**june, "groupBy": [], "measures": ["sales", "sales_py", "sales_yoy", "sales_yoy_pct", "labour", "labour_py", "splh", "splh_py", "splh_yoy"]})[0]
+check("SR1 sales (16 x 100 + 16 x 47)", t["sales"], 2352)
+check("SR1 sales PY (the same retail days in 2025: 16 x 80)", t["sales_py"], 1280)
+check("SR1 sales YOY $", t["sales_yoy"], 1072)
+check("SR1 sales YOY %", t["sales_yoy_pct"], 1072 / 1280)
+check("SR1 labour (16 x 10 crew + 16 x 2 temp, manager and HR left out)", t["labour"], 192)
+check("SR1 labour PY", t["labour_py"], 128)
+check("SR1 SPLH", t["splh"], 2352 / 192)
+check("SR1 SPLH PY", t["splh_py"], 1280 / 128)
+check("SR1 SPLH YOY $", t["splh_yoy"], 2352 / 192 - 10)
+day = {(str(r["day"]), r["plaza"]): r for r in post1({**june, "groupBy": ["day", "plaza"], "measures": ["sales", "sales_py"]})}
+c1 = day[("2026-06-01", "Cambridge North")]
+check("SR1 PY lines up on this year's day (Mon 2026-06-01 <- Mon 2025-06-02)", (c1["sales"], c1["sales_py"]), (100, 80))
+b1 = day[("2026-06-01", "Bainsville ON S")]
+check("SR1 no sales last year gives an empty PY, not 0", (b1["sales"], b1["sales_py"]), (47, None))
+wd = {r["weekday"]: r for r in post1({**june, "groupBy": ["weekday"], "measures": ["sales", "sales_py"]})}
+check("SR1 Monday (3 Mondays)", (wd["Monday"]["sales"], wd["Monday"]["sales_py"]), (441, 240))
+we = {str(r["week_end"]): r for r in post1({**june, "groupBy": ["week_end"], "measures": ["sales", "sales_py"]})}
+check("SR1 week ending 2026-06-06 (6 days) with its PY week", (we["2026-06-06"]["sales"], we["2026-06-06"]["sales_py"]), (882, 480))
+br = {r["brand"]: r for r in post1({**june, "groupBy": ["plaza", "brand"], "measures": ["sales"]})}
+check("SR1 brands kept as sold (TIM HORTONS DT not merged)", sorted(br), ["MARKET", "TIM HORTONS DT"])
 if fails:
     raise SystemExit(f"{len(fails)} check(s) failed")
 print("OK: calendar and windows match the hand-worked totals")

@@ -47,9 +47,9 @@ public record ReportSpec(
     }
 
     /**
-     * A measure is either its own {@code sql}, or another measure ({@code of}) over a retail-calendar {@code window}
-     * that ends on the last selected day: wtd = from the start of that retail week, ptd = from the start of its retail
-     * period, ytd = from the start of its retail year.
+     * A measure is either its own {@code sql}, or another measure ({@code of}) over a retail-calendar {@code window}:
+     * wtd / ptd / ytd = from the start of the retail week, period or year that holds the last selected day,
+     * py = the selected days one retail year earlier, yoy = value - py, yoy_pct = (value - py) / py.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Measure(String label, String sql, String format, String window, String of) {

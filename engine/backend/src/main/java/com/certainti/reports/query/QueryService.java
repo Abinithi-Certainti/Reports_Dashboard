@@ -21,23 +21,41 @@ public class QueryService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> run(ReportSpec spec, QueryRequest request) {
-        Map<String, List<String>> byWindow = Windows.split(spec, request.measuresOrEmpty());
+        Map<String, Map<String, String>> plan = Windows.plan(spec, request.measuresOrEmpty());
         List<Map<String, Object>> rows;
-        if (byWindow.keySet().equals(java.util.Set.of(""))) {
-            rows = runOnce(spec, request);
+        if (!Windows.needsCalendar(plan)) {
+            rows = runOnce(spec, request, plan.getOrDefault("", Map.of()));
         } else {
             if (request.dateTo() == null) {
-                throw new SqlBuilder.BadRequest("Week, period and year to date need a selected end date");
+                throw new SqlBuilder.BadRequest("Week, period, year to date and last year need a selected end date");
             }
             SqlBuilder.Built day = SqlBuilder.calendarDay(spec, request.dateTo());
             List<Map<String, Object>> found = jdbc.queryForList(day.sql(), day.params().toArray());
             if (found.isEmpty()) {
                 throw new SqlBuilder.BadRequest(request.dateTo() + " is not in the retail calendar");
             }
+            Map<String, Object> starts = found.get(0);
+            List<String> dateColumns = request.groupByOrEmpty().stream()
+                    .filter(g -> spec.dimensions().containsKey(g) && spec.dimensions().get(g).isDate()).toList();
             List<List<Map<String, Object>>> parts = new ArrayList<>();
-            byWindow.forEach((window, measures) -> parts.add(runOnce(spec, new QueryRequest(request.filters(), request.exclude(),
-                    Windows.start(window, found.get(0), request.dateFrom()), request.dateTo(), request.groupBy(), measures, null))));
-            rows = Windows.merge(request.groupByOrEmpty(), request.measuresOrEmpty(), parts);
+            List<String> columns = new ArrayList<>();
+            plan.forEach((window, cols) -> {
+                columns.addAll(cols.keySet());
+                String from = Windows.start(window, starts, request.dateFrom());
+                String to = request.dateTo();
+                long shift = 0;
+                if (window.equals("py")) {
+                    shift = Windows.pyShiftDays(starts);
+                    from = Windows.minusDays(request.dateFrom(), shift);
+                    to = Windows.minusDays(to, shift);
+                }
+                List<Map<String, Object>> part = runOnce(spec, new QueryRequest(request.filters(), request.exclude(),
+                        from, to, request.groupBy(), List.copyOf(cols.keySet()), null), cols);
+                Windows.shiftDates(part, dateColumns, shift);
+                parts.add(part);
+            });
+            rows = Windows.merge(request.groupByOrEmpty(), columns, parts);
+            Windows.derive(spec, request.measuresOrEmpty(), rows);
         }
         applyCalculations(spec, request, rows);
         return rows;
@@ -49,8 +67,8 @@ public class QueryService {
         return jdbc.queryForList(built.sql());
     }
 
-    private List<Map<String, Object>> runOnce(ReportSpec spec, QueryRequest request) {
-        SqlBuilder.Built built = SqlBuilder.build(spec, request);
+    private List<Map<String, Object>> runOnce(ReportSpec spec, QueryRequest request, Map<String, String> columns) {
+        SqlBuilder.Built built = SqlBuilder.build(spec, request, columns);
         List<Map<String, Object>> rows = jdbc.queryForList(built.sql(), built.params().toArray());
         return new ArrayList<>(rows.stream().map(r -> (Map<String, Object>) new LinkedHashMap<>(r)).toList());
     }

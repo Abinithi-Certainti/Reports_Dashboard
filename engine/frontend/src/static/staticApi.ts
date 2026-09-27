@@ -17,11 +17,15 @@ import wasteSql from '../../../../reports/waste-report/dataset.sql?raw';
 import salesMarginYaml from '../../../../reports/sales-margin-budget/report.yaml?raw';
 import salesMarginSql from '../../../../reports/sales-margin-budget/dataset.sql?raw';
 import salesMarginRows from '../../../../demo/static-data/sales-margin-rows.json';
+import salesReport1Yaml from '../../../../reports/sales-report-1/report.yaml?raw';
+import salesReport1Sql from '../../../../reports/sales-report-1/dataset.sql?raw';
 
 // Real figures live in demo/private-data/ (git-ignored - the repository is public). The glob is empty when the
 // folder is absent, so a build from a fresh clone simply leaves the real-data report out.
 const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, DataRow[]>;
-const wasteRows = Object.entries(privateData).find(([path]) => path.endsWith('/waste-rows.json'))?.[1];
+const privateRows = (file: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${file}`))?.[1];
+const wasteRows = privateRows('waste-rows.json');
+const salesReport1Rows = privateRows('sales-report-1-qa-rows.json');
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
@@ -42,6 +46,11 @@ const REAL_DATA_NOTICES: Record<string, { title: string; text: string }> = {
     text: 'Burger King, week ending Saturday 27 June 2026: one total per plaza from the new database (kios_etl, DEV), '
       + 'not yet compared with Power BI. Category, item and district detail are not included in this copy.',
   },
+  'sales-report-1': {
+    title: 'Real QA data.',
+    text: 'One store, 6 to 21 September 2026, from the new database (kios_etl, QA), not yet compared with Power BI. '
+      + 'QA holds no 2025 data, so every PY and YOY % is empty and YOY equals this year. Vending / Market Express hours are not included.',
+  },
 };
 const NOTICE = 'All stores, names and amounts on this page are made up. The layout and calculations are real; the numbers are not.';
 const STORE_KEY = 're.imported';
@@ -55,6 +64,7 @@ const DATASETS: { sql: string; rows: DataRow[] }[] = [
   { sql: normalise(paidoutSql), rows: paidoutRows as DataRow[] },
   { sql: normalise(salesMarginSql), rows: salesMarginRows as DataRow[] },
   ...(wasteRows ? [{ sql: normalise(wasteSql), rows: wasteRows }] : []),
+  ...(salesReport1Rows ? [{ sql: normalise(salesReport1Sql), rows: salesReport1Rows }] : []),
 ];
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
@@ -153,7 +163,7 @@ const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
 const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard'];
 const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
 const FILTER_TYPES: string[] = ['multi_select', 'date_range', 'retail_week'];
-const WINDOWS: string[] = ['wtd', 'ptd', 'ytd'];
+const WINDOWS: string[] = ['wtd', 'ptd', 'ytd', 'py', 'yoy', 'yoy_pct'];
 const STARTS_WITH_SELECT = /^\s*(--[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*(select|with)\b/i;
 
 function cleanSql(sql: string) {
@@ -185,7 +195,7 @@ function validate(spec: FullSpec, sql: string) {
   for (const [id, m] of Object.entries(spec.measures)) {
     require(IDENTIFIER.test(id), `bad measure name ${id}`);
     if (m?.window != null) {
-      require(WINDOWS.includes(m.window), `measure ${id} window must be one of ptd, wtd, ytd (found ${m.window})`);
+      require(WINDOWS.includes(m.window), `measure ${id} window must be one of ${[...WINDOWS].sort().join(', ')} (found ${m.window})`);
       const base = m.of ? spec.measures[m.of] : undefined;
       require(base && base.window == null, `measure ${id} must be 'of' a measure that has its own sql`);
       require(spec.calendar != null, `measure ${id} uses a window, so the report needs calendar: retail`);
@@ -262,6 +272,7 @@ register(tenderYaml, tenderSql, true);
 const builtIns: [string, string, string, boolean][] = [
   ['waste-report', wasteYaml, wasteSql, !!wasteRows],
   ['sales-margin-budget', salesMarginYaml, salesMarginSql, true],
+  ['sales-report-1', salesReport1Yaml, salesReport1Sql, !!salesReport1Rows],
 ];
 for (const [id, yaml, sql, available] of builtIns) {
   if (!available) continue;
@@ -313,7 +324,7 @@ function compare(a: unknown, b: unknown): number {
 
 function filterRows(r: Report, q: Pick<QueryRequest, 'filters' | 'exclude' | 'dateFrom' | 'dateTo'>): DataRow[] {
   const dims = r.spec.dimensions;
-  const dateDim = Object.values(dims).find((d) => d.type === 'date');
+  const dateDim = dateDimension(r.spec);
   const checks: ((row: DataRow) => boolean)[] = [];
   const add = (f: Record<string, string[]> | undefined, exclude: boolean) => {
     for (const [id, values] of Object.entries(f ?? {})) {
@@ -367,35 +378,80 @@ const CALENDAR: CalendarWeek[] = (() => {
 })();
 const calendarWeekOf = (day: string) => CALENDAR.find((w) => w.week_start <= day && day <= w.week_end);
 
-/** Week-, period- and year-to-date: each window runs over its own dates, widest first, then joins on the groups. */
+/** The date the date filter applies to: the report's date filter's dimension, else its first date (as SqlBuilder). */
+function dateDimension(spec: FullSpec): FullDimension | undefined {
+  for (const f of spec.filters ?? []) {
+    const d = spec.dimensions[f.dimension];
+    if (d?.type === 'date' && f.type !== 'multi_select') return d;
+  }
+  return Object.values(spec.dimensions).find((d) => d.type === 'date');
+}
+
+const shiftDay = (day: string, days: number) => iso(Date.parse(`${day}T00:00:00Z`) + days * DAY);
+
+/**
+ * Measures over other dates (same rules as Windows.java): wtd / ptd / ytd from the start of the retail week, period
+ * or year of the last selected day; py = the selected days one retail year earlier, with rows grouped by a date moved
+ * onto this year's dates; yoy = value - py (a missing py counts as 0); yoy_pct = (value - py) / py.
+ * Each window runs over its own dates, widest first, then the rows are joined on the groups.
+ */
 function runQuery(r: Report, q: QueryRequest): Row[] {
-  const order = ['ytd', 'ptd', 'wtd', ''];
-  const byWindow = new Map<string, string[]>(order.map((w) => [w, []]));
-  for (const m of q.measures ?? []) byWindow.get(r.spec.measures[m]?.window ?? '')!.push(m);
-  for (const w of order) if (!byWindow.get(w)!.length) byWindow.delete(w);
+  const order = ['ytd', 'ptd', 'wtd', 'py', ''];
+  const plan = new Map<string, Map<string, string>>(order.map((w) => [w, new Map()]));
+  for (const m of q.measures ?? []) {
+    const spec = r.spec.measures[m];
+    const w = spec?.window ?? '';
+    if (w === 'yoy' || w === 'yoy_pct') {
+      plan.get('')!.set(`_cur__${spec!.of}`, spec!.of!);
+      plan.get('py')!.set(`_py__${spec!.of}`, spec!.of!);
+    } else plan.get(w)!.set(m, m);
+  }
+  for (const w of order) if (!plan.get(w)!.size) plan.delete(w);
   let rows: Row[];
-  if (![...byWindow.keys()].some((w) => w !== '')) {
+  if (![...plan.keys()].some((w) => w !== '')) {
     rows = runOnce(r, q);
   } else {
-    if (!q.dateTo) throw new BadRequest('Week, period and year to date need a selected end date');
+    if (!q.dateTo) throw new BadRequest('Week, period, year to date and last year need a selected end date');
     const week = calendarWeekOf(q.dateTo);
     if (!week) throw new BadRequest(`${q.dateTo} is not in the retail calendar`);
-    const start: Record<string, string | undefined> = { wtd: week.week_start, ptd: week.period_start, ytd: week.year_start, '': q.dateFrom };
+    const start: Record<string, string | undefined> = { wtd: week.week_start, ptd: week.period_start, ytd: week.year_start, py: q.dateFrom, '': q.dateFrom };
+    const pyShift = Math.round((Date.parse(week.year_start) - retailYearStart(week.retail_year - 1)) / DAY);
     const groupBy = q.groupBy ?? [];
+    const dateCols = groupBy.filter((g) => r.spec.dimensions[g]?.type === 'date');
     const merged = new Map<string, Row>();
-    for (const [w, measures] of byWindow) {
-      for (const row of runOnce(r, { ...q, measures, calculations: undefined, dateFrom: start[w] })) {
+    for (const [w, cols] of plan) {
+      const aliases = [...cols.keys()];
+      const evalFor: Record<string, Agg> = { ...r.eval };
+      for (const [alias, id] of cols) evalFor[alias] = r.eval[id];
+      const shift = w === 'py' ? pyShift : 0;
+      const from = start[w] && shift ? shiftDay(start[w]!, -shift) : start[w];
+      const to = shift ? shiftDay(q.dateTo, -shift) : q.dateTo;
+      for (const row of runOnce({ ...r, eval: evalFor }, { ...q, measures: aliases, calculations: undefined, dateFrom: from, dateTo: to })) {
+        for (const c of dateCols) if (shift && row[c] != null) row[c] = shiftDay(String(row[c]), shift);
         const key = JSON.stringify(groupBy.map((g) => row[g]));
         let out = merged.get(key);
         if (!out) {
-          out = Object.fromEntries([...groupBy.map((g) => [g, row[g]]), ...q.measures.map((m) => [m, null])]) as Row;
+          out = Object.fromEntries(groupBy.map((g) => [g, row[g]])) as Row;
           merged.set(key, out);
         }
-        for (const m of measures) out[m] = row[m];
+        for (const a of aliases) out[a] = row[a];
       }
     }
     rows = [...merged.values()];
-    if (!rows.length && !groupBy.length) rows = [Object.fromEntries(q.measures.map((m) => [m, null])) as Row];
+    if (!rows.length && !groupBy.length) rows = [{}];
+    for (const row of rows) {
+      for (const m of q.measures) {
+        const spec = r.spec.measures[m];
+        if (spec?.window === 'yoy' || spec?.window === 'yoy_pct') {
+          const cur = row[`_cur__${spec.of}`] as number | null | undefined;
+          const py = row[`_py__${spec.of}`] as number | null | undefined;
+          row[m] = spec.window === 'yoy'
+            ? (cur == null && py == null ? null : round((cur ?? 0) - (py ?? 0)))
+            : (cur == null || py == null || py === 0 ? null : (cur - py) / py);
+        } else if (!(m in row)) row[m] = null;
+      }
+      for (const k of Object.keys(row)) if (k.startsWith('_cur__') || k.startsWith('_py__')) delete row[k];
+    }
   }
   for (const [calcId, modeId] of Object.entries(q.calculations ?? {})) {
     const calc = r.spec.calculations?.[calcId];
@@ -541,7 +597,7 @@ export const staticApi = {
   }),
   dateBounds: (id: string) => later(() => {
     const r = report(id);
-    const d = Object.values(r.spec.dimensions).find((x) => x.type === 'date');
+    const d = dateDimension(r.spec);
     if (!d) throw new BadRequest('This report has no date dimension');
     const days = r.rows.map((x) => x[d.column]).filter((v) => v !== null).map(String).sort();
     return { min_date: days[0], max_date: days[days.length - 1] };
