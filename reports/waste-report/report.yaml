@@ -4,6 +4,7 @@ id: waste-report
 title: Detailed Waste Report
 subtitle: Weekly stock, cost and waste by plaza
 dataset: dataset.sql
+calendar: retail   # Year / Period / Week picker, from reports/_shared/retail_calendar.sql
 
 dimensions:
   plaza:             { label: Plaza,             column: plaza }
@@ -33,7 +34,7 @@ filters:
   - { dimension: brand,             type: multi_select }
   - { dimension: category,          type: multi_select }
   - { dimension: item_description,  type: multi_select }
-  - { dimension: period,            type: date_range, default_last_days: 7 }
+  - { dimension: period,            type: retail_week }   # period = week-ending Saturday, so each week holds one
 
 visuals:
   - type: kpi

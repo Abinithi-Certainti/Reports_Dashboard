@@ -6,7 +6,9 @@ export type Dimension = { label: string; type: string | null };
 export type Measure = { label: string; format: 'currency' | 'percent' | 'number' | null };
 export type Mode = { type: string; label: string };
 export type Calculation = { label: string; of: string; format: string; modes: Record<string, Mode>; default_mode: string };
-export type Filter = { dimension: string; type: 'multi_select' | 'date_range'; default_last_days?: number };
+export type Filter = { dimension: string; type: 'multi_select' | 'date_range' | 'retail_week'; default_last_days?: number };
+/** One retail week (Sunday to Saturday), from the report's retail calendar. */
+export type RetailWeek = { retail_year: number; retail_period: number; retail_week: number; week_start: string; week_end: string };
 export type KpiItem = {
   label: string;
   measure: string;
@@ -79,6 +81,7 @@ const httpApi = {
   values: (id: string, dim: string) => fetch(`/api/reports/${id}/values/${dim}`).then((r) => json<string[]>(r)),
   dateBounds: (id: string) =>
     fetch(`/api/reports/${id}/date-bounds`).then((r) => json<{ min_date: string; max_date: string }>(r)),
+  calendar: (id: string) => fetch(`/api/reports/${id}/calendar`).then((r) => json<RetailWeek[]>(r)),
   mapping: (id: string) => fetch(`/api/reports/${id}/mapping`).then((r) => json<Mapping>(r)),
   importReport: (yaml: string, sql: string, publish: boolean) =>
     fetch(publish ? '/api/admin/reports' : '/api/admin/reports/validate', {

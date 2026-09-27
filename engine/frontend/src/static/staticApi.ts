@@ -5,7 +5,7 @@
 //   import checks          -> engine/backend/.../spec/ReportRegistry.java + web/ImportController.java
 // Only the database dry run differs: there is no database here, so an upload can only use a bundled dataset.
 import { parse as parseYaml } from 'yaml';
-import type { ImportCheck, ImportResult, Mapping, QueryRequest, ReportSummary, Row, Spec } from '../api';
+import type { ImportCheck, ImportResult, Mapping, QueryRequest, ReportSummary, RetailWeek, Row, Spec } from '../api';
 import tenderYaml from '../../../../reports/tender-report/report.yaml?raw';
 import tenderSql from '../../../../reports/tender-report/dataset.sql?raw';
 import tenderMapping from '../../../../reports/tender-report/mapping.json';
@@ -14,6 +14,9 @@ import paidoutSql from '../../../../demo/import-example/paidout-report/dataset.s
 import paidoutRows from '../../../../demo/static-data/paidout-rows.json';
 import wasteYaml from '../../../../reports/waste-report/report.yaml?raw';
 import wasteSql from '../../../../reports/waste-report/dataset.sql?raw';
+import salesMarginYaml from '../../../../reports/sales-margin-budget/report.yaml?raw';
+import salesMarginSql from '../../../../reports/sales-margin-budget/dataset.sql?raw';
+import salesMarginRows from '../../../../demo/static-data/sales-margin-rows.json';
 
 // Real figures live in demo/private-data/ (git-ignored - the repository is public). The glob is empty when the
 // folder is absent, so a build from a fresh clone simply leaves the real-data report out.
@@ -22,9 +25,10 @@ const wasteRows = Object.entries(privateData).find(([path]) => path.endsWith('/w
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
-type FullMeasure = { label: string; sql: string; format?: string | null };
+type FullMeasure = { label: string; sql?: string; format?: string | null; window?: string | null; of?: string | null };
 type FullSpec = Omit<Spec, 'dimensions' | 'measures' | 'sampleDataNotice'> & {
   dataset?: string;
+  calendar?: string | null;
   dimensions: Record<string, FullDimension>;
   measures: Record<string, FullMeasure>;
 };
@@ -49,12 +53,13 @@ const normalise = (sql: string) => cleanSql(sql).replace(/--[^\n]*/g, '').replac
 const DATASETS: { sql: string; rows: DataRow[] }[] = [
   { sql: normalise(tenderSql), rows: tenderRows as DataRow[] },
   { sql: normalise(paidoutSql), rows: paidoutRows as DataRow[] },
+  { sql: normalise(salesMarginSql), rows: salesMarginRows as DataRow[] },
   ...(wasteRows ? [{ sql: normalise(wasteSql), rows: wasteRows }] : []),
 ];
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
 function compileMeasure(expr: string, columns: Set<string>): Agg {
-  const tokens = expr.match(/\s*([A-Za-z_][A-Za-z0-9_]*|\d+(?:\.\d+)?|\*|[-+/()])/g)?.map((s) => s.trim()) ?? [];
+  const tokens = expr.match(/\s*([A-Za-z_][A-Za-z0-9_]*|\d+(?:\.\d+)?|\*|[-+/(),])/g)?.map((s) => s.trim()) ?? [];
   if (tokens.join('').replace(/\s/g, '') !== expr.replace(/\s/g, '')) throw new BadRequest(`cannot read measure "${expr}"`);
   let i = 0;
   const peek = () => tokens[i];
@@ -79,8 +84,17 @@ function compileMeasure(expr: string, columns: Set<string>): Agg {
     }
     if (/^\d/.test(t)) return () => Number(t);
     const fn = t.toLowerCase();
+    if (fn === 'nullif') {
+      // nullif(a, b): NULL when a equals b - used to avoid dividing by zero, as in SQL.
+      take('(');
+      const a = sum();
+      take(',');
+      const b = sum();
+      take(')');
+      return (rows) => { const x = a(rows), y = b(rows); return x !== null && y !== null && x === y ? null : x; };
+    }
     if (!['sum', 'count', 'min', 'max', 'avg'].includes(fn)) {
-      throw new BadRequest(`this online demo supports sum, count, min, max and avg; found "${t}"`);
+      throw new BadRequest(`this online demo supports sum, count, min, max, avg and nullif; found "${t}"`);
     }
     take('(');
     const arg = take();
@@ -121,7 +135,8 @@ function compileMeasure(expr: string, columns: Set<string>): Agg {
       left = (rows) => {
         const a = l(rows), b = r(rows);
         if (a === null || b === null) return null; // SQL: NULL - x is NULL
-        return round(op === '+' ? a + b : a - b);
+        // Only clears floating-point noise: rounding to cents here would break ratios such as GP % - Bud %.
+        return Math.round((op === '+' ? a + b : a - b) * 1e9) / 1e9;
       };
     }
     return left;
@@ -137,6 +152,8 @@ const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
 const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
 const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard'];
 const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
+const FILTER_TYPES: string[] = ['multi_select', 'date_range', 'retail_week'];
+const WINDOWS: string[] = ['wtd', 'ptd', 'ytd'];
 const STARTS_WITH_SELECT = /^\s*(--[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*(select|with)\b/i;
 
 function cleanSql(sql: string) {
@@ -164,9 +181,24 @@ function validate(spec: FullSpec, sql: string) {
     require(IDENTIFIER.test(id) && d?.column && IDENTIFIER.test(d.column), `bad dimension name ${id}`);
     require(!d.sort_by || IDENTIFIER.test(d.sort_by), `bad sort_by on ${id}`);
   }
+  if (spec.calendar != null) require(spec.calendar === 'retail', `calendar must be 'retail' (found ${spec.calendar})`);
   for (const [id, m] of Object.entries(spec.measures)) {
     require(IDENTIFIER.test(id), `bad measure name ${id}`);
-    require(m?.sql && !m.sql.includes(';'), `bad measure sql on ${id}`);
+    if (m?.window != null) {
+      require(WINDOWS.includes(m.window), `measure ${id} window must be one of ptd, wtd, ytd (found ${m.window})`);
+      const base = m.of ? spec.measures[m.of] : undefined;
+      require(base && base.window == null, `measure ${id} must be 'of' a measure that has its own sql`);
+      require(spec.calendar != null, `measure ${id} uses a window, so the report needs calendar: retail`);
+    } else {
+      require(m?.sql && !m.sql.includes(';'), `bad measure sql on ${id}`);
+    }
+  }
+  for (const f of spec.filters ?? []) {
+    require(f?.type && FILTER_TYPES.includes(f.type), `filter type must be one of ${[...FILTER_TYPES].sort().join(', ')} (found ${f?.type})`);
+    const d = spec.dimensions[f.dimension];
+    require(d, `filter uses unknown dimension ${f.dimension}`);
+    if (f.type !== 'multi_select') require(d.type === 'date', `a ${f.type} filter needs a date dimension (${f.dimension} is not)`);
+    if (f.type === 'retail_week') require(spec.calendar != null, 'a retail_week filter needs calendar: retail');
   }
   const calcs = spec.calculations ?? {};
   for (const [id, c] of Object.entries(calcs)) require(spec.measures[c.of], `calculation ${id} refers to unknown measure ${c.of}`);
@@ -212,7 +244,9 @@ function dryRun(spec: FullSpec, sql: string): { rows: DataRow[]; eval: Record<st
     if (d.sort_by && !columns.has(d.sort_by)) throw new BadRequest(`column d.${d.sort_by} does not exist`);
   }
   const ev: Record<string, Agg> = {};
-  for (const [id, m] of Object.entries(spec.measures)) ev[id] = compileMeasure(m.sql, columns);
+  for (const [id, m] of Object.entries(spec.measures)) if (m.window == null) ev[id] = compileMeasure(m.sql!, columns);
+  // A windowed measure is its base measure; the window only changes the dates (see runQuery).
+  for (const [id, m] of Object.entries(spec.measures)) if (m.window != null) ev[id] = ev[m.of!];
   return { rows: ds.rows, eval: ev };
 }
 
@@ -225,11 +259,16 @@ function register(yaml: string, sql: string, builtIn: boolean) {
 }
 register(tenderYaml, tenderSql, true);
 // A report that fails its checks is left out and logged; it must never stop the other reports from loading.
-if (wasteRows) {
+const builtIns: [string, string, string, boolean][] = [
+  ['waste-report', wasteYaml, wasteSql, !!wasteRows],
+  ['sales-margin-budget', salesMarginYaml, salesMarginSql, true],
+];
+for (const [id, yaml, sql, available] of builtIns) {
+  if (!available) continue;
   try {
-    register(wasteYaml, wasteSql, true);
+    register(yaml, sql, true);
   } catch (e) {
-    console.error('waste-report not loaded:', (e as Error).message);
+    console.error(`${id} not loaded:`, (e as Error).message);
   }
 }
 
@@ -298,7 +337,78 @@ function filterRows(r: Report, q: Pick<QueryRequest, 'filters' | 'exclude' | 'da
   return r.rows.filter((row) => checks.every((c) => c(row)));
 }
 
+// ---------- the retail calendar (the demo builds it; the engine reads reports/_shared/retail_calendar.sql) ----------
+// Weeks run Sunday to Saturday. Week 1 is the week holding 1 January when that is a Sunday to Thursday, else the week
+// after (checked against the old report: 2021-01-03, 2022-01-02, 2023-01-01, 2023-12-31, 2024-12-29, 2025-12-28).
+// Periods are 4-4-5 weeks, a 53rd week joins period 12.
+const DAY = 86_400_000;
+const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+function retailYearStart(year: number): number {
+  const jan1 = Date.UTC(year, 0, 1);
+  const dow = new Date(jan1).getUTCDay(); // 0 = Sunday
+  return dow <= 4 ? jan1 - dow * DAY : jan1 + (7 - dow) * DAY;
+}
+const PERIOD_ENDS = [4, 8, 13, 17, 21, 26, 30, 34, 39, 43, 47, 52];
+type CalendarWeek = RetailWeek & { period_start: string; year_start: string };
+const CALENDAR: CalendarWeek[] = (() => {
+  const out: CalendarWeek[] = [];
+  for (let y = 2019; y <= 2030; y++) {
+    const start = retailYearStart(y);
+    const weeks = Math.round((retailYearStart(y + 1) - start) / (7 * DAY));
+    const periodStart: Record<number, string> = {};
+    for (let w = 1; w <= weeks; w++) {
+      const period = PERIOD_ENDS.findIndex((end) => w <= end) + 1 || 12;
+      const ws = start + (w - 1) * 7 * DAY;
+      periodStart[period] ??= iso(ws);
+      out.push({ retail_year: y, retail_period: period, retail_week: w, week_start: iso(ws), week_end: iso(ws + 6 * DAY), period_start: periodStart[period], year_start: iso(start) });
+    }
+  }
+  return out;
+})();
+const calendarWeekOf = (day: string) => CALENDAR.find((w) => w.week_start <= day && day <= w.week_end);
+
+/** Week-, period- and year-to-date: each window runs over its own dates, widest first, then joins on the groups. */
 function runQuery(r: Report, q: QueryRequest): Row[] {
+  const order = ['ytd', 'ptd', 'wtd', ''];
+  const byWindow = new Map<string, string[]>(order.map((w) => [w, []]));
+  for (const m of q.measures ?? []) byWindow.get(r.spec.measures[m]?.window ?? '')!.push(m);
+  for (const w of order) if (!byWindow.get(w)!.length) byWindow.delete(w);
+  let rows: Row[];
+  if (![...byWindow.keys()].some((w) => w !== '')) {
+    rows = runOnce(r, q);
+  } else {
+    if (!q.dateTo) throw new BadRequest('Week, period and year to date need a selected end date');
+    const week = calendarWeekOf(q.dateTo);
+    if (!week) throw new BadRequest(`${q.dateTo} is not in the retail calendar`);
+    const start: Record<string, string | undefined> = { wtd: week.week_start, ptd: week.period_start, ytd: week.year_start, '': q.dateFrom };
+    const groupBy = q.groupBy ?? [];
+    const merged = new Map<string, Row>();
+    for (const [w, measures] of byWindow) {
+      for (const row of runOnce(r, { ...q, measures, calculations: undefined, dateFrom: start[w] })) {
+        const key = JSON.stringify(groupBy.map((g) => row[g]));
+        let out = merged.get(key);
+        if (!out) {
+          out = Object.fromEntries([...groupBy.map((g) => [g, row[g]]), ...q.measures.map((m) => [m, null])]) as Row;
+          merged.set(key, out);
+        }
+        for (const m of measures) out[m] = row[m];
+      }
+    }
+    rows = [...merged.values()];
+    if (!rows.length && !groupBy.length) rows = [Object.fromEntries(q.measures.map((m) => [m, null])) as Row];
+  }
+  for (const [calcId, modeId] of Object.entries(q.calculations ?? {})) {
+    const calc = r.spec.calculations?.[calcId];
+    if (!calc) throw new BadRequest(`Unknown calculation: ${calcId}`);
+    const mode = calc.modes[modeId ?? calc.default_mode];
+    if (!mode) throw new BadRequest(`Unknown mode ${modeId} for ${calcId}`);
+    if (!q.measures.includes(calc.of)) throw new BadRequest(`${calcId} needs measure ${calc.of} in the request`);
+    applyCalculation(mode.type, calcId, calc.of, rows);
+  }
+  return rows;
+}
+
+function runOnce(r: Report, q: QueryRequest): Row[] {
   const groupBy = q.groupBy ?? [];
   if (!q.measures?.length) throw new BadRequest('At least one measure is required');
   for (const m of q.measures) if (!r.eval[m]) throw new BadRequest(`Unknown measure: ${m}`);
@@ -343,17 +453,7 @@ function runQuery(r: Report, q: QueryRequest): Row[] {
     }
     return 0;
   });
-  const result = out.map((o) => o.row);
-
-  for (const [calcId, modeId] of Object.entries(q.calculations ?? {})) {
-    const calc = r.spec.calculations?.[calcId];
-    if (!calc) throw new BadRequest(`Unknown calculation: ${calcId}`);
-    const mode = calc.modes[modeId ?? calc.default_mode];
-    if (!mode) throw new BadRequest(`Unknown mode ${modeId} for ${calcId}`);
-    if (!q.measures.includes(calc.of)) throw new BadRequest(`${calcId} needs measure ${calc.of} in the request`);
-    applyCalculation(mode.type, calcId, calc.of, result);
-  }
-  return result;
+  return out.map((o) => o.row);
 }
 
 function applyCalculation(type: string, out: string, of: string, rows: Row[]) {
@@ -445,6 +545,10 @@ export const staticApi = {
     if (!d) throw new BadRequest('This report has no date dimension');
     const days = r.rows.map((x) => x[d.column]).filter((v) => v !== null).map(String).sort();
     return { min_date: days[0], max_date: days[days.length - 1] };
+  }),
+  calendar: (id: string) => later<RetailWeek[]>(() => {
+    if (!report(id).spec.calendar) throw new BadRequest('This report has no retail calendar');
+    return CALENDAR.map(({ retail_year, retail_period, retail_week, week_start, week_end }) => ({ retail_year, retail_period, retail_week, week_start, week_end }));
   }),
   mapping: (id: string) => later(() => {
     report(id);

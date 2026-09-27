@@ -3,7 +3,7 @@ import { Alert, Box, CircularProgress, Container, Typography } from '@mui/materi
 import { useTokens } from './theme';
 import { api, QueryRequest, Spec } from './api';
 import { addDays } from './format';
-import FilterBar, { FilterState } from './components/FilterBar';
+import FilterBar, { FilterState, weeksWithData } from './components/FilterBar';
 import KpiRow from './components/KpiRow';
 import SummaryTable from './components/SummaryTable';
 import BarChartVisual from './components/BarChartVisual';
@@ -32,7 +32,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
     setSpec(undefined);
     setError(undefined);
     Promise.all([api.spec(reportId), api.dateBounds(reportId)])
-      .then(([s, bounds]) => {
+      .then(async ([s, bounds]) => {
         const dateFilter = s.filters.find((f) => f.type === 'date_range');
         const days = dateFilter?.default_last_days ?? 30;
         const initial: FilterState = {
@@ -42,6 +42,13 @@ export default function ReportPage({ reportId }: { reportId: string }) {
           minDate: bounds.min_date,
           maxDate: bounds.max_date,
         };
+        // A retail-week report opens on the latest week that has data, like the old report's Calendar slicer.
+        if (s.filters.some((f) => f.type === 'retail_week')) {
+          const weeks = weeksWithData(await api.calendar(reportId), bounds.min_date, bounds.max_date);
+          const latest = weeks[weeks.length - 1];
+          if (!latest) throw new Error('No retail week in the calendar covers the data in this report');
+          Object.assign(initial, { dateFrom: latest.week_start, dateTo: latest.week_end, weeks });
+        }
         setSpec(s);
         setDefaults(initial);
         setFilters(initial);
@@ -83,7 +90,7 @@ export default function ReportPage({ reportId }: { reportId: string }) {
               '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
             }}
           />
-          {filters.dateFrom} → {filters.dateTo}
+          {weekLabel(filters) ?? `${filters.dateFrom} → ${filters.dateTo}`}
         </Box>
       </Box>
       {spec.sampleDataNotice && (
@@ -117,4 +124,10 @@ export default function ReportPage({ reportId }: { reportId: string }) {
       </Box>
     </Container>
   );
+}
+
+/** "Period 9 · Week 37" when a retail week is selected. */
+function weekLabel(f: FilterState): string | null {
+  const w = f.weeks?.find((x) => x.week_start === f.dateFrom && x.week_end === f.dateTo);
+  return w ? `${w.retail_year} · Period ${w.retail_period} · Week ${w.retail_week}` : null;
 }

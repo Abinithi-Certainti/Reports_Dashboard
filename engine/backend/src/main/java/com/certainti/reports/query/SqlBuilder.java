@@ -46,11 +46,7 @@ public final class SqlBuilder {
             throw new BadRequest("At least one measure is required");
         }
         for (String measureId : request.measuresOrEmpty()) {
-            Measure measure = spec.measures().get(measureId);
-            if (measure == null) {
-                throw new BadRequest("Unknown measure: " + measureId);
-            }
-            select.add("(" + measure.sql() + ") AS " + measureId);
+            select.add("(" + measureSql(spec, measureId) + ") AS " + measureId);
         }
 
         StringBuilder where = new StringBuilder(" WHERE 1 = 1");
@@ -89,6 +85,38 @@ public final class SqlBuilder {
         String sql = "WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT min(d." + dim.column() + ") AS min_date, max(d."
                 + dim.column() + ") AS max_date FROM d";
         return new Built(sql, List.of());
+    }
+
+    /**
+     * The retail weeks, oldest first, for the week filter. Calendar columns: day, retail_year, retail_period,
+     * retail_week, week_start, week_end, period_start, year_start (see reports/_shared/retail_calendar.sql).
+     */
+    public static Built calendarWeeks(ReportSpec spec) {
+        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT retail_year, retail_period, retail_week, week_start, week_end"
+                + " FROM c GROUP BY retail_year, retail_period, retail_week, week_start, week_end ORDER BY week_start";
+        return new Built(sql, List.of());
+    }
+
+    /** Where the week, period and year that contain {@code day} begin - the start of each window. */
+    public static Built calendarDay(ReportSpec spec, String day) {
+        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT week_start, period_start, year_start FROM c WHERE day = ?";
+        return new Built(sql, List.of(parseDate(day)));
+    }
+
+    /** A windowed measure is its base measure's SQL; the window only changes the dates it is run over. */
+    static String measureSql(ReportSpec spec, String measureId) {
+        Measure measure = spec.measures().get(measureId);
+        if (measure == null) {
+            throw new BadRequest("Unknown measure: " + measureId);
+        }
+        return measure.isWindowed() ? spec.measures().get(measure.of()).sql() : measure.sql();
+    }
+
+    private static String requireCalendar(ReportSpec spec) {
+        if (spec.calendarSql() == null) {
+            throw new BadRequest("This report has no retail calendar");
+        }
+        return spec.calendarSql();
     }
 
     private static void addValueFilters(ReportSpec spec, Map<String, List<String>> filters, StringBuilder where,

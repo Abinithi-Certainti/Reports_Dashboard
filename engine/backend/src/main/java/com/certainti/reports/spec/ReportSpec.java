@@ -22,11 +22,21 @@ public record ReportSpec(
         Map<String, Calculation> calculations,
         List<Filter> filters,
         List<Visual> visuals,
-        String datasetSql) {
+        String calendar,
+        String datasetSql,
+        String calendarSql) {
+
+    /** The only calendar so far: the retail calendar (Sunday-Saturday weeks, 4-4-5 periods), from reports/_shared. */
+    public static final String RETAIL_CALENDAR = "retail";
 
     public ReportSpec withDatasetSql(String sql) {
         return new ReportSpec(id, title, subtitle, dataset, sampleDataNotice, dimensions, measures, calculations,
-                filters, visuals, sql);
+                filters, visuals, calendar, sql, calendarSql);
+    }
+
+    public ReportSpec withCalendarSql(String sql) {
+        return new ReportSpec(id, title, subtitle, dataset, sampleDataNotice, dimensions, measures, calculations,
+                filters, visuals, calendar, datasetSql, sql);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,8 +46,20 @@ public record ReportSpec(
         }
     }
 
+    /**
+     * A measure is either its own {@code sql}, or another measure ({@code of}) over a retail-calendar {@code window}
+     * that ends on the last selected day: wtd = from the start of that retail week, ptd = from the start of its retail
+     * period, ytd = from the start of its retail year.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Measure(String label, String sql, String format) {
+    public record Measure(String label, String sql, String format, String window, String of) {
+        public Measure(String label, String sql, String format) {
+            this(label, sql, format, null, null);
+        }
+
+        public boolean isWindowed() {
+            return window != null;
+        }
     }
 
     /** A value worked out after the query, from the returned rows (for example a share of the total). */

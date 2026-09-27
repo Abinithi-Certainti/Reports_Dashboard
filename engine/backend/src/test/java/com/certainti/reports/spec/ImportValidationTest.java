@@ -82,4 +82,51 @@ class ImportValidationTest {
         assertThatThrownBy(() -> registry().parse(YAML.replace("type: table,", "type: table, span: 13,"), "SELECT 1 AS amount, 'A' AS plaza"))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("span must be 1 to 12");
     }
+
+    private static final String WINDOWED = """
+            id: sales-margin
+            title: Sales
+            dataset: dataset.sql
+            calendar: retail
+            dimensions:
+              plaza: { label: Plaza, column: plaza }
+              day:   { label: Day, column: day, type: date }
+            measures:
+              sales:     { label: Sales $, sql: "sum(sales)", format: currency }
+              wtd_sales: { label: WTD Sales $, of: sales, window: wtd, format: currency }
+            filters:
+              - { dimension: day, type: retail_week }
+            visuals:
+              - { type: table, title: By plaza, rows: [plaza], values: [wtd_sales] }
+            """;
+
+    private ReportRegistry registryWithCalendar() throws java.io.IOException {
+        java.nio.file.Files.createDirectories(tmp.resolve("_shared"));
+        java.nio.file.Files.writeString(tmp.resolve("_shared").resolve("retail_calendar.sql"),
+                "SELECT d AS day FROM generate_series(1, 2) d;");
+        return registry();
+    }
+
+    @Test
+    void acceptsAWindowedMeasureWithTheRetailCalendar() throws Exception {
+        ReportSpec spec = registryWithCalendar().parse(WINDOWED, "SELECT 1 AS sales, 'A' AS plaza, current_date AS day");
+        assertThat(spec.calendarSql()).startsWith("SELECT").doesNotContain(";");
+        assertThat(spec.measures().get("wtd_sales").isWindowed()).isTrue();
+    }
+
+    @Test
+    void rejectsWindowsWithoutACalendarOrABadBase() throws Exception {
+        String sql = "SELECT 1 AS sales, 'A' AS plaza, current_date AS day";
+        assertThatThrownBy(() -> registry().parse(WINDOWED, sql))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("retail_calendar.sql");
+        ReportRegistry r = registryWithCalendar();
+        assertThatThrownBy(() -> r.parse(WINDOWED.replace("calendar: retail\n", ""), sql))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs calendar: retail");
+        assertThatThrownBy(() -> r.parse(WINDOWED.replace("window: wtd", "window: mtd"), sql))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("window must be one of");
+        assertThatThrownBy(() -> r.parse(WINDOWED.replace("of: sales", "of: wtd_sales"), sql))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("has its own sql");
+        assertThatThrownBy(() -> r.parse(WINDOWED.replace("dimension: day, type: retail_week", "dimension: plaza, type: retail_week"), sql))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs a date dimension");
+    }
 }
