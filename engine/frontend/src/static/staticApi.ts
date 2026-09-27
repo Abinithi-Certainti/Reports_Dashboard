@@ -48,8 +48,9 @@ const REAL_DATA_NOTICES: Record<string, { title: string; text: string }> = {
   },
   'sales-report-1': {
     title: 'Real QA data.',
-    text: 'One store, 6 to 21 September 2026, from the new database (kios_etl, QA), not yet compared with Power BI. '
-      + 'QA holds no 2025 data, so every PY and YOY % is empty and YOY equals this year. Vending / Market Express hours are not included.',
+    text: 'Store 101518 only, 6 to 21 September 2026 (the first and last day are part days), from the new database (kios_etl, QA). '
+      + 'Not yet compared with Power BI. Its plaza and brand are not known yet, so labour hours and SPLH are not loaded. '
+      + 'QA holds no 2025 data, so every PY and YOY % is empty and YOY equals this year.',
   },
 };
 const NOTICE = 'All stores, names and amounts on this page are made up. The layout and calculations are real; the numbers are not.';
