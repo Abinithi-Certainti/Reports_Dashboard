@@ -33,3 +33,8 @@ weekly_cogs, pos_order_details and the structure export (master_columns_2026-09-
 1. Which environment should the report migration be validated on, DEV or QA?
 2. Will weekly_cogs, the budget tables, netsuite_location_mapping, date_table and district_directors be deployed to QA?
 3. Can readonly_user get SELECT on the QA POS tables?
+
+## Decision (2026-09-27, the user)
+The team chooses the database: whichever of DEV or QA has enough data for a report is the one we use. This is not
+a question for the tech lead. Every result must record which database it came from. Scope: 10 reports, prioritised
+by the business team.
