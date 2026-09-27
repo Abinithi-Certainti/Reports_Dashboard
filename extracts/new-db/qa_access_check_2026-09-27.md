@@ -59,3 +59,8 @@ agreed rule is readonly_user only, so no further checks are run with that login.
 
 Meaning: QA holds a small test load (one store, two weeks). It cannot reproduce the PDF (2026-06-01 to 06-16, all
 stores), and its column types differ from DEV. DEV stays the database for Sales Report 1.
+
+## Correction (2026-09-27, the user)
+QA holds REAL values. "DEV stays the database" above was too strong. QA can check this report for the store and days it
+has (1 store, 2026-09-06 to 09-21), against a Power BI export with the same filter. What QA cannot check: the June PDF,
+other stores, and PY / YOY (it has no 2025 data). It still needs SELECT for readonly_user.
