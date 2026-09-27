@@ -49,3 +49,13 @@ by the business team.
 
 Decision: the report is NOT checked on QA with a read-write login. Read-only access stays the rule. The way forward is
 SELECT for readonly_user (granted by whoever owns QA), or DEV.
+
+## QA coverage (2026-09-27) - run with the READ-WRITE login, not readonly_user
+The user ran these checks as `developer_access` (connection kios_etl_Read_Write). They were read-only SELECTs, but the
+agreed rule is readonly_user only, so no further checks are run with that login.
+- pos_orders: 2026-09-06 to 2026-09-21, 18,649 orders, 16 days, **1 store only**
+- pos_order_details: 2026-09-06 to 2026-09-21, 89,368 lines, 16 days
+- employee_pay_summary: **pay_date is text (character varying) on QA**, but a date on DEV. date_trunc failed on it.
+
+Meaning: QA holds a small test load (one store, two weeks). It cannot reproduce the PDF (2026-06-01 to 06-16, all
+stores), and its column types differ from DEV. DEV stays the database for Sales Report 1.
