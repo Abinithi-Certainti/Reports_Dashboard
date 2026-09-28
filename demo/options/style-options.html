@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Style Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Sora:wght@500;600;700&display=swap">
+<style>
+  :root { color-scheme: dark; --page: #070a12; --text: #e2e8f0; --muted: #7c8aa3; --mono: "JetBrains Mono", ui-monospace, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 60px; background: var(--page); color: var(--text); font: 14px/1.5 Inter, "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .lead { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+  .opt-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .opt-head .tag { font-family: var(--mono); font-size: .75rem; letter-spacing: .14em; color: #22d3ee; font-weight: 700; }
+  .opt-head h2 { margin: 0; font-size: 1.15rem; }
+  .opt-head p { margin: 0; color: var(--muted); flex-basis: 100%; }
+  .num { font-variant-numeric: tabular-nums; }
+  .grid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .two { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 10px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .two { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  td, th { padding: 5px 8px; text-align: left; }
+  td:last-child, th:last-child { text-align: right; }
+  .bars { display: grid; gap: 7px; }
+  .bar { display: grid; grid-template-columns: 90px 1fr 70px; gap: 8px; align-items: center; font-size: .78rem; }
+  .bar i { display: block; height: 8px; border-radius: 4px; }
+  .note { font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+  /* ---- A: Glass Neon (current look, tightened) ---- */
+  .A { background: #04060d; border-radius: 18px; padding: 14px; border: 1px solid rgba(148,163,184,.14);
+       background-image: radial-gradient(600px 240px at 10% 0%, rgba(8,145,178,.25), transparent 70%), radial-gradient(500px 240px at 100% 0%, rgba(124,58,237,.22), transparent 70%); }
+  .A .k { background: rgba(12,18,32,.6); border: 1px solid rgba(148,163,184,.15); border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(12px); position: relative; overflow: hidden; }
+  .A .k::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #22d3ee, #a78bfa); }
+  .A .k small { color: #94a3b8; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; }
+  .A .k b { display: block; font: 700 1.25rem var(--mono); color: #f1f5f9; }
+  .A .p { background: rgba(12,18,32,.6); border: 1px solid rgba(148,163,184,.15); border-radius: 14px; padding: 10px 12px; }
+  .A .p h3 { margin: 0 0 6px; font-size: .68rem; letter-spacing: .12em; color: #94a3b8; }
+  .A th { color: #64748b; font-weight: 600; } .A td { border-top: 1px solid rgba(148,163,184,.08); }
+  .A .bar i { background: linear-gradient(90deg, #3b82f6, #22d3ee); box-shadow: 0 0 10px rgba(34,211,238,.5); }
+
+  /* ---- B: Clean Pro (flat, sharp, dense) ---- */
+  .B { background: #0d1117; border-radius: 10px; padding: 14px; border: 1px solid #1f2733; font-family: Inter, sans-serif; }
+  .B .grid { gap: 0; border: 1px solid #1f2733; border-radius: 8px; overflow: hidden; }
+  .B .k { padding: 10px 14px; border-right: 1px solid #1f2733; background: #0f141b; }
+  .B .k:last-child { border-right: 0; }
+  .B .k small { color: #8b96a8; font-size: .72rem; }
+  .B .k b { display: block; font-size: 1.2rem; font-weight: 650; color: #f0f3f6; }
+  .B .k em { font-style: normal; font-size: .7rem; color: #3fb950; }
+  .B .p { border: 1px solid #1f2733; border-radius: 8px; padding: 10px 12px; background: #0f141b; }
+  .B .p h3 { margin: 0 0 6px; font-size: .8rem; font-weight: 600; color: #c9d1d9; }
+  .B th { color: #8b96a8; font-weight: 500; border-bottom: 1px solid #1f2733; } .B tr:nth-child(even) td { background: #121821; }
+  .B .bar i { background: #4c8dff; border-radius: 2px; }
+
+  /* ---- C: Bento Colour (bold tiles, rounded, playful) ---- */
+  .C { background: #0b0b14; border-radius: 22px; padding: 14px; font-family: Sora, Inter, sans-serif; }
+  .C .k { border-radius: 18px; padding: 12px 14px; color: #0b0b14; }
+  .C .k small { font-size: .7rem; font-weight: 600; opacity: .75; }
+  .C .k b { display: block; font-size: 1.3rem; font-weight: 700; }
+  .C .k:nth-child(1) { background: linear-gradient(135deg, #67e8f9, #22d3ee); }
+  .C .k:nth-child(2) { background: linear-gradient(135deg, #c4b5fd, #a78bfa); }
+  .C .k:nth-child(3) { background: linear-gradient(135deg, #fda4af, #fb7185); }
+  .C .k:nth-child(4) { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+  .C .p { background: #151525; border-radius: 18px; padding: 12px 14px; }
+  .C .p h3 { margin: 0 0 6px; font-size: .85rem; font-weight: 600; }
+  .C th { color: #8a8aa8; font-weight: 500; } .C td { border-top: 1px solid #22223a; }
+  .C .bar i { border-radius: 999px; background: linear-gradient(90deg, #a78bfa, #fb7185); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Dashboard styles: pick one</h1>
+    <p class="lead">The same Tender Report top section in 3 styles, all in the new compact size (about 35% smaller than now). <b>The numbers are made-up examples</b>, only to show the look. Tell me A, B or C.</p>
+  </div>
+
+  <section>
+    <div class="opt-head"><span class="tag">OPTION A</span><h2>Glass Neon</h2><p>Today's look, tightened: see-through glass panels, glowing edges, soft colour lights behind. Futuristic and dark.</p></div>
+    <div class="A" id="A"></div>
+  </section>
+
+  <section>
+    <div class="opt-head"><span class="tag">OPTION B</span><h2>Clean Pro</h2><p>Flat and sharp, like GitHub or Linear. No glow, thin lines, very dense, easiest to read a lot of numbers at once.</p></div>
+    <div class="B" id="B"></div>
+  </section>
+
+  <section>
+    <div class="opt-head"><span class="tag">OPTION C</span><h2>Bento Colour</h2><p>Bold coloured tiles for the headline numbers, big rounded corners, a friendlier rounded font. Modern and eye-catching.</p></div>
+    <div class="C" id="C"></div>
+  </section>
+</div>
+<script>
+// Made-up example values, only to show each style.
+const K = [['Total tender', '$128,450'], ['Cash after paid-outs', '$31,220'], ['Card and other', '$97,230'], ['Paid-outs', '$1,140']];
+const ROWS = [['Visa', '$41,300'], ['Mastercard', '$28,950'], ['Debit', '$22,410'], ['Cash', '$31,220'], ['Amex', '$4,570']];
+const max = 41300;
+for (const id of ['A', 'B', 'C']) {
+  const box = document.getElementById(id);
+  box.innerHTML = `
+    <div class="grid">${K.map(([l, v], i) => `<div class="k"><small>${l}</small><b class="num">${v}</b>${id === 'B' ? `<em>▲ ${[4.2, 1.1, 5.0, 0.3][i]}%</em>` : ''}</div>`).join('')}</div>
+    <div class="two">
+      <div class="p"><h3>SELECTED LOCATIONS - SUMMARY</h3>
+        <table><tr><th>Payment type</th><th>Tender</th></tr>${ROWS.map(([p, v]) => `<tr><td>${p}</td><td class="num">${v}</td></tr>`).join('')}</table></div>
+      <div class="p"><h3>TENDER AMOUNT BY PAYMENT TYPE</h3>
+        <div class="bars">${ROWS.map(([p, v]) => `<div class="bar"><span>${p}</span><i style="width:${Math.round(Number(v.replace(/\D/g, '')) / max * 100)}%"></i><span class="num" style="text-align:right">${v}</span></div>`).join('')}</div></div>
+    </div>
+    <div class="note">Example numbers only.</div>`;
+}
+</script>
+</body>
+</html>
