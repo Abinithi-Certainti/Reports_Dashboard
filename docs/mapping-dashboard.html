@@ -1,0 +1,410 @@
+<title>Report Field Mappings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f4f6f5; --card:#ffffff; --ink:#1c2a30; --muted:#5b6b70; --line:#dde3e2; --soft:#eaefee;
+  --accent:#0e6b6b; --accent-soft:#e0efee;
+  --ok:#2f7a4d; --ok-soft:#e3f1e8; --warn:#a35f00; --warn-soft:#fbeedb; --bad:#b3261e; --bad-soft:#f8e3e1;
+  --code:#f0f3f2;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#11181b; --card:#172125; --ink:#e3ebec; --muted:#9aabaf; --line:#2a383d; --soft:#1d292d;
+    --accent:#5cc3c0; --accent-soft:#16393a;
+    --ok:#6fcf93; --ok-soft:#173424; --warn:#f0b35a; --warn-soft:#3a2a12; --bad:#f28b82; --bad-soft:#3d1c1a;
+    --code:#1b272b;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#11181b; --card:#172125; --ink:#e3ebec; --muted:#9aabaf; --line:#2a383d; --soft:#1d292d;
+  --accent:#5cc3c0; --accent-soft:#16393a;
+  --ok:#6fcf93; --ok-soft:#173424; --warn:#f0b35a; --warn-soft:#3a2a12; --bad:#f28b82; --bad-soft:#3d1c1a;
+  --code:#1b272b;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:flex;flex-direction:column;gap:28px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:28px;line-height:1.2;margin:0;text-wrap:balance;font-weight:700;letter-spacing:-.01em}
+h2{font-size:17px;margin:0;font-weight:650;text-wrap:balance}
+.lede{color:var(--muted);max-width:72ch;margin:0}
+code,.mono{font-family:var(--mono);font-size:12.5px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:24px;font-variant-numeric:tabular-nums;font-weight:700}
+.stat span{color:var(--muted);font-size:12.5px}
+.stat.ok b{color:var(--ok)} .stat.warn b{color:var(--warn)} .stat.bad b{color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.qa{color:var(--ok);background:var(--ok-soft)}
+.pill.dev{color:var(--warn);background:var(--warn-soft)}
+.pill.none{color:var(--bad);background:var(--bad-soft)}
+section{display:flex;flex-direction:column;gap:12px}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--soft);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tables td:first-child{white-space:nowrap}
+.used{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:11.5px;background:var(--soft);border-radius:4px;padding:1px 6px;color:var(--muted);white-space:nowrap}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:1fr}}
+.picker{display:flex;flex-direction:column;gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:820px){.picker{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}}
+.rbtn{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:8px;border:1px solid transparent}
+@media (max-width:820px){.rbtn{min-width:190px;border-color:var(--line);background:var(--card)}}
+.rbtn:hover{background:var(--card);border-color:var(--line)}
+.rbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rbtn[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.rbtn .rn{font-weight:600;font-size:13.5px}
+.rbtn .rm{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.bar{display:flex;height:5px;border-radius:3px;overflow:hidden;background:var(--line)}
+.bar i{display:block;height:100%}
+.detail{display:flex;flex-direction:column;gap:14px;min-width:0}
+.rhead{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.rhead .meta{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:12.5px}
+.rhead p{margin:0;max-width:80ch}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;color:var(--ink)}
+.notes li::marker{color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);min-width:0;flex:1 1 220px}
+.controls input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chip{all:unset;cursor:pointer;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fields{table-layout:fixed;min-width:860px}
+.fields td{font-size:13px}
+.fields th:nth-child(1){width:15%}.fields th:nth-child(2){width:27%}.fields th:nth-child(3){width:31%}.fields th:nth-child(4){width:17%}.fields th:nth-child(5){width:10%}
+.fields .fname{font-weight:600}
+.kind{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:2px}
+.src{display:flex;flex-direction:column;gap:5px}
+.src .tbl{font-family:var(--mono);font-size:12px;color:var(--accent);word-break:break-word}
+pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.45;background:var(--code);border-radius:5px;padding:6px 8px;white-space:pre-wrap;word-break:break-word}
+.plain{}
+.fnote{display:block;color:var(--warn);font-size:12px;margin-top:4px}
+.empty{padding:20px;color:var(--muted);text-align:center}
+footer{color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:4px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Power BI → PostgreSQL <span class="mono">kios_etl.master</span></div>
+    <h1>Report Field Mappings</h1>
+    <p class="lede">Every field of the 10 business-priority reports: where it came from in the old SQL Server model, where it
+    comes from in the new database, the formula in both, and what it means in plain words. Status is checked against the
+    QA table list of 28 Sep 2026 and the DEV table list of 25 Sep 2026.</p>
+  </header>
+
+  <div class="summary" id="summary"></div>
+  <div class="legend">
+    <span><span class="pill qa">In QA</span> every table this field needs is in QA</span>
+    <span><span class="pill dev">From DEV</span> at least one table is missing in QA; DEV has it and is used for now</span>
+    <span><span class="pill none">Missing</span> no table in QA or DEV</span>
+  </div>
+
+  <section aria-labelledby="t-h">
+    <h2 id="t-h">Tables: old → new, and where they exist</h2>
+    <div class="scroll"><table class="tables">
+      <thead><tr><th>New table</th><th>Old table</th><th>QA</th><th>DEV</th><th>Used by</th><th>Note</th></tr></thead>
+      <tbody id="tbody-tables"></tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="f-h">
+    <h2 id="f-h">Fields, report by report</h2>
+    <div class="layout">
+      <nav class="picker" id="picker" role="tablist" aria-label="Reports"></nav>
+      <div class="detail">
+        <div class="rhead" id="rhead"></div>
+        <div class="controls">
+          <input id="q" type="search" placeholder="Search a field, table or formula" aria-label="Search fields">
+          <button class="chip" data-f="all" aria-pressed="true">All</button>
+          <button class="chip" data-f="qa" aria-pressed="false">In QA</button>
+          <button class="chip" data-f="dev" aria-pressed="false">From DEV</button>
+          <button class="chip" data-f="none" aria-pressed="false">Missing</button>
+        </div>
+        <div class="scroll"><table class="fields">
+          <thead><tr><th>Field</th><th>Old (Power BI / SQL Server)</th><th>New (PostgreSQL)</th><th>In plain words</th><th>Status</th></tr></thead>
+          <tbody id="tbody-fields"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Sources: <span class="mono">extracts/&lt;report&gt;/</span> model files and <span class="mono">extracts/new-db/qa_structure_2026-09-28.md</span> in the Reports_Dashboard repository.</span>
+    <span>Numbers are not shown here on purpose: this page is about tables, fields and formulas.</span>
+  </footer>
+</div>
+
+<script>
+// Every table the reports need. qa / dev: 1 = present in that database's table list.
+const TABLES = {
+  pos_orders:               {old:"POS_ORDERS", qa:1, dev:1, note:"order_type_name is an enum type"},
+  pos_order_details:        {old:"POS_ORDERDETAILS", qa:1, dev:1},
+  pos_order_payments:       {old:"POS_ORDERPAYMENTS", qa:1, dev:1},
+  pos_order_paid_outs:      {old:"POS_ORDERPAIDOUTS", qa:1, dev:1},
+  employee_pay_summary:     {old:"EmployeePaySummaryv2", qa:1, dev:1, note:"QA: pay_date is text (cast with ::date); DEV: date"},
+  netsuite_location_mapping:{old:"NetSuiteLocation_Mapping", qa:0, dev:1, note:"store → plaza, brand, host location. Needed by every report"},
+  district_directors:       {old:"District_Directors", qa:0, dev:1},
+  date_table:               {old:"dbo.date_table", qa:0, dev:1, note:"retail calendar (weeks, periods, years)"},
+  temp_dlh:                 {old:"Temp_DLH", qa:0, dev:1},
+  weekly_cogs:              {old:"WeeklyCogs", qa:0, dev:1},
+  weekly_cogs_prod_num:     {old:"WeeklyCogsProdNum", qa:0, dev:1},
+  vena_sales:               {old:"Sales_20xx_UnPivot_New", qa:0, dev:1, note:'or "Sales" (same columns). Not yet confirmed which one is loaded'},
+  vena_gross_margin:        {old:"GM_20xx_UnPivot_New", qa:0, dev:1, note:'or "Gross Margin"'},
+  vena_transactions:        {old:"Transactions_2026_UnPivot_v2", qa:0, dev:1, note:'or "Transactions"'},
+  vena_labour_hours:        {old:"DLH_2026_UnPivot_New", qa:0, dev:1, note:'or "DLH"'},
+  people_count:             {old:"people_count (MySQL)", qa:0, dev:1, note:"camera counters, cumulative per day"},
+  car_count:                {old:"smats_raw (MySQL)", qa:0, dev:1, note:"radar counts; column match still to confirm"},
+  timecard_detail:          {old:"TimeCardDetail + JobCode", qa:0, dev:0, note:"vending / Market Express hours. No new table"},
+  plu_product_map:          {old:"Net-Chef (Oracle) PLU → product", qa:0, dev:0, note:"links Market sales to products. No new table"}
+};
+
+const LOC = ["netsuite_location_mapping"];
+const DIMS = {
+  plaza:{n:"Plaza",k:"dimension",dax:"Revenue_Append[Plaza] (LocationName + ~20 text renames)",sql:"netsuite_location_mapping.location_name + the same renames",plain:"The travel plaza the store belongs to.",t:LOC},
+  brand:{n:"Brand",k:"dimension",dax:"Revenue_Append[Brand] (upper-case, Wendy's → WENDYS …)",sql:"upper(netsuite_location_mapping.brand_name) + the same fixes",plain:"The restaurant or shop inside the plaza.",t:LOC},
+  dd:{n:"District Director",k:"filter",dax:"District_Directors[District_Director]",sql:"district_directors.district_director (join on host_location_id)",plain:"The manager responsible for the plaza.",t:["district_directors","netsuite_location_mapping"]},
+  day:{n:"Date",k:"filter",dax:"endday (date part)",sql:"end_day::date",plain:"The business day of the sale.",t:["pos_orders"]},
+  retail:{n:"Retail year / period / week",k:"filter",dax:"dbo.date_table columns",sql:"date_table (retail_year, retail_period, retail_week)",plain:"The company's own 52-week calendar, weeks Sunday to Saturday.",t:["date_table"]},
+  agm:{n:"AGM",k:"filter",dax:"CASE on HostLocationID → Central / East / West / TBD (hard-coded)",sql:"the same CASE on host_location_id",plain:"Area manager group. The list is typed into the old SQL; it has no table.",t:LOC,note:"Hard-coded list: where should it live?"}
+};
+
+// Shared sales formulas
+const SALES = {n:"Sales $",k:"measure",
+  dax:`SUM(POS net) − SUM(Cardfee[price]) − SUM(Deposits[Deposit])`,
+  sql:`sum(pos_orders.net)  -- not Cash Drop
+− sum(pos_order_details.value_added_base_price)
+    where menu_item_name = 'Card Fee' and Market brand
+− sum(...) where department_name = 'Alcohol Deposit - Beer'`,
+  plain:"What customers paid before tax, minus Market card fees and beer bottle deposits.",t:["pos_orders","pos_order_details","netsuite_location_mapping"]};
+const TRANS = {n:"Transactions",k:"measure",dax:`COUNT(POS_ORDERS.OrderID)  -- not Cash Drop`,sql:`count(pos_orders.order_id)
+where order_type_name <> 'Cash Drop'`,plain:"Number of customer orders.",t:["pos_orders","netsuite_location_mapping"]};
+const LHD = {n:"Labour Hours Direct",k:"measure",
+  dax:`EmployeePaySummaryv2[Hours] (crew jobs, Reg/OT1.5/Hol1.5)
++ TimeCardDetail vending hours + Temp_DLH[DLH]`,
+  sql:`sum(employee_pay_summary.hours)
+  where job in ('CREW MEMBER','LEAD','SHIFT SUPERVISOR','UTILITY')
+  and pay_category in ('Reg','OT1.5','Hol1.5')
++ sum(temp_dlh.dlh)`,
+  plain:"Hours worked by crew serving customers. Joined to a plaza by the text 'PLAZA BRAND'.",t:["employee_pay_summary","temp_dlh","netsuite_location_mapping"],
+  note:"Vending / Market Express hours (TimeCardDetail) have no new table."};
+const SPLH = {n:"SPLH $",k:"measure",dax:`DIVIDE([Sales $], [Labour Hours Direct])`,sql:`sales / nullif(labour_hours, 0)`,plain:"Sales per labour hour.",t:["pos_orders","pos_order_details","employee_pay_summary","temp_dlh","netsuite_location_mapping"]};
+const AVG = {n:"Average Check $",k:"measure",dax:`DIVIDE([Sales $], [Transactions])`,sql:`sales / nullif(transactions, 0)`,plain:"Average amount spent per order.",t:["pos_orders","pos_order_details","netsuite_location_mapping"]};
+const PY = {n:"… PY, YOY $, YOY %",k:"measure",dax:`CALCULATE([m], 'Date'[DWY] = MAX('Date'[DWY]) − 1)
+YOY = m − PY;  YOY % = (m − PY) / PY`,sql:`engine window "py": same days shifted back one retail year (364 days)
+yoy = cur − py;  yoy_pct = (cur − py) / py`,plain:"The same measure on the same weekday of the same week last year, and the change.",t:["date_table","netsuite_location_mapping"]};
+
+const REPORTS = [
+ {id:"tender",name:"Tender Report",jira:"AG-66",state:"built",
+  about:"Money taken per payment type (cash, cards, gift cards) per plaza and brand, with cash paid-outs taken off the cash line.",
+  notes:["All paid-outs are counted against Cash.","\"Cash Drop\" is merged into Cash before anything is summed."],
+  fields:[
+   {n:"Tender Amount",k:"measure",dax:`SUM('Payment Type Summary'[Tender Amount])
+  ← POS_ORDERPAYMENTS.PaymentAmount`,sql:`sum(pos_order_payments.payment_amount)`,plain:"Money received, by payment type.",t:["pos_order_payments","netsuite_location_mapping"]},
+   {n:"Payment Type",k:"dimension",dax:`PaymentTypeName, "Cash Drop" → "Cash"`,sql:`pos_order_payments.payment_type_name
+  (replace 'Cash Drop' with 'Cash')`,plain:"How the customer paid. Shown in a fixed order: Cash, US Cash, Debit, Visa …",t:["pos_order_payments"]},
+   {n:"Cash paid out",k:"measure",dax:`SUM(Cash_Paidout[PaymentAmount])`,sql:`sum(pos_order_paid_outs.payment_amount)`,plain:"Cash handed out of the till (lottery wins, refunds).",t:["pos_order_paid_outs","netsuite_location_mapping"]},
+   {n:"Tender amount 2",k:"measure",dax:`SUM([Tender Amount]) − SUM(Cash_Paidout[PaymentAmount])`,sql:`tender − paid_out   (paid-outs sit on the Cash row)`,plain:"Money received after cash paid-outs.",t:["pos_order_payments","pos_order_paid_outs","netsuite_location_mapping"]},
+   {n:"Total Payment",k:"measure",dax:`[All_Payment_Type ex cash] + [Cash-paidout]`,sql:`sum over all payment types of tender − paid_out`,plain:"All money received, after paid-outs.",t:["pos_order_payments","pos_order_paid_outs","netsuite_location_mapping"]},
+   {n:"% to Total",k:"measure",dax:`DIVIDE([Tender amount 2], [Total Payment])`,sql:`tender_2 / nullif(total_payment, 0)`,plain:"Share of each payment type in the total.",t:["pos_order_payments","pos_order_paid_outs","netsuite_location_mapping"]},
+   DIMS.day, DIMS.plaza, DIMS.brand, DIMS.dd]},
+ {id:"waste",name:"Detailed Waste Report",jira:"",state:"built",
+  about:"Stock movement, cost of goods and waste per plaza and product for a range of retail weeks.",
+  notes:["Begin $ and End $ take the first / last week of the range, not a sum.","Inventory adjustments count as waste only from 2023-05-28."],
+  fields:[
+   {n:"Begin $",k:"measure",dax:`SUM(begin_value) for the FIRST retail week in range`,sql:`sum(weekly_cogs.begin_value) where week = first week`,plain:"Stock value at the start of the range.",t:["weekly_cogs","date_table","netsuite_location_mapping"]},
+   {n:"Purchase $",k:"measure",dax:`SUM(purchase_value)`,sql:`sum(weekly_cogs.purchase_value)`,plain:"Stock bought in.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Var Adj Value",k:"measure",dax:`SUM(var_adj_value)`,sql:`sum(weekly_cogs.var_adj_value)`,plain:"Stock count corrections.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"End $",k:"measure",dax:`SUM(end_value) for the LAST retail week in range`,sql:`sum(weekly_cogs.end_value) where week = last week`,plain:"Stock value at the end of the range.",t:["weekly_cogs","date_table","netsuite_location_mapping"]},
+   {n:"COGS $",k:"measure",dax:`SUM(cogs)`,sql:`sum(weekly_cogs.cogs)`,plain:"Cost of the goods that were used or sold.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Theocost $",k:"measure",dax:`SUM(theo_cost)`,sql:`sum(weekly_cogs.theo_cost)`,plain:"What the goods should have cost, from recipes.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Waste $",k:"measure",dax:`SUM(waste_value) + SUM(new_inv_adj_value)
+new_inv_adj_value = 0 before 2023-05-28`,sql:`sum(waste_value)
++ sum(case when start_date >= '2023-05-28' then inv_adj_value else 0 end)`,plain:"Value of food thrown away.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Variance",k:"measure",dax:`[COGS $] − [Theocost $] − [Waste $]`,sql:`cogs − theo_cost − waste`,plain:"Cost that is not explained by recipes or waste.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Unit Price",k:"measure",dax:`SUM(unit_price)`,sql:`sum(weekly_cogs.unit_price)`,plain:"Price per unit. Added up across rows in the old report, so its total means nothing.",t:["weekly_cogs","netsuite_location_mapping"],note:"Adding prices together is a bug in the old report."},
+   {n:"Category / Sub Category / Item",k:"filter",dax:`WeeklyCogsProdNum (product_num, category, sub_category)`,sql:`weekly_cogs_prod_num joined on product_num`,plain:"What kind of product it is.",t:["weekly_cogs_prod_num"]},
+   DIMS.retail, DIMS.plaza, DIMS.brand, DIMS.dd]},
+ {id:"market",name:"Market Category Report",jira:"",state:"extracted",
+  about:"The Waste Report's stock numbers plus sales and gross profit, for the Market (convenience store) brand only.",
+  notes:["Sales link to products through PLU numbers held in the Net-Chef (Oracle) system, which has no table in the new database.","The old model has no Market sales between May 2022 and Dec 2023."],
+  fields:[
+   {n:"BOP U / EOP U / EOP $",k:"measure",dax:`SUM(begin_quantity) / SUM(end_quantity) / SUM(end_value)`,sql:`weekly_cogs.begin_quantity / end_quantity / end_value`,plain:"Units and value in stock at the start and end of the week.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Receipt U / Rec $",k:"measure",dax:`SUM(purchase_quantity) / SUM(purchase_value)`,sql:`weekly_cogs.purchase_quantity / purchase_value`,plain:"Units and value received.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Waste U / Waste $",k:"measure",dax:`waste_quantity + new_inv_adj_quantity
+waste_value + new_inv_adj_value`,sql:`the same, adjustment counted from 2023-05-28`,plain:"Units and value thrown away.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"Sales U",k:"measure",dax:`SUM(count_of_plu)  -- promotions count 0 units`,sql:`count(pos_order_details.plu)
+  where menu_item_name not like '%PROMOTION%'`,plain:"Units sold.",t:["pos_order_details","plu_product_map","netsuite_location_mapping"]},
+   {n:"Sales $",k:"measure",dax:`SUM(final_price)
+final_price = (ValueAddedBasePrice, or Price if 0) − Discountamount`,sql:`sum(coalesce(nullif(value_added_base_price,0), price) − discount_amount)`,plain:"Market sales value, after discounts.",t:["pos_order_details","plu_product_map","netsuite_location_mapping"]},
+   {n:"COGS $",k:"measure",dax:`CALCULATE(SUM(cogs), Brand = "Market")`,sql:`sum(weekly_cogs.cogs) where brand = 'Market'`,plain:"Cost of goods for the Market.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"GP $ / GP %",k:"measure",dax:`[Sales $] − [COGS $];  GP $ / Sales $`,sql:`sales − cogs;  (sales − cogs) / nullif(sales,0)`,plain:"Gross profit in dollars and as a share of sales.",t:["pos_order_details","weekly_cogs","plu_product_map","netsuite_location_mapping"]},
+   {n:"WTD / LW / LLW / YTD …",k:"measure",dax:`the measure from Start of Week; the week 7 / 14 / 21 days earlier; from the first retail week of the year`,sql:`engine windows wtd, ytd; "lw" windows still to add`,plain:"This week, last week, the two weeks before, and year to date.",t:["date_table"]},
+   {n:"Category / Sub Category",k:"filter",dax:`WeeklyCogsProdNum + ~76 hard-coded promotion and LCBO rows`,sql:`weekly_cogs_prod_num (+ the hard-coded rows as a small table)`,plain:"Product grouping.",t:["weekly_cogs_prod_num"]},
+   DIMS.retail, DIMS.plaza, DIMS.dd]},
+ {id:"people",name:"People Count & Transactions",jira:"",state:"extracted",
+  about:"People walking in (door cameras) against transactions, by time of day, to give a capture rate.",
+  notes:["Camera counters are cumulative through the day, so a time band is end counter minus start counter.","\"Transactions\" here leaves out drive-thru and paid-outs; in the Radar report it does not."],
+  fields:[
+   {n:"People In",k:"measure",dax:`SUM(WAIV[people_in])  -- max counter of the day`,sql:`max(entrance_count) per plaza, camera, day
+  (people_count)`,plain:"People who walked in during the day.",t:["people_count"]},
+   {n:"People In by band (7–11, 11–15, 15–22, 22–7)",k:"measure",dax:`SUM(before_11) − SUM(before_7)  etc.`,sql:`counter at band end − counter at band start`,plain:"People in during each part of the day.",t:["people_count"]},
+   {n:"Transactions (walk-in)",k:"measure",dax:`SUM(POS_ORDERS[OrderNumber])
+  not Cash Drop, Drive-Thru, Paid Out, Mobile - Drive Thru; receipt <> 0`,sql:`count(pos_orders.order_id) with the same exclusions
+  hour from finish_on`,plain:"Orders placed inside the plaza.",t:["pos_orders","netsuite_location_mapping"]},
+   {n:"Capture Rate",k:"measure",dax:`DIVIDE([transaction], [people in sum])`,sql:`transactions / nullif(people_in, 0)`,plain:"Share of people walking in who bought something.",t:["pos_orders","people_count","netsuite_location_mapping"]},
+   {n:"Plaza (camera)",k:"dimension",dax:`location + ~25 hand-written renames`,sql:`people_count.location + a plaza lookup`,plain:"The plaza the camera is in.",t:["people_count"]},
+   DIMS.day]},
+ {id:"radar",name:"Radar Car Count",jira:"",state:"extracted",
+  about:"Vehicles passing on the highway and turning in, by vehicle type and time of day, against transactions.",
+  notes:["Which lane counts as \"Highway\" is a hard-coded list of plaza names per direction.","Sensor-1 is renamed to Cambridge North up to 2025-09-18."],
+  fields:[
+   {n:"Radar highway / entrance",k:"measure",dax:`SUM(Radar[volume]) where new_zone_name = "Highway" / "Entrance"`,sql:`sum(volume) from car_count
+  zone Off% = Entrance; WB/EB/NB/SB per plaza = Highway`,plain:"Vehicles passing, and vehicles turning in.",t:["car_count"]},
+   {n:"Cars / Trucks",k:"dimension",dax:`Car, Motorbike, Transporter = Cars; Long/Short Truck = Trucks`,sql:`the same CASE on vehicle_class`,plain:"Vehicle type.",t:["car_count"]},
+   {n:"Turn-in rate",k:"measure",dax:`[Radar_entrance] / ([Radar_entrance] + [Radar_highway])`,sql:`entrance / nullif(entrance + highway, 0)`,plain:"Share of passing vehicles that turned into the plaza.",t:["car_count"]},
+   {n:"Time bands",k:"dimension",dax:`hour_only in [7,11), [11,15), [15,22), rest`,sql:`extract(hour from rec_datetime)`,plain:"Morning, midday, evening and night.",t:["car_count"]},
+   {n:"Transactions",k:"measure",dax:`SUM(POS_ORDERS[OrderNumber])  -- not Cash Drop`,sql:`count(pos_orders.order_id) where order_type_name <> 'Cash Drop'`,plain:"All orders, drive-thru included.",t:["pos_orders","netsuite_location_mapping"]},
+   DIMS.retail, DIMS.plaza]},
+ {id:"margin",name:"Sales and Margin with Budget",jira:"AG-76",state:"built (sample data)",
+  about:"Sales, gross profit and their budgets per plaza and brand, for the week, period and year to date.",
+  notes:["Which budget table is loaded (vena_sales or \"Sales\") is not yet confirmed."],
+  fields:[SALES,
+   {n:"COGS $",k:"measure",dax:`SUM(WeeklyCogs[cogs])`,sql:`sum(weekly_cogs.cogs)`,plain:"Cost of goods sold.",t:["weekly_cogs","netsuite_location_mapping"]},
+   {n:"GP $ / GP %",k:"measure",dax:`[Sales $] − [COGS $];  GP / Sales`,sql:`sales − cogs;  (sales − cogs) / nullif(sales, 0)`,plain:"Gross profit.",t:["pos_orders","pos_order_details","weekly_cogs","netsuite_location_mapping"]},
+   {n:"Budget Sales",k:"measure",dax:`SUM('SQL Sales budget table'[value])`,sql:`sum(vena_sales.value)  (by "TimePeriod_Date", "HostLocationID", "Brand")`,plain:"Planned sales.",t:["vena_sales"]},
+   {n:"Budget GP $ / Bud %",k:"measure",dax:`SUM(GM budget[value]);  GM budget / Sales budget`,sql:`sum(vena_gross_margin.value);  gm / nullif(budget, 0)`,plain:"Planned gross profit and margin.",t:["vena_gross_margin","vena_sales"]},
+   {n:"Variance to budget",k:"measure",dax:`actual − budget  (Sales, GP $, GP %)`,sql:`cur − budget`,plain:"How far actual is above or below plan.",t:["pos_orders","vena_sales","vena_gross_margin","weekly_cogs","netsuite_location_mapping"]},
+   {n:"WTD / MTD / YTD …",k:"measure",dax:`from Start of Week / Start of week by period / first retail week by year to last date`,sql:`engine windows wtd / ptd / ytd`,plain:"Week, retail period and year to date.",t:["date_table"]},
+   DIMS.retail, DIMS.plaza, DIMS.brand, DIMS.dd]},
+ {id:"sr1",name:"Sales Report 1",jira:"AG-79",state:"built (QA sales, 1 store)",
+  about:"Daily sales, transactions, labour and their ratios by weekday, plaza and brand, against last year.",
+  notes:["Labour joins to a plaza on free text ('CAMBRIDGE NORTH TIM HORTONS').","Maple Tim Hortons drive-thru orders count as brand TIM HORTONS DT."],
+  fields:[SALES, TRANS, LHD, SPLH, AVG, PY,
+   {n:"Weekday / Week ending",k:"dimension",dax:`'Date'[Weekday], 'Date'[End of Week]`,sql:`date_table.weekday, date_table.end_of_week`,plain:"Sunday to Saturday, and the Saturday that ends the week.",t:["date_table"]},
+   DIMS.plaza, DIMS.brand, DIMS.dd, DIMS.agm]},
+ {id:"bud26",name:"Sales Report – Including Budget 2026",jira:"AG-80",state:"extracted",
+  about:"Sales Report 1 plus 2026 budgets for sales, transactions and labour hours, TPLH, and week / period / year to date.",
+  notes:["A second \"last year\" (FIN) uses the same calendar date, not the same weekday.","Budget brand fixes: NYF, STARBUCKS KIOSK, WENDY'S; labour budget also MIC → ADMIN, ONCARE → UTILITY."],
+  fields:[SALES, TRANS, LHD, SPLH, AVG,
+   {n:"TPLH",k:"measure",dax:`DIVIDE([Transactions], [Labour Hours Direct])`,sql:`transactions / nullif(labour_hours, 0)`,plain:"Transactions per labour hour.",t:["pos_orders","employee_pay_summary","temp_dlh","netsuite_location_mapping"]},
+   {n:"Sales Budget $",k:"measure",dax:`SUM('2026 SQL Sales budget table'[value])`,sql:`sum(vena_sales.value)`,plain:"Planned sales.",t:["vena_sales"]},
+   {n:"Trans budget",k:"measure",dax:`SUM('2026 SQL transactions budget table'[value])`,sql:`sum(vena_transactions.value)`,plain:"Planned transactions.",t:["vena_transactions"]},
+   {n:"LHD budget",k:"measure",dax:`SUM('2026 SQL DLH budget table'[value])`,sql:`sum(vena_labour_hours.value)`,plain:"Planned labour hours.",t:["vena_labour_hours"]},
+   {n:"Budget TPLH / Budget Avg Check",k:"measure",dax:`Trans budget / LHD budget;  Sales budget / Trans budget`,sql:`ratios of the budget sums`,plain:"Planned transactions per hour and planned average check.",t:["vena_sales","vena_transactions","vena_labour_hours"]},
+   {n:"… vs Budget $ / %",k:"measure",dax:`actual − budget;  (actual − budget) / budget`,sql:`cur − budget;  (cur − budget) / nullif(budget, 0)`,plain:"Difference from plan.",t:["vena_sales","vena_transactions","vena_labour_hours","pos_orders","netsuite_location_mapping"]},
+   PY,
+   {n:"… PY FIN",k:"measure",dax:`CALCULATE([m], 'Date'[YMD] = MAX('Date'[YMD]) − 10000)`,sql:`new engine window "py_fin": same calendar date one year earlier`,plain:"Last year on the same calendar date.",t:["date_table"],note:"Engine window not built yet."},
+   {n:"WTD / PTD / YTD …",k:"measure",dax:`from Start of Week / Start of week by period / first retail week by year`,sql:`engine windows wtd / ptd / ytd`,plain:"Week, retail period and year to date.",t:["date_table"]},
+   DIMS.plaza, DIMS.brand, DIMS.dd, DIMS.agm]},
+ {id:"field",name:"Sales Report Field Team",jira:"AG-81",state:"extracted",
+  about:"A smaller Sales Report: daily sales, transactions, labour, SPLH and average check, with last year and month to date.",
+  notes:["Sales here does NOT subtract beer deposits.","Labour here keeps every job except 5 manager jobs."],
+  fields:[
+   {n:"Sales",k:"measure",dax:`SUM(POS net) − SUM(Cardfee[price])`,sql:`sum(pos_orders.net) − Market card fees
+  (no beer deposit)`,plain:"Sales before tax, minus Market card fees.",t:["pos_orders","pos_order_details","netsuite_location_mapping"]},
+   TRANS,
+   {n:"Labour Hours Direct",k:"measure",dax:`Hours for every job except ASSOCIATE GM, GENERAL MANAGER,
+MANAGER IN TRAINING, OPERATIONS MANAGER, BRAND MANAGER
++ vending hours + Temp_DLH`,sql:`sum(employee_pay_summary.hours) where job not in (5 manager jobs)
+  and pay_category in ('Reg','OT1.5','Hol1.5')
++ sum(temp_dlh.dlh)`,plain:"Hours worked by everyone except managers.",t:["employee_pay_summary","temp_dlh","netsuite_location_mapping"],note:"Vending hours have no new table."},
+   SPLH, AVG, PY,
+   {n:"MTD …",k:"measure",dax:`CALCULATE([m], DATESMTD('Date'[Date]))`,sql:`new engine window "mtd": calendar month to date`,plain:"From the 1st of the month to the selected day.",t:[],note:"Engine window not built yet."},
+   {n:"Week ending",k:"dimension",dax:`'Date'[End of Week]`,sql:`date_table.end_of_week`,plain:"The Saturday that ends each week.",t:["date_table"]},
+   DIMS.plaza, DIMS.brand, DIMS.dd, DIMS.agm]},
+ {id:"fin",name:"Financial Reports",jira:"AG-82",state:"extracted",
+  about:"Four daily money reports by plaza and brand: HST, gift card sales, donations and lottery.",
+  notes:["Every cash paid-out is counted as a lottery redemption, whatever reason the cashier typed. Business to confirm."],
+  fields:[
+   {n:"HST",k:"measure",dax:`SUM('POS Order & Ref'[tax])`,sql:`sum(pos_orders.tax)`,plain:"Sales tax collected.",t:["pos_orders","netsuite_location_mapping"]},
+   {n:"Gift Card",k:"measure",dax:`SUM(price) where DepartmentName in
+('Gift Card','Retail - gift card','Tim Card','gift cards')`,sql:`sum(pos_order_details.value_added_base_price)
+  where department_name in (…) and menu_item_name <> 'Card Fee'`,plain:"Gift cards sold.",t:["pos_order_details","netsuite_location_mapping"]},
+   {n:"Donations",k:"measure",dax:`SUM(Donations[price])
+  DepartmentName = 'Donations' or MenuItemName = 'Camp Day Bracelet'`,sql:`sum(value_added_base_price) with the same filter`,plain:"Charity donations taken at the till.",t:["pos_order_details","netsuite_location_mapping"]},
+   {n:"Donation item",k:"dimension",dax:`KitchenName`,sql:`pos_order_details.kitchen_name`,plain:"Which donation it was (badge, bracelet, coin box …).",t:["pos_order_details"]},
+   {n:"Lottery Sales",k:"measure",dax:`SUM(valueaddedbaseprice) where DepartmentName in ('Instant Tickets','Open Lottery')`,sql:`sum(pos_order_details.value_added_base_price) with the same filter`,plain:"Lottery tickets sold.",t:["pos_order_details","netsuite_location_mapping"]},
+   {n:"Lottery Redemptions",k:"measure",dax:`MenuItemName in ('Lottery Redemption','Lottery Payout')
++ POS_ORDERPAIDOUTS.PaymentAmount × −1`,sql:`order-detail redemption rows
++ (− sum(pos_order_paid_outs.payment_amount))`,plain:"Lottery winnings paid out, plus all cash paid-outs.",t:["pos_order_details","pos_order_paid_outs","netsuite_location_mapping"],note:"Includes paid-outs typed as refund or error."},
+   {n:"Lottery Type / Category",k:"dimension",dax:`Category: Sales / Redemptions;  Type: DepartmentName (blank → Redemptions)`,sql:`the same CASE on department_name and menu_item_name`,plain:"Sales or redemption, and instant or open lottery.",t:["pos_order_details","pos_order_paid_outs"]},
+   DIMS.day, DIMS.plaza, DIMS.brand, DIMS.dd]}
+];
+
+const RANK={qa:0,dev:1,none:2};
+const LABEL={qa:"In QA",dev:"From DEV",none:"Missing"};
+function tableStatus(name){const t=TABLES[name];if(!t)return "none";return t.qa?"qa":(t.dev?"dev":"none");}
+function fieldStatus(f){let s="qa";(f.t||[]).forEach(n=>{const x=tableStatus(n);if(RANK[x]>RANK[s])s=x;});return s;}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+const pill=s=>`<span class="pill ${s}">${LABEL[s]}</span>`;
+
+// Summary
+(function(){
+  const all=REPORTS.flatMap(r=>r.fields);
+  const c={qa:0,dev:0,none:0};all.forEach(f=>c[fieldStatus(f)]++);
+  const tn=Object.keys(TABLES);const tq=tn.filter(n=>TABLES[n].qa).length;
+  document.getElementById("summary").innerHTML=
+   `<div class="stat"><b>${REPORTS.length}</b><span>reports mapped</span></div>`+
+   `<div class="stat"><b>${all.length}</b><span>fields and formulas</span></div>`+
+   `<div class="stat ok"><b>${c.qa}</b><span>fields fully in QA</span></div>`+
+   `<div class="stat warn"><b>${c.dev}</b><span>fields needing a DEV table</span></div>`+
+   `<div class="stat bad"><b>${c.none}</b><span>fields with a missing table</span></div>`+
+   `<div class="stat"><b>${tq} / ${tn.length}</b><span>tables found in QA</span></div>`;
+})();
+
+// Tables grid
+(function(){
+  const used={};REPORTS.forEach(r=>r.fields.forEach(f=>(f.t||[]).forEach(n=>{(used[n]=used[n]||new Set()).add(r.name);})));
+  const order=Object.keys(TABLES).sort((a,b)=>RANK[tableStatus(a)]-RANK[tableStatus(b)]);
+  const yes=v=>v?`<span class="pill qa">Yes</span>`:`<span class="pill none">No</span>`;
+  document.getElementById("tbody-tables").innerHTML=order.map(n=>{const t=TABLES[n];const u=[...(used[n]||[])];
+    return `<tr><td class="mono">${esc(n)}</td><td class="mono">${esc(t.old)}</td><td>${yes(t.qa)}</td><td>${yes(t.dev)}</td>
+    <td><div class="used">${u.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></td><td>${esc(t.note||"")}</td></tr>`;}).join("");
+})();
+
+// Picker + detail
+let cur=REPORTS[0].id, filt="all";
+try{const s=localStorage.getItem("map-report");if(s&&REPORTS.some(r=>r.id===s))cur=s;}catch(e){}
+function counts(r){const c={qa:0,dev:0,none:0};r.fields.forEach(f=>c[fieldStatus(f)]++);return c;}
+function renderPicker(){
+  document.getElementById("picker").innerHTML=REPORTS.map((r,i)=>{const c=counts(r),n=r.fields.length;
+    return `<button class="rbtn" role="tab" id="tab-${r.id}" aria-selected="${r.id===cur}" data-id="${r.id}">
+      <span class="rn">${i+1}. ${esc(r.name)}</span>
+      <span class="bar" aria-hidden="true"><i style="width:${c.qa/n*100}%;background:var(--ok)"></i><i style="width:${c.dev/n*100}%;background:var(--warn)"></i><i style="width:${c.none/n*100}%;background:var(--bad)"></i></span>
+      <span class="rm"><span>${n} fields</span><span>${r.jira||"no ticket yet"}</span></span></button>`;}).join("");
+  document.querySelectorAll(".rbtn").forEach(b=>b.addEventListener("click",()=>{cur=b.dataset.id;try{localStorage.setItem("map-report",cur);}catch(e){}renderPicker();renderDetail();}));
+}
+function renderDetail(){
+  const r=REPORTS.find(x=>x.id===cur);const c=counts(r);
+  document.getElementById("rhead").innerHTML=`<h2>${esc(r.name)}</h2>
+    <div class="meta"><span>Jira: <b>${esc(r.jira||"—")}</b></span><span>Stage: <b>${esc(r.state)}</b></span>
+    <span>${c.qa} in QA · ${c.dev} from DEV · ${c.none} missing</span></div>
+    <p>${esc(r.about)}</p>${r.notes&&r.notes.length?`<ul class="notes">${r.notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:""}`;
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  const rows=r.fields.filter(f=>{const s=fieldStatus(f);if(filt!=="all"&&s!==filt)return false;
+    if(!q)return true;return [f.n,f.dax,f.sql,f.plain,(f.t||[]).join(" ")].join(" ").toLowerCase().includes(q);});
+  document.getElementById("tbody-fields").innerHTML=rows.length?rows.map(f=>{const s=fieldStatus(f);
+    const tl=(f.t||[]).map(n=>`${n}${tableStatus(n)==="qa"?"":tableStatus(n)==="dev"?" (DEV)":" (missing)"}`).join(", ");
+    return `<tr><td class="fname">${esc(f.n)}<span class="kind">${esc(f.k)}</span></td>
+      <td><div class="src"><pre>${esc(f.dax)}</pre></div></td>
+      <td><div class="src">${tl?`<span class="tbl">${esc(tl)}</span>`:""}<pre>${esc(f.sql)}</pre></div></td>
+      <td class="plain">${esc(f.plain)}${f.note?`<span class="fnote">${esc(f.note)}</span>`:""}</td>
+      <td>${pill(s)}</td></tr>`;}).join(""):`<tr><td colspan="5" class="empty">No fields match. Clear the search or pick "All".</td></tr>`;
+}
+document.getElementById("q").addEventListener("input",renderDetail);
+document.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{filt=b.dataset.f;
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));renderDetail();}));
+renderPicker();renderDetail();
+</script>
