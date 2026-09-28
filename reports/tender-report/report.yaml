@@ -18,16 +18,6 @@ measures:
   gross_tenders: { label: Tenders,       sql: "sum(tender_amount)",                        format: currency }
   paidouts:      { label: Paid-outs,     sql: "sum(paidout_amount)",                       format: currency }
 
-calculations:
-  pct_to_total:
-    label: "% to Total"
-    of: tender_amount
-    format: percent
-    default_mode: legacy          # decision pending with the lead: keep the old numbers or fix them
-    modes:
-      legacy:    { type: tender_legacy_share, label: "As in Power BI today" }
-      corrected: { type: share_of_total,      label: "Corrected (adds to 100%)" }
-
 filters:
   - { dimension: plaza,             type: multi_select }
   - { dimension: district_director, type: multi_select }
@@ -55,7 +45,7 @@ visuals:
   - type: table
     title: Selected Locations - Summary
     rows: [payment_type]
-    values: [tender_amount, pct_to_total]
+    values: [tender_amount]
     total_row: true
   - type: bar
     title: Tender amount by payment type

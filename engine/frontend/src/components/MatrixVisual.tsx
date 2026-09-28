@@ -44,15 +44,12 @@ function heatColour(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
 }
 
-function allKeys(nodes: Node[], out: string[] = []): string[] {
-  nodes.forEach((n) => {
-    if (n.children.length) {
-      out.push(n.key);
-      allKeys(n.children, out);
-    }
-  });
-  return out;
-}
+/**
+ * Which rows are open. "Expand all" opens every level except the one above the last, so the last level (for example
+ * payment types under plaza > brand) stays folded until its parent row is clicked; with only two levels it opens both.
+ * "Collapse all" folds everything. A click flips one row against that baseline, so it survives filter changes.
+ */
+type Fold = { mode: 'expand' | 'collapse'; flipped: Set<string> };
 
 export default function MatrixVisual({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   const tokens = useTokens();
@@ -64,14 +61,22 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   const { rows, error } = useQuery(reportId, { ...base, groupBy: [...rowDims, colDim], measures: [measure] });
 
   const tree = useMemo(() => (rows ? buildTree(rows, rowDims, colDim, measure) : undefined), [rows, rowDims, colDim, measure]);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [fold, setFold] = useState<Fold>({ mode: 'expand', flipped: new Set() });
+  // With N row levels, "expand all" shows levels 1..N-1: nodes above depth N-2 open, the ones at N-2 stay closed.
+  const openDepth = rowDims.length > 2 ? rowDims.length - 2 : rowDims.length;
+  const baseOpen = (n: Node) => fold.mode === 'expand' && n.depth < openDepth;
+  const isOpenNode = (n: Node) => baseOpen(n) !== fold.flipped.has(n.key);
   const toggle = (key: string) => {
     sound.play('click');
-    setCollapsed((s) => {
-      const next = new Set(s);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
+    setFold((f) => {
+      const flipped = new Set(f.flipped);
+      flipped.has(key) ? flipped.delete(key) : flipped.add(key);
+      return { ...f, flipped };
     });
+  };
+  const setAll = (mode: Fold['mode']) => {
+    sound.play('click');
+    setFold({ mode, flipped: new Set() });
   };
 
   const cell = (n: number | undefined) => (n === undefined ? '' : formatValue(n, format));
@@ -81,7 +86,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   const heat = (v: number | undefined) => (v === undefined || v <= 0 ? 'transparent' : heatColour(tokens.series1Light, 0.04 + 0.30 * Math.min(1, v / leafMax)));
 
   const renderNode = (n: Node): JSX.Element => {
-    const isOpen = !collapsed.has(n.key);
+    const isOpen = isOpenNode(n);
     const hasChildren = n.children.length > 0;
     const weight = n.depth < rowDims.length - 1 ? 650 : 400;
     return (
@@ -120,13 +125,13 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   };
 
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
+    <Paper sx={{ p: 1.5, height: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Typography variant="h2">{visual.title}</Typography>
         {tree && (
           <Box>
-            <Button size="small" onClick={() => setCollapsed(new Set())}>Expand all</Button>
-            <Button size="small" onClick={() => setCollapsed(new Set(allKeys(tree.roots)))}>Collapse all</Button>
+            <Button size="small" onClick={() => setAll('expand')}>Expand all</Button>
+            <Button size="small" onClick={() => setAll('collapse')}>Collapse all</Button>
           </Box>
         )}
       </Box>
@@ -134,8 +139,9 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
       {!tree ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <Box sx={{ overflow: 'auto', maxHeight: 620 }}>
-          <Table size="small" stickyHeader>
+        // Many date columns may scroll sideways; the panel grows with the open rows instead of scrolling up and down.
+        <Box sx={{ overflowX: 'auto', overflowY: 'hidden' }}>
+          <Table size="small" sx={{ '& th, & td': { px: 1 } }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ ...firstColSx, zIndex: 3 }}>{rowDims.map((d) => spec.dimensions[d].label).join(' › ')}</TableCell>

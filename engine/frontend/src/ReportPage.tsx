@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress, Container } from '@mui/material';
+import { Alert, Box, CircularProgress, Container, Tooltip, Typography } from '@mui/material';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { useTokens } from './theme';
 import { api, DataSource, QueryRequest, Spec } from './api';
-import { SOURCE_LABEL, sourceColour } from './dataSource';
+import { SAMPLE_ORANGE, SOURCE_LABEL, sourceColour } from './dataSource';
 import { addDays } from './format';
 import FilterBar, { FilterState, weeksWithData } from './components/FilterBar';
 import KpiRow from './components/KpiRow';
@@ -71,17 +72,17 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 12 }}><CircularProgress thickness={2.5} size={46} /></Box>;
   }
 
-  // Where the rows come from: green live DEV data, blue DEV export, orange made-up sample rows.
+  // Where the rows come from: green live DEV data, blue DEV export, orange made-up sample rows (the dot next to the dates).
   const source = spec.dataSource ?? listedSource;
   const colour = sourceColour(source, tokens);
-  const sample = source === 'sample';
+  // Made-up rows keep one compact orange line, so nobody takes sample numbers for real ones. A DEV export shows no banner.
+  // (Live mode only sends a notice when the backend itself runs on sample rows.)
+  const warn = !!spec.sampleDataNotice && source !== 'export';
   return (
-    <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
+    <Container maxWidth={false} sx={{ py: 2, maxWidth: 1500 }}>
       <ReportHeader
         entry={entry}
         subtitle={spec.subtitle}
-        status={SOURCE_LABEL[source]}
-        statusColour={colour}
         right={(
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
             <Box
@@ -95,30 +96,29 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
           </Box>
         )}
       />
-      {spec.sampleDataNotice && (() => {
-        // Live data keeps the quiet accent banner; a DEV export is blue; made-up rows get a loud orange one, so nobody
-        // takes sample numbers for real ones.
-        const c = source === 'live' ? tokens.accent : colour;
-        return (
-          <Alert
-            severity={sample ? 'warning' : 'info'}
-            variant="outlined"
-            role={sample ? 'alert' : undefined}
+      {warn && (
+        <Tooltip title={spec.sampleDataNotice} placement="bottom-start">
+          <Box
+            role="alert"
             data-source={source}
             sx={{
-              mb: 2, bgcolor: alpha(c, sample ? 0.16 : 0.06), borderColor: alpha(c, sample ? 0.9 : 0.35), borderWidth: sample ? 2 : 1,
-              color: tokens.textSecondary, '& .MuiAlert-icon': { color: c }, ...(sample && { fontSize: '0.95rem', boxShadow: `0 0 24px -8px ${c}` }),
+              mb: 1.25, px: 1.25, py: 0.5, display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, borderRadius: '10px',
+              border: `1px solid ${alpha(SAMPLE_ORANGE, 0.85)}`, bgcolor: alpha(SAMPLE_ORANGE, 0.14), boxShadow: `0 0 18px -8px ${SAMPLE_ORANGE}`,
+              fontSize: '0.8rem', color: tokens.textSecondary,
             }}
           >
-            <strong style={{ color: sample ? c : tokens.textPrimary }}>{spec.dataNoticeTitle ?? 'Data.'}</strong> {spec.sampleDataNotice}
-          </Alert>
-        );
-      })()}
+            <WarningAmberRoundedIcon sx={{ fontSize: 16, color: SAMPLE_ORANGE, flexShrink: 0 }} />
+            <Typography component="div" noWrap sx={{ fontSize: 'inherit', minWidth: 0 }}>
+              <strong style={{ color: SAMPLE_ORANGE }}>{SOURCE_LABEL.sample}.</strong> <span>{spec.sampleDataNotice}</span>
+            </Typography>
+          </Box>
+        </Tooltip>
+      )}
 
       <FilterBar reportId={reportId} spec={spec} value={filters} onChange={setFilters} onReset={() => setFilters(defaults)} />
 
       {/* Every visual in the order the settings file lists them, on a 12-column grid (one column on phones). */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2, alignItems: 'stretch' }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 1.5, alignItems: 'stretch' }}>
         {spec.visuals.map((v, i) => {
           const span = v.span ?? DEFAULT_SPAN[v.type] ?? 12;
           const body = v.type === 'kpi'

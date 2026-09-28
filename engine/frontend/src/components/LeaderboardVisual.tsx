@@ -30,8 +30,8 @@ export default function LeaderboardVisual({ reportId, spec, visual, base }: { re
   const max = Math.max(1, ...top.map((x) => x.value));
 
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+    <Paper sx={{ p: 1.5, height: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
         <Typography variant="h2">{visual.title}</Typography>
         {rows && (
           <Typography sx={{ fontSize: '0.75rem', color: t.textMuted }}>
@@ -43,12 +43,12 @@ export default function LeaderboardVisual({ reportId, spec, visual, base }: { re
       {!rows ? (
         <Skeleton variant="rectangular" height={220} />
       ) : (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', columnGap: 3, rowGap: 1.25 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', columnGap: 3, rowGap: 0.5 }}>
           {top.map((x, i) => (
             <Box
               key={x.name}
               sx={{
-                display: 'grid', gridTemplateColumns: '30px 1fr auto', alignItems: 'center', columnGap: 1.25, px: 1, py: 0.75, borderRadius: '12px',
+                display: 'grid', gridTemplateColumns: '30px 1fr auto', alignItems: 'center', columnGap: 1.25, px: 1, py: 0.5, borderRadius: '12px',
                 transition: 'background .2s ease, transform .2s ease',
                 '&:hover': { bgcolor: alpha(t.accent, 0.07), transform: 'translateX(3px)' },
               }}

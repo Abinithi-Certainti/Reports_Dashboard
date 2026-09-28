@@ -1,27 +1,18 @@
 import { ReactNode } from 'react';
-import { Box, Chip, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Typography } from '@mui/material';
 import { useTokens } from '../theme';
 import { CatalogEntry } from '../catalog';
 
-/** Report title block: number, Jira key, an animated gradient title, a status chip and optional right-hand content. */
-export default function ReportHeader({ entry, subtitle, status, statusColour, right }: {
-  entry: CatalogEntry; subtitle?: string; status: string; statusColour: string; right?: ReactNode;
-}) {
+/** Report title block: number, an animated gradient title, subtitle and optional right-hand content. */
+export default function ReportHeader({ entry, subtitle, right }: { entry: CatalogEntry; subtitle?: string; right?: ReactNode }) {
   const t = useTokens();
   return (
-    <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+    <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
       <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25, flexWrap: 'wrap' }}>
           <Typography sx={{ fontFamily: t.mono, fontSize: '0.72rem', letterSpacing: '0.14em', color: t.accent, fontWeight: 700 }}>
             REPORT {String(entry.no).padStart(2, '0')} / 10
           </Typography>
-          {entry.jira && <Chip size="small" label={entry.jira} sx={{ height: 20, fontSize: '0.66rem', fontFamily: t.mono, bgcolor: alpha(t.accent2, 0.14), color: t.accent2 }} />}
-          <Chip
-            size="small"
-            label={status}
-            sx={{ height: 20, fontSize: '0.66rem', fontWeight: 650, bgcolor: alpha(statusColour, 0.14), color: statusColour, border: `1px solid ${alpha(statusColour, 0.35)}` }}
-          />
         </Box>
         <Typography
           variant="h1"
@@ -34,7 +25,7 @@ export default function ReportHeader({ entry, subtitle, status, statusColour, ri
         >
           {entry.title}
         </Typography>
-        {subtitle && <Typography sx={{ color: t.textSecondary, mt: 0.25 }}>{subtitle}</Typography>}
+        {subtitle && <Typography sx={{ color: t.textSecondary, fontSize: '0.9rem' }}>{subtitle}</Typography>}
       </Box>
       {right}
     </Box>

@@ -1,68 +1,42 @@
-import { useState } from 'react';
-import {
-  Box, Paper, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
-} from '@mui/material';
+import { Box, Paper, Skeleton, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { QueryRequest, Spec, Visual } from '../api';
 import { formatValue } from '../format';
 import { useTokens } from '../theme';
 import { useQuery } from '../useQuery';
-import { useSound } from '../sound';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
-/**
- * A grouped table with an optional total row. Values can be measures or calculations; a calculation with
- * several modes (like % to Total) gets a toggle so old and corrected numbers can be compared.
- */
+/** A grouped table with an optional total row. It shows every row: its panel grows to fit (no inner scrollbar). */
 export default function SummaryTable({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   const tokens = useTokens();
-  const sound = useSound();
-  const values = visual.values ?? [];
-  const measures = values.filter((v) => spec.measures[v]);
-  const calcIds = values.filter((v) => spec.calculations[v]);
-  const [modes, setModes] = useState<Record<string, string>>(
-    Object.fromEntries(calcIds.map((c) => [c, spec.calculations[c].default_mode])),
-  );
-  const neededMeasures = Array.from(new Set([...measures, ...calcIds.map((c) => spec.calculations[c].of)]));
+  const values = (visual.values ?? []).filter((v) => spec.measures[v]);
+  const measures = values;
 
-  const rowsQuery = useQuery(reportId, { ...base, groupBy: visual.rows, measures: neededMeasures, calculations: modes });
-  const totalQuery = useQuery(reportId, visual.total_row ? { ...base, groupBy: [], measures: neededMeasures, calculations: modes } : null);
+  const rowsQuery = useQuery(reportId, { ...base, groupBy: visual.rows, measures });
+  const totalQuery = useQuery(reportId, visual.total_row ? { ...base, groupBy: [], measures } : null);
 
-  const label = (id: string) => spec.measures[id]?.label ?? spec.calculations[id]?.label ?? id;
-  const format = (id: string) => spec.measures[id]?.format ?? spec.calculations[id]?.format;
+  const label = (id: string) => spec.measures[id]?.label ?? id;
+  const format = (id: string) => spec.measures[id]?.format;
   const rowDims = visual.rows ?? [];
+  // Half-width (or narrower) tables with many values get smaller cells so they fit without scrolling sideways.
+  const narrow = (visual.span ?? 5) < 12 && rowDims.length + values.length > 4;
   const maxOf: Record<string, number> = Object.fromEntries(
     measures.map((m) => [m, Math.max(0, ...(rowsQuery.rows ?? []).map((r) => Number(r[m] ?? 0)))]),
   );
 
   return (
-    <Paper sx={{ p: 2, overflow: 'hidden', height: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-        <Typography variant="h2">{visual.title}</Typography>
-        {calcIds.map((c) => (
-          <ToggleButtonGroup
-            key={c}
-            size="small"
-            exclusive
-            value={modes[c]}
-            onChange={(_, m) => {
-              if (m) {
-                setModes({ ...modes, [c]: m });
-                sound.play('toggle');
-              }
-            }}
-            aria-label={`${label(c)} mode`}
-          >
-            {Object.entries(spec.calculations[c].modes).map(([id, m]) => (
-              <ToggleButton key={id} value={id} sx={{ textTransform: 'none', py: 0.25 }}>
-                {m.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        ))}
-      </Box>
-      <Box sx={{ maxHeight: 440, overflow: 'auto' }}>
-        <Table size="small" stickyHeader>
+    <Paper sx={{ p: 1.5, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
+      {/* Wide tables may scroll sideways on narrow screens; never up and down. */}
+      <Box sx={{ overflowX: 'auto', overflowY: 'hidden' }}>
+        {/* Tight cells so wide tables (ten or more values) still fit their panel. */}
+        <Table
+          size="small"
+          sx={{
+            '& th, & td': { px: narrow ? 0.75 : 1 }, '& th:first-of-type, & td:first-of-type': { pl: narrow ? 1 : 1.5 }, '& td': { whiteSpace: 'nowrap' },
+            ...(narrow && { '& td': { whiteSpace: 'nowrap', fontSize: '0.76rem !important' }, '& th': { fontSize: '0.66rem' } }),
+          }}
+        >
           <TableHead>
             <TableRow>
               {rowDims.map((d) => <TableCell key={d}>{spec.dimensions[d].label}</TableCell>)}
@@ -112,7 +86,7 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
           </TableBody>
           {visual.total_row && totalQuery.rows?.[0] && (
             <TableHead>
-              <TableRow sx={{ '& th': { fontWeight: 700, color: 'text.primary', bgcolor: tokens.headerCell, position: 'sticky', bottom: 0, borderTop: `1px solid ${tokens.panelBorder}` } }}>
+              <TableRow sx={{ '& th': { fontWeight: 700, color: 'text.primary', bgcolor: tokens.headerCell, borderTop: `1px solid ${tokens.panelBorder}` } }}>
                 <TableCell colSpan={rowDims.length}>Total</TableCell>
                 {values.map((v) => (
                   <TableCell key={v} align="right" sx={{ fontFamily: tokens.mono, color: tokens.accent }}>
@@ -124,15 +98,6 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
           )}
         </Table>
       </Box>
-      {calcIds.map((c) =>
-        modes[c] === 'legacy' ? (
-          <Tooltip key={c} title="In the current Power BI report, non-cash rows are divided by the total without cash, so the column does not add up to 100%.">
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              Showing {label(c)} exactly as Power BI calculates it today (does not add up to 100%).
-            </Typography>
-          </Tooltip>
-        ) : null,
-      )}
       {(rowsQuery.error || totalQuery.error) && <Typography color="error">{rowsQuery.error ?? totalQuery.error}</Typography>}
     </Paper>
   );

@@ -137,7 +137,7 @@ export function buildTheme(t: Tokens, look?: Look): Theme {
     spacing: size.spacing,
     typography: {
       fontFamily: t.font,
-      h1: { fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em' },
+      h1: { fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 },
       h2: { fontSize: '0.78rem', fontWeight: 650, letterSpacing: '0.10em', textTransform: 'uppercase', color: t.textSecondary },
     },
     components: {

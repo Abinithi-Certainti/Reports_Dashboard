@@ -1,7 +1,7 @@
 import type { DataSource } from './api';
 import type { Tokens } from './theme';
 
-/** How each data source is named and coloured, the same in the sidebar, the status chip and the banner. */
+/** How each data source is named and coloured, in the sidebar status dots (and the orange sample-data warning on a report page). */
 export const SOURCE_LABEL: Record<DataSource, string> = {
   live: 'Live DEV data',
   export: 'DEV export',

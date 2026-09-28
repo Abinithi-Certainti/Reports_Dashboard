@@ -18,8 +18,8 @@ export default function NotReadyPage({ entry }: { entry: CatalogEntry }) {
       ? 'The report is built, but it could not be loaded in this browser copy. The browser console gives the reason.'
       : 'The engine could not load this report. Check the backend log for the reason.');
   return (
-    <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
-      <ReportHeader entry={entry} status={blocked ? 'Cannot show yet' : 'Could not load'} statusColour={colour} />
+    <Container maxWidth={false} sx={{ py: 2, maxWidth: 1500 }}>
+      <ReportHeader entry={entry} />
       <Paper sx={{ p: { xs: 3, md: 6 }, display: 'grid', placeItems: 'center', textAlign: 'center', minHeight: 320 }}>
         <Box
           sx={{

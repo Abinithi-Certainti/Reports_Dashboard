@@ -50,15 +50,16 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
   };
 
   return (
-    <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
       {!option ? (
         <Skeleton variant="circular" width={200} height={200} sx={{ mx: 'auto', my: 2 }} />
       ) : (
         <>
-          <Box sx={{ position: 'relative' }}>
-            <ReactECharts option={option} onEvents={onEvents} style={{ height: 220 }} notMerge />
+          {/* The ring takes whatever height the row leaves after the legend (at least 180px). */}
+          <Box sx={{ position: 'relative', flex: 1, minHeight: 180 }}>
+            <ReactECharts option={option} onEvents={onEvents} style={{ position: 'absolute', inset: 0, height: '100%' }} notMerge />
             <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none', textAlign: 'center' }}>
               <Box>
                 <Typography sx={{ fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: focus ? focus.colour : t.textMuted, fontWeight: 650 }}>
@@ -73,14 +74,14 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
               </Box>
             </Box>
           </Box>
-          <Box sx={{ display: 'grid', gap: 0.5, mt: 1 }}>
+          <Box sx={{ display: 'grid', gap: 0.25, mt: 0.75 }}>
             {items.map((x, i) => (
               <Box
                 key={x.name}
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
                 sx={{
-                  display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderRadius: '8px',
+                  display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: 1, px: 1, py: 0.35, borderRadius: '8px',
                   bgcolor: hover === i ? `${x.colour}1a` : 'transparent', transition: 'background .2s ease',
                 }}
               >

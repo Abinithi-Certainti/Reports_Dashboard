@@ -71,7 +71,7 @@ function Sparkline({ rows, measure, dateDim, format, colour }: { rows: Record<st
       },
     ],
   };
-  return <ReactECharts option={option} style={{ height: 52 }} notMerge />;
+  return <ReactECharts option={option} style={{ height: 38 }} notMerge />;
 }
 
 function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: Spec; item: KpiItem; base: Base; index: number }) {
@@ -101,7 +101,7 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
   return (
     <Paper
       sx={{
-        p: 2.25, pb: 1, position: 'relative', overflow: 'hidden', height: '100%',
+        p: 1.5, pb: 0.5, position: 'relative', overflow: 'hidden', height: '100%',
         animation: 'rise .6s ease both', animationDelay: `${index * 80}ms`,
         '@keyframes rise': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'none' } },
         // A coloured edge on top and a soft corner glow, in this tile's own colour.
@@ -126,13 +126,13 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
         <Box
           className="kpi-icon"
           sx={{
-            width: 36, height: 36, borderRadius: '11px', display: 'grid', placeItems: 'center', flexShrink: 0,
+            width: 30, height: 30, borderRadius: '10px', display: 'grid', placeItems: 'center', flexShrink: 0,
             color: colour, background: `linear-gradient(135deg, ${alpha(colour, 0.22)}, ${alpha(colour, 0.08)})`,
             boxShadow: `inset 0 0 0 1px ${alpha(colour, 0.3)}${t.glow ? `, 0 0 16px -4px ${alpha(colour, 0.6)}` : ''}`,
             transition: 'transform .3s ease',
           }}
         >
-          <Icon sx={{ fontSize: 20 }} />
+          <Icon sx={{ fontSize: 18 }} />
         </Box>
         <Typography variant="h2" sx={{ fontSize: '0.68rem', flex: 1, lineHeight: 1.3 }}>{item.label}</Typography>
         {delta && (
@@ -153,19 +153,19 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
       {error ? (
         <Typography color="error" variant="body2">{error}</Typography>
       ) : value === undefined ? (
-        <Skeleton width="60%" height={50} />
+        <Skeleton width="60%" height={40} />
       ) : (
         <Typography
           sx={{
-            fontFamily: t.mono, fontSize: { xs: '1.35rem', md: '1.95rem' }, fontWeight: 700, mt: 1.25, color: t.textPrimary, letterSpacing: '-0.02em',
+            fontFamily: t.mono, fontSize: { xs: '1.3rem', md: '1.65rem' }, fontWeight: 700, mt: 0.5, lineHeight: 1.25, color: t.textPrimary, letterSpacing: '-0.02em',
             textShadow: t.glow ? `0 0 28px ${alpha(colour, 0.45)}` : 'none', whiteSpace: 'nowrap', position: 'relative', zIndex: 1,
           }}
         >
           <AnimatedNumber value={Number(value ?? 0)} format={format} />
         </Typography>
       )}
-      <Typography sx={{ fontSize: '0.7rem', color: t.textMuted, minHeight: 16 }}>{delta ? 'vs previous period' : ' '}</Typography>
-      <Box sx={{ mx: -2.25, mt: 0.25 }}>
+      <Typography sx={{ fontSize: '0.68rem', color: t.textMuted, minHeight: 14, lineHeight: 1.3 }}>{delta ? 'vs previous period' : ' '}</Typography>
+      <Box sx={{ mx: -1.5, mt: 0.25 }}>
         {dateDim && trend.rows && trend.rows.length > 1 && <Sparkline rows={trend.rows} measure={item.measure} dateDim={dateDim} format={format} colour={colour} />}
       </Box>
     </Paper>
@@ -174,7 +174,7 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
 
 export default function KpiRow({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: `repeat(${visual.items?.length ?? 1}, minmax(0, 1fr))` }, gap: 2 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: `repeat(${visual.items?.length ?? 1}, minmax(0, 1fr))` }, gap: 1.5 }}>
       {visual.items?.map((item, i) => <Tile key={item.label} index={i} reportId={reportId} spec={spec} item={item} base={base} />)}
     </Box>
   );

@@ -70,11 +70,11 @@ export default function LineChartVisual({ reportId, spec, visual, base }: { repo
   };
 
   return (
-    <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
-      {/* Grows to the height of its row (for example next to a donut), never below 260px. */}
-      <Box sx={{ flex: 1, minHeight: 260, position: 'relative' }}>
+      {/* Grows to the height of its row (for example next to a donut), never below 240px. */}
+      <Box sx={{ flex: 1, minHeight: 240, position: 'relative' }}>
         {option
           ? <ReactECharts option={option} style={{ position: 'absolute', inset: 0, height: '100%' }} notMerge />
           : <Skeleton variant="rectangular" height="100%" />}

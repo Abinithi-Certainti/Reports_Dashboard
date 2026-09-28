@@ -1,5 +1,5 @@
 import ReactECharts from 'echarts-for-react';
-import { Paper, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Skeleton, Typography } from '@mui/material';
 import { QueryRequest, Spec, Visual } from '../api';
 import { formatCompactCurrency, formatValue } from '../format';
 import { useQuery } from '../useQuery';
@@ -69,15 +69,17 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
       })),
   };
 
+  // The chart needs this much room for its bars; next to a taller panel it grows to fill the same height.
+  const minHeight = rows ? Math.max(220, rows.length * (many ? 26 * measures.length : 30) + (many ? 32 : 0)) : 240;
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
+    <Paper sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
-      {option ? (
-        <ReactECharts option={option} style={{ height: Math.max(260, rows!.length * (many ? 30 * measures.length : 34) + (many ? 32 : 0)) }} notMerge />
-      ) : (
-        <Skeleton variant="rectangular" height={300} />
-      )}
+      <Box sx={{ flex: 1, minHeight, position: 'relative' }}>
+        {option
+          ? <ReactECharts option={option} style={{ position: 'absolute', inset: 0, height: '100%' }} notMerge />
+          : <Skeleton variant="rectangular" height="100%" />}
+      </Box>
     </Paper>
   );
 }
