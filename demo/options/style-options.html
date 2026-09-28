@@ -6,107 +6,169 @@
 <title>Dashboard Style Options</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Sora:wght@500;600;700&display=swap">
 <style>
-  :root { color-scheme: dark; --page: #070a12; --text: #e2e8f0; --muted: #7c8aa3; --mono: "JetBrains Mono", ui-monospace, monospace; }
+  :root { color-scheme: dark; --mono: "JetBrains Mono", ui-monospace, monospace; }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 24px 16px 60px; background: var(--page); color: var(--text); font: 14px/1.5 Inter, "Segoe UI", system-ui, sans-serif; }
-  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
-  h1 { margin: 0; font-size: 1.5rem; }
-  .lead { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
-  .opt-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-  .opt-head .tag { font-family: var(--mono); font-size: .75rem; letter-spacing: .14em; color: #22d3ee; font-weight: 700; }
-  .opt-head h2 { margin: 0; font-size: 1.15rem; }
-  .opt-head p { margin: 0; color: var(--muted); flex-basis: 100%; }
+  body { margin: 0; font: 13px/1.45 Inter, "Segoe UI", system-ui, sans-serif; transition: background .4s ease, color .4s ease; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .num { font-variant-numeric: tabular-nums; }
-  .grid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .two { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 10px; }
-  @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .two { grid-template-columns: 1fr; } }
-  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
-  td, th { padding: 5px 8px; text-align: left; }
-  td:last-child, th:last-child { text-align: right; }
-  .bars { display: grid; gap: 7px; }
-  .bar { display: grid; grid-template-columns: 90px 1fr 70px; gap: 8px; align-items: center; font-size: .78rem; }
-  .bar i { display: block; height: 8px; border-radius: 4px; }
-  .note { font-size: .72rem; color: var(--muted); margin-top: 6px; }
 
-  /* ---- A: Glass Neon (current look, tightened) ---- */
-  .A { background: #04060d; border-radius: 18px; padding: 14px; border: 1px solid rgba(148,163,184,.14);
-       background-image: radial-gradient(600px 240px at 10% 0%, rgba(8,145,178,.25), transparent 70%), radial-gradient(500px 240px at 100% 0%, rgba(124,58,237,.22), transparent 70%); }
-  .A .k { background: rgba(12,18,32,.6); border: 1px solid rgba(148,163,184,.15); border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(12px); position: relative; overflow: hidden; }
-  .A .k::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #22d3ee, #a78bfa); }
-  .A .k small { color: #94a3b8; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; }
-  .A .k b { display: block; font: 700 1.25rem var(--mono); color: #f1f5f9; }
-  .A .p { background: rgba(12,18,32,.6); border: 1px solid rgba(148,163,184,.15); border-radius: 14px; padding: 10px 12px; }
-  .A .p h3 { margin: 0 0 6px; font-size: .68rem; letter-spacing: .12em; color: #94a3b8; }
-  .A th { color: #64748b; font-weight: 600; } .A td { border-top: 1px solid rgba(148,163,184,.08); }
-  .A .bar i { background: linear-gradient(90deg, #3b82f6, #22d3ee); box-shadow: 0 0 10px rgba(34,211,238,.5); }
+  /* ---------- the style switch ---------- */
+  .switch { position: sticky; top: 0; z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 16px;
+            background: rgba(0,0,0,.72); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.1); color: #e2e8f0; }
+  .switch b { font-size: .8rem; letter-spacing: .08em; }
+  .switch button { border: 1px solid rgba(255,255,255,.2); background: transparent; border-radius: 999px; padding: 5px 14px; font-weight: 600; }
+  .switch button[aria-pressed="true"] { background: #22d3ee; color: #04060d; border-color: #22d3ee; }
+  .switch span { color: #94a3b8; font-size: .78rem; }
 
-  /* ---- B: Clean Pro (flat, sharp, dense) ---- */
-  .B { background: #0d1117; border-radius: 10px; padding: 14px; border: 1px solid #1f2733; font-family: Inter, sans-serif; }
-  .B .grid { gap: 0; border: 1px solid #1f2733; border-radius: 8px; overflow: hidden; }
-  .B .k { padding: 10px 14px; border-right: 1px solid #1f2733; background: #0f141b; }
-  .B .k:last-child { border-right: 0; }
-  .B .k small { color: #8b96a8; font-size: .72rem; }
-  .B .k b { display: block; font-size: 1.2rem; font-weight: 650; color: #f0f3f6; }
-  .B .k em { font-style: normal; font-size: .7rem; color: #3fb950; }
-  .B .p { border: 1px solid #1f2733; border-radius: 8px; padding: 10px 12px; background: #0f141b; }
-  .B .p h3 { margin: 0 0 6px; font-size: .8rem; font-weight: 600; color: #c9d1d9; }
-  .B th { color: #8b96a8; font-weight: 500; border-bottom: 1px solid #1f2733; } .B tr:nth-child(even) td { background: #121821; }
-  .B .bar i { background: #4c8dff; border-radius: 2px; }
+  /* ---------- shared layout ---------- */
+  .app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 46px); }
+  .side { padding: 14px 12px; border-right: 1px solid var(--line); background: var(--side); }
+  .logo { display: flex; gap: 8px; align-items: center; font-weight: 800; margin-bottom: 16px; }
+  .logo i { width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--logo); display: block; }
+  .nav-h { font-size: .64rem; letter-spacing: .14em; color: var(--muted); margin: 0 6px 6px; font-weight: 700; }
+  .nav { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--r-sm); color: var(--text2); margin-bottom: 2px; }
+  .nav em { font: 700 .64rem var(--mono); font-style: normal; min-width: 22px; text-align: center; padding: 2px 0; border-radius: 6px; background: var(--chip); color: var(--muted); }
+  .nav.on { background: var(--nav-on); color: var(--text); box-shadow: var(--nav-on-shadow); }
+  .nav.on em { background: var(--accent); color: var(--on-accent); }
+  .nav .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--dot); }
+  .main { padding: 14px 18px 28px; min-width: 0; }
+  .eyebrow { font: 700 .66rem var(--mono); letter-spacing: .14em; color: var(--accent); }
+  h1 { margin: 2px 0 10px; font: var(--h1); letter-spacing: -.01em; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); }
+  .fbtn { display: flex; gap: 6px; align-items: center; padding: 5px 10px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--input); }
+  .fbtn small { color: var(--muted); }
+  .fbtn .count { background: var(--accent); color: var(--on-accent); border-radius: 5px; padding: 0 5px; font-size: .68rem; font-weight: 700; }
+  .kpis { display: grid; gap: var(--gap); grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--gap); }
+  .k { padding: 10px 12px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease; }
+  .k:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .k small { display: block; color: var(--k-label); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .k b { display: block; font: var(--k-num); margin-top: 2px; }
+  .k em { font-style: normal; font-size: .68rem; color: var(--good); }
+  .row2 { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); margin-bottom: var(--gap); align-items: stretch; }
+  .p { padding: 10px 12px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .p h3 { margin: 0 0 8px; font-size: .68rem; letter-spacing: .1em; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 4px 6px; text-align: left; }
+  th:last-child, td:last-child { text-align: right; }
+  th { color: var(--muted); font-weight: 600; font-size: .7rem; }
+  td { border-top: 1px solid var(--line); }
+  tr.total td { font-weight: 700; }
+  .bars { display: grid; gap: 8px; flex: 1; align-content: space-between; }
+  .bar { display: grid; grid-template-columns: 84px minmax(0, 1fr) 70px; gap: 8px; align-items: center; }
+  .track { height: 9px; border-radius: var(--bar-r); background: var(--track); overflow: hidden; }
+  .track i { display: block; height: 100%; border-radius: var(--bar-r); background: var(--bar); box-shadow: var(--bar-glow); width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .detail .lvl1 td:first-child { font-weight: 650; }
+  .detail .lvl2 td:first-child { padding-left: 22px; color: var(--text2); }
+  .note { color: var(--muted); font-size: .7rem; margin-top: 10px; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; } .side { display: none; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .row2 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-  /* ---- C: Bento Colour (bold tiles, rounded, playful) ---- */
-  .C { background: #0b0b14; border-radius: 22px; padding: 14px; font-family: Sora, Inter, sans-serif; }
-  .C .k { border-radius: 18px; padding: 12px 14px; color: #0b0b14; }
-  .C .k small { font-size: .7rem; font-weight: 600; opacity: .75; }
-  .C .k b { display: block; font-size: 1.3rem; font-weight: 700; }
-  .C .k:nth-child(1) { background: linear-gradient(135deg, #67e8f9, #22d3ee); }
-  .C .k:nth-child(2) { background: linear-gradient(135deg, #c4b5fd, #a78bfa); }
-  .C .k:nth-child(3) { background: linear-gradient(135deg, #fda4af, #fb7185); }
-  .C .k:nth-child(4) { background: linear-gradient(135deg, #fde68a, #fbbf24); }
-  .C .p { background: #151525; border-radius: 18px; padding: 12px 14px; }
-  .C .p h3 { margin: 0 0 6px; font-size: .85rem; font-weight: 600; }
-  .C th { color: #8a8aa8; font-weight: 500; } .C td { border-top: 1px solid #22223a; }
-  .C .bar i { border-radius: 999px; background: linear-gradient(90deg, #a78bfa, #fb7185); }
+  /* ---------- A: Glass Neon ---------- */
+  body.A {
+    --bg: #04060d; --side: rgba(4,6,13,.7); --panel: rgba(12,18,32,.58); --input: rgba(15,23,42,.6); --line: rgba(148,163,184,.15);
+    --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --k-label: #94a3b8; --accent: #22d3ee; --on-accent: #04060d; --good: #34d399;
+    --chip: rgba(100,116,139,.15); --dot: #34d399; --nav-on: linear-gradient(90deg, rgba(34,211,238,.18), rgba(167,139,250,.05));
+    --nav-on-shadow: inset 0 0 0 1px rgba(34,211,238,.4), 0 0 22px -6px rgba(34,211,238,.35);
+    --logo: conic-gradient(from 200deg, #22d3ee, #a78bfa, #3b82f6, #22d3ee);
+    --r: 14px; --r-sm: 10px; --gap: 10px; --h1: 700 1.45rem Inter, sans-serif; --k-num: 700 1.2rem var(--mono);
+    --track: rgba(148,163,184,.1); --bar: linear-gradient(90deg, #3b82f6, #22d3ee); --bar-glow: 0 0 10px rgba(34,211,238,.55); --bar-r: 5px;
+    background: #04060d radial-gradient(700px 300px at 15% -5%, rgba(8,145,178,.28), transparent 70%) no-repeat,
+                radial-gradient(600px 300px at 95% 0%, rgba(124,58,237,.25), transparent 70%) no-repeat;
+    background-color: #04060d; color: var(--text);
+  }
+  body.A .k::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #22d3ee, #a78bfa); }
+  body.A .k, body.A .p, body.A .filters { backdrop-filter: blur(14px); }
+
+  /* ---------- B: Clean Pro ---------- */
+  body.B {
+    --bg: #0d1117; --side: #010409; --panel: #0f141b; --input: #0d1117; --line: #21262d;
+    --text: #e6edf3; --text2: #adbac7; --muted: #7d8590; --k-label: #7d8590; --accent: #4c8dff; --on-accent: #fff; --good: #3fb950;
+    --chip: #21262d; --dot: #3fb950; --nav-on: #161b22; --nav-on-shadow: inset 2px 0 0 #4c8dff;
+    --logo: #4c8dff;
+    --r: 6px; --r-sm: 6px; --gap: 8px; --h1: 650 1.3rem Inter, sans-serif; --k-num: 650 1.15rem Inter, sans-serif;
+    --track: #21262d; --bar: #4c8dff; --bar-glow: none; --bar-r: 2px;
+    background: #0d1117; color: var(--text);
+  }
+  body.B tbody tr:nth-child(even) td { background: #121821; }
+
+  /* ---------- C: Bento Colour ---------- */
+  body.C {
+    --bg: #0b0b14; --side: #0b0b14; --panel: #151525; --input: #1c1c30; --line: #24243c;
+    --text: #f5f5ff; --text2: #b4b4d0; --muted: #8a8aa8; --k-label: rgba(11,11,20,.7); --accent: #a78bfa; --on-accent: #0b0b14; --good: #0b0b14;
+    --chip: #1c1c30; --dot: #34d399; --nav-on: #1f1f36; --nav-on-shadow: none;
+    --logo: linear-gradient(135deg, #67e8f9, #a78bfa, #fb7185);
+    --r: 20px; --r-sm: 14px; --gap: 10px; --h1: 700 1.5rem Sora, Inter, sans-serif; --k-num: 700 1.3rem Sora, Inter, sans-serif;
+    --track: #24243c; --bar: linear-gradient(90deg, #a78bfa, #fb7185); --bar-glow: none; --bar-r: 999px;
+    background: #0b0b14; color: var(--text); font-family: Sora, Inter, sans-serif;
+  }
+  body.C .k { border: 0; color: #0b0b14; }
+  body.C .k:nth-child(1) { background: linear-gradient(135deg, #67e8f9, #22d3ee); }
+  body.C .k:nth-child(2) { background: linear-gradient(135deg, #c4b5fd, #a78bfa); }
+  body.C .k:nth-child(3) { background: linear-gradient(135deg, #fda4af, #fb7185); }
+  body.C .k:nth-child(4) { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+  body.C .k:hover { border: 0; }
 </style>
 </head>
-<body>
-<div class="wrap">
-  <div>
-    <h1>Dashboard styles: pick one</h1>
-    <p class="lead">The same Tender Report top section in 3 styles, all in the new compact size (about 35% smaller than now). <b>The numbers are made-up examples</b>, only to show the look. Tell me A, B or C.</p>
-  </div>
-
-  <section>
-    <div class="opt-head"><span class="tag">OPTION A</span><h2>Glass Neon</h2><p>Today's look, tightened: see-through glass panels, glowing edges, soft colour lights behind. Futuristic and dark.</p></div>
-    <div class="A" id="A"></div>
-  </section>
-
-  <section>
-    <div class="opt-head"><span class="tag">OPTION B</span><h2>Clean Pro</h2><p>Flat and sharp, like GitHub or Linear. No glow, thin lines, very dense, easiest to read a lot of numbers at once.</p></div>
-    <div class="B" id="B"></div>
-  </section>
-
-  <section>
-    <div class="opt-head"><span class="tag">OPTION C</span><h2>Bento Colour</h2><p>Bold coloured tiles for the headline numbers, big rounded corners, a friendlier rounded font. Modern and eye-catching.</p></div>
-    <div class="C" id="C"></div>
-  </section>
+<body class="A">
+<div class="switch" role="group" aria-label="Choose a style">
+  <b>STYLE</b>
+  <button type="button" data-s="A" aria-pressed="true">A · Glass Neon</button>
+  <button type="button" data-s="B" aria-pressed="false">B · Clean Pro</button>
+  <button type="button" data-s="C" aria-pressed="false">C · Bento Colour</button>
+  <span>Made-up example numbers, only to show the look.</span>
+</div>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i>Report Engine</div>
+    <div class="nav-h">REPORTS</div>
+    <div id="nav"></div>
+  </aside>
+  <main class="main">
+    <div class="eyebrow">REPORT 01 / 10</div>
+    <h1>Tender Report</h1>
+    <div class="filters">
+      <span class="fbtn"><small>Plaza:</small><span class="count">3</span> ▾</span>
+      <span class="fbtn"><small>District:</small> All ▾</span>
+      <span class="fbtn"><small>Brand:</small><span class="count">2</span> ▾</span>
+      <span class="fbtn"><small>Payment type:</small> All ▾</span>
+      <span class="fbtn"><small>Dates:</small> 13 May → 19 May ▾</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="row2">
+      <section class="p"><h3>Selected locations - summary</h3><table><thead><tr><th>Payment type</th><th>Tender</th></tr></thead><tbody id="sum"></tbody></table></section>
+      <section class="p"><h3>Tender amount by payment type</h3><div class="bars" id="bars"></div></section>
+    </div>
+    <section class="p detail"><h3>All locations - detail</h3>
+      <table><thead><tr><th>Plaza / Brand</th><th>13 May</th><th>14 May</th><th>15 May</th><th>Total</th></tr></thead><tbody id="det"></tbody></table>
+    </section>
+    <div class="note">Example numbers only.</div>
+  </main>
 </div>
 <script>
 // Made-up example values, only to show each style.
-const K = [['Total tender', '$128,450'], ['Cash after paid-outs', '$31,220'], ['Card and other', '$97,230'], ['Paid-outs', '$1,140']];
-const ROWS = [['Visa', '$41,300'], ['Mastercard', '$28,950'], ['Debit', '$22,410'], ['Cash', '$31,220'], ['Amex', '$4,570']];
-const max = 41300;
-for (const id of ['A', 'B', 'C']) {
-  const box = document.getElementById(id);
-  box.innerHTML = `
-    <div class="grid">${K.map(([l, v], i) => `<div class="k"><small>${l}</small><b class="num">${v}</b>${id === 'B' ? `<em>▲ ${[4.2, 1.1, 5.0, 0.3][i]}%</em>` : ''}</div>`).join('')}</div>
-    <div class="two">
-      <div class="p"><h3>SELECTED LOCATIONS - SUMMARY</h3>
-        <table><tr><th>Payment type</th><th>Tender</th></tr>${ROWS.map(([p, v]) => `<tr><td>${p}</td><td class="num">${v}</td></tr>`).join('')}</table></div>
-      <div class="p"><h3>TENDER AMOUNT BY PAYMENT TYPE</h3>
-        <div class="bars">${ROWS.map(([p, v]) => `<div class="bar"><span>${p}</span><i style="width:${Math.round(Number(v.replace(/\D/g, '')) / max * 100)}%"></i><span class="num" style="text-align:right">${v}</span></div>`).join('')}</div></div>
-    </div>
-    <div class="note">Example numbers only.</div>`;
-}
+const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report 1', 'Budget 2026', 'Field Team', 'Financial Reports'];
+document.getElementById('nav').innerHTML = NAV.map((n, i) => `<div class="nav${i === 0 ? ' on' : ''}"><em>${String(i + 1).padStart(2, '0')}</em>${n}<span class="dot"></span></div>`).join('');
+const K = [['Total tender', '$128,450', '4.2'], ['Cash after paid-outs', '$31,220', '1.1'], ['Card and other', '$97,230', '5.0'], ['Paid-outs', '$1,140', '0.3']];
+document.getElementById('kpis').innerHTML = K.map(([l, v, d]) => `<div class="k"><small>${l}</small><b class="num">${v}</b><em>▲ ${d}% vs last week</em></div>`).join('');
+const ROWS = [['Visa', 41300], ['Cash', 31220], ['Mastercard', 28950], ['Debit', 22410], ['Amex', 4570]];
+const fmt = (n) => '$' + n.toLocaleString('en-CA');
+document.getElementById('sum').innerHTML = ROWS.map(([p, v]) => `<tr><td>${p}</td><td class="num">${fmt(v)}</td></tr>`).join('')
+  + `<tr class="total"><td>Total</td><td class="num">${fmt(ROWS.reduce((s, r) => s + r[1], 0))}</td></tr>`;
+document.getElementById('bars').innerHTML = ROWS.map(([p, v]) => `<div class="bar"><span>${p}</span><span class="track"><i data-w="${Math.round(v / 41300 * 100)}"></i></span><span class="num" style="text-align:right">${fmt(v)}</span></div>`).join('');
+const DET = [['Barrie', [5120, 4880, 5310]], ['  Tim Hortons', [3400, 3150, 3520]], ['  Market', [1720, 1730, 1790]], ['Innisfil', [4210, 4390, 4050]], ['  Tim Hortons', [2900, 3010, 2780]], ['  Market', [1310, 1380, 1270]]];
+document.getElementById('det').innerHTML = DET.map(([n, v]) => `<tr class="${n.startsWith('  ') ? 'lvl2' : 'lvl1'}"><td>${n.startsWith('  ') ? '' : '▾ '}${n.trim()}</td>${v.map((x) => `<td class="num">${fmt(x)}</td>`).join('')}<td class="num">${fmt(v.reduce((a, b) => a + b, 0))}</td></tr>`).join('');
+const grow = () => document.querySelectorAll('.track i').forEach((i) => { i.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { i.style.width = i.dataset.w + '%'; })); });
+document.querySelectorAll('.switch button').forEach((b) => b.addEventListener('click', () => {
+  document.body.className = b.dataset.s;
+  document.querySelectorAll('.switch button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  grow();
+}));
+const start = new URLSearchParams(location.search).get('s');
+if (start) document.querySelector(`.switch button[data-s="${start}"]`)?.click(); else grow();
 </script>
 </body>
 </html>
