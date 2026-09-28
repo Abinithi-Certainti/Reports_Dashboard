@@ -1,4 +1,4 @@
-# Financial Reports - model (from the 5 read-only DAX queries + the 4-page PDF)
+# Financial Reports - model (AG-82, from the 5 read-only DAX queries + the 4-page PDF)
 
 Check values from the PDF (Date 2024-02-05 to 2026-09-27, all filters All) are kept outside git in
 `demo/private-data/financial-reports-check.json`, because the repository is public. Server names are left out.

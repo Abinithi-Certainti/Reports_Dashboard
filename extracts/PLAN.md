@@ -23,7 +23,7 @@ Formulas, tables, mappings and fields matter most. Matching the old numbers exac
 | 7 | Sales Report 1 | AG-79 | built, real QA sales for 1 store |
 | 8 | Sales Report - Including Budget 2026 | AG-80 | extracted; budget tables not found in the DB checked |
 | 9 | Sales Report Field Team | AG-81 | extracted |
-| 10 | (next) | | |
+| 10 | Financial Reports (HST, Gift Card, Donations, Lottery) | AG-82 | extracted; 2 helper queries needed |
 
 ## Rules that still apply
 - Read-only login (`readonly_user`) only.
