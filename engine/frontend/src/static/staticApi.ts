@@ -29,9 +29,30 @@ import financialSql from '../../../../reports/financial-reports/dataset.sql?raw'
 // Rows per report: the DEV export in demo/private-data/<report id>.json when there is one (git-ignored - the repository
 // is public; written by tools/private_to_json.py), else made-up sample rows from sampleData.ts. The glob is empty in a
 // fresh clone, so every report then runs on sample rows, and its page says so.
+// The file holds either plain rows, or (tools/private_to_json.py, smaller) column names, one list of distinct text
+// values per text column, and each row as a list where a text value is its position in that column's list.
+type PackedFile = { columns: string[]; dicts: Record<string, string[]>; data: (string | number | null)[][] };
+type RawFile = { exported_on: string; source: string; row_cap_hit: boolean; rows?: DataRow[] } & Partial<PackedFile>;
 type PrivateFile = { exported_on: string; source: string; row_cap_hit: boolean; rows: DataRow[] };
-const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, PrivateFile>;
-const privateFile = (id: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${id}.json`))?.[1];
+const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, RawFile>;
+const unpacked = new Map<string, PrivateFile>();
+function privateFile(id: string): PrivateFile | undefined {
+  if (unpacked.has(id)) return unpacked.get(id);
+  const raw = Object.entries(privateData).find(([path]) => path.endsWith(`/${id}.json`))?.[1];
+  if (!raw) return undefined;
+  let rows = raw.rows;
+  if (!rows && raw.columns && raw.data) {
+    const { columns, dicts = {}, data } = raw;
+    rows = data.map((r) => {
+      const row: DataRow = {};
+      columns.forEach((c, i) => { const v = r[i]; row[c] = dicts[c] && typeof v === 'number' ? dicts[c][v] : v; });
+      return row;
+    });
+  }
+  const file = { exported_on: raw.exported_on, source: raw.source, row_cap_hit: raw.row_cap_hit, rows: rows ?? [] };
+  unpacked.set(id, file);
+  return file;
+}
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };

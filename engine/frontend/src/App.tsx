@@ -1,11 +1,11 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import {
-  Avatar, Box, ButtonBase, Drawer, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
+  Avatar, Box, Button, ButtonBase, Drawer, IconButton, InputAdornment, TextField, Tooltip, Typography,
 } from '@mui/material';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import PaletteRoundedIcon from '@mui/icons-material/PaletteRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -13,13 +13,14 @@ import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import { api, DataSource, dataMode, isStaticDemo } from './api';
 import { SAMPLE_ORANGE, SOURCE_LABEL, sourceColour } from './dataSource';
 import { alpha } from '@mui/material/styles';
-import { ThemeName, useTokens } from './theme';
+import { useTokens } from './theme';
 import Aurora from './components/Aurora';
 import { useSound } from './sound';
 import { PrefsContext } from './prefs';
 import ReportPage from './ReportPage';
 import NotReadyPage from './NotReadyPage';
 import { CATALOG, CatalogEntry } from './catalog';
+import CustomizePanel from './components/CustomizePanel';
 
 /** Routes: #/r/<id> opens a report. Anything else opens the first report that can show. */
 function useHashRoute(): string[] {
@@ -40,23 +41,27 @@ type ReportState = DataSource | 'no-data' | 'cannot';
 const STATE_LABEL: Record<ReportState, string> = { ...SOURCE_LABEL, 'no-data': 'Could not load', cannot: 'Cannot show yet' };
 const isOpen = (s: ReportState): s is DataSource => s === 'live' || s === 'export' || s === 'sample';
 
-function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state: ReportState; active: boolean; onPick: () => void }) {
+/** One report in the menu. 'rail' shows only its number, 'top' is a tab in the top menu. */
+function NavItem({ entry, state, active, onPick, variant = 'side' }: {
+  entry: CatalogEntry; state: ReportState; active: boolean; onPick: () => void; variant?: 'side' | 'rail' | 'top';
+}) {
   const t = useTokens();
   const sound = useSound();
   const dot = isOpen(state) ? sourceColour(state, t) : state === 'no-data' ? SAMPLE_ORANGE : t.textMuted;
   return (
-    <Tooltip title={STATE_LABEL[state]} placement="right">
+    <Tooltip title={variant === 'side' ? STATE_LABEL[state] : `${entry.title} · ${STATE_LABEL[state]}`} placement={variant === 'top' ? 'bottom' : 'right'}>
       <ButtonBase
         href={`#/r/${entry.id}`}
         onClick={() => { sound.play('click'); onPick(); }}
         sx={{
-          width: '100%', justifyContent: 'flex-start', gap: 1.25, px: 1.25, py: 1, borderRadius: '12px', mb: 0.5,
+          width: variant === 'top' ? 'auto' : '100%', flexShrink: 0, justifyContent: variant === 'rail' ? 'center' : 'flex-start',
+          gap: 1.25, px: variant === 'rail' ? 0 : 1.25, py: 1, borderRadius: '12px', mb: variant === 'top' ? 0 : 0.5,
           color: active ? t.textPrimary : t.textSecondary, fontWeight: active ? 650 : 500, fontSize: '0.88rem',
           background: active ? `linear-gradient(90deg, ${alpha(t.accent, t.mode === 'light' ? 0.14 : 0.18)}, ${alpha(t.accent2, 0.05)})` : 'transparent',
           boxShadow: active ? `inset 0 0 0 1px ${alpha(t.accent, t.glow ? 0.4 : 0.2)}${t.glow ? `, 0 0 22px -6px ${t.glow}` : ''}` : 'none',
           position: 'relative', overflow: 'hidden', transition: 'background .25s ease, color .25s ease, transform .25s ease',
           opacity: state === 'cannot' && !active ? 0.62 : 1,
-          '&:hover': { background: alpha(t.accent, 0.08), color: t.textPrimary, transform: 'translateX(3px)' },
+          '&:hover': { background: alpha(t.accent, 0.08), color: t.textPrimary, transform: variant === 'side' ? 'translateX(3px)' : 'translateY(-1px)' },
           // A light sweep crosses the active item now and then.
           '&::after': active ? {
             content: '""', position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -64,7 +69,7 @@ function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state:
             transform: 'translateX(-100%)', animation: 'sweep 4.5s ease-in-out infinite',
             '@keyframes sweep': { '0%': { transform: 'translateX(-100%)' }, '35%,100%': { transform: 'translateX(100%)' } },
           } : {},
-          '&::before': active ? { content: '""', position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 3, background: `linear-gradient(${t.accent}, ${t.accent2})`, boxShadow: `0 0 10px ${t.accent}` } : {},
+          '&::before': active ? { content: '""', position: 'absolute', ...(variant === 'top' ? { left: 10, right: 10, bottom: 0, height: 3 } : { left: 0, top: 8, bottom: 8, width: 3 }), borderRadius: 3, background: `linear-gradient(${t.accent}, ${t.accent2})`, boxShadow: `0 0 10px ${t.accent}` } : {},
         }}
       >
         <Box
@@ -77,10 +82,11 @@ function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state:
         >
           {String(entry.no).padStart(2, '0')}
         </Box>
-        <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.title}</Box>
+        {variant !== 'rail' && <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.title}</Box>}
         <Box
           aria-label={STATE_LABEL[state]}
           sx={{
+            ...(variant === 'rail' ? { position: 'absolute', top: 5, right: 9 } : {}),
             width: 7, height: 7, borderRadius: '50%', flexShrink: 0, bgcolor: dot,
             boxShadow: isOpen(state) ? `0 0 8px ${dot}` : 'none',
             animation: isOpen(state) ? 'blink 2.4s ease-in-out infinite' : 'none',
@@ -109,7 +115,9 @@ function Clock() {
 export default function App() {
   const t = useTokens();
   const sound = useSound();
-  const { themeName, setThemeName } = useContext(PrefsContext);
+  const { look, setLook } = useContext(PrefsContext);
+  const [customize, setCustomize] = useState(false);
+  const layout = look.layout;
   const route = useHashRoute();
   const [available, setAvailable] = useState<Map<string, DataSource>>();
   const [search, setSearch] = useState('');
@@ -142,9 +150,7 @@ export default function App() {
       ? <ReportPage key={current.id} reportId={current.id} entry={current} source={available.get(current.id)!} />
       : <NotReadyPage key={current.id} entry={current} />;
 
-  const sidebar = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2, pl: 2.25 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 0.5, py: 1, mb: 2.5 }}>
+  const logo = (
         <Box
           aria-hidden
           sx={{
@@ -161,26 +167,36 @@ export default function App() {
         >
           <InsightsRoundedIcon sx={{ color: '#fff', fontSize: 21 }} />
         </Box>
+  );
+
+  const brand = (
         <Box>
           <Typography sx={{ fontWeight: 800, lineHeight: 1.1, color: t.textPrimary, letterSpacing: '-0.01em' }}>Report Engine</Typography>
           <Typography sx={{ fontSize: '0.7rem', color: t.textMuted, fontFamily: t.mono }}>Certainti · Reports 2.0</Typography>
         </Box>
+  );
+
+  const sidebar = (rail: boolean) => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: rail ? 1.25 : 2, pl: rail ? 1.25 : 2.25 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: rail ? 'center' : 'flex-start', gap: 1.25, px: 0.5, py: 1, mb: 2.5 }}>
+        {logo}
+        {!rail && brand}
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', px: 1.25, mb: 1 }}>
+      {!rail && <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', px: 1.25, mb: 1 }}>
         <Typography sx={{ fontSize: '0.66rem', letterSpacing: '0.16em', color: t.textMuted, fontWeight: 700 }}>REPORTS</Typography>
         <Typography sx={{ fontSize: '0.66rem', color: t.textMuted, fontFamily: t.mono }}>{readyCount}/{CATALOG.length} {mode === 'live' ? 'live' : 'open'}</Typography>
-      </Box>
+      </Box>}
       <Box sx={{ overflowY: 'auto', flex: 1, pr: 0.5 }}>
         {shown.map((e, i) => (
           <Box key={e.id} sx={{ animation: 'navIn .5s cubic-bezier(.2,.8,.2,1) both', animationDelay: `${i * 40}ms`, '@keyframes navIn': { from: { opacity: 0, transform: 'translateX(-10px)' }, to: { opacity: 1, transform: 'none' } } }}>
-            <NavItem entry={e} state={stateOf(e)} active={e.id === current.id} onPick={() => setDrawer(false)} />
+            <NavItem entry={e} state={stateOf(e)} active={e.id === current.id} onPick={() => setDrawer(false)} variant={rail ? 'rail' : 'side'} />
           </Box>
         ))}
         {shown.length === 0 && <Typography sx={{ px: 1.5, py: 1, fontSize: '0.82rem', color: t.textMuted }}>No report matches “{search}”.</Typography>}
       </Box>
 
-      <Box sx={{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' }}>
+      {!rail && <Box sx={{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' }}>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 1 }}>
           {legend.map((s) => (
             <Box key={s} sx={{ display: 'flex', alignItems: 'center', gap: 0.6, fontSize: '0.66rem', color: t.textSecondary }}>
@@ -192,25 +208,36 @@ export default function App() {
         <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary }}>
           {mode === 'live' ? 'PostgreSQL DEV · read-only' : mode === 'offline' ? (isStaticDemo ? 'Offline copy · in your browser' : 'No DEV connection · in your browser') : 'Checking the connection…'}
         </Typography>
-      </Box>
+      </Box>}
+    </Box>
+  );
+
+  // Top menu: the 10 reports as tabs under the header bar.
+  const topMenu = (
+    <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, px: 3, py: 0.75, overflowX: 'auto', borderBottom: `1px solid ${t.panelBorder}`, background: t.headerBar, backdropFilter: 'blur(14px)' }}>
+      {shown.map((e) => <NavItem key={e.id} entry={e} state={stateOf(e)} active={e.id === current.id} onPick={() => {}} variant="top" />)}
     </Box>
   );
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       <Aurora />
-      <Box
-        component="nav"
-        sx={{
-          width: 272, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', display: { xs: 'none', md: 'block' },
-          background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`, transition: 'background .4s ease',
-        }}
-      >
-        {sidebar}
-      </Box>
+      {layout !== 'top' && (
+        <Box
+          component="nav"
+          aria-label="Reports"
+          sx={{
+            width: layout === 'rail' ? 76 : 272, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', display: { xs: 'none', md: 'block' },
+            background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`, transition: 'background .4s ease, width .3s ease',
+          }}
+        >
+          {sidebar(layout === 'rail')}
+        </Box>
+      )}
       <Drawer open={drawer} onClose={() => setDrawer(false)} PaperProps={{ sx: { width: 280, background: t.panelSolid, borderRadius: 0 } }}>
-        {sidebar}
+        {sidebar(false)}
       </Drawer>
+      <CustomizePanel open={customize} onClose={() => setCustomize(false)} />
 
       <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
         <Box
@@ -227,6 +254,7 @@ export default function App() {
           }}
         >
           <IconButton aria-label="Open the report list" onClick={() => setDrawer(true)} sx={{ display: { md: 'none' } }}><MenuRoundedIcon /></IconButton>
+          {layout === 'top' && <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.25, mr: 1 }}>{logo}{brand}</Box>}
           <TextField
             size="small"
             placeholder="Find a report…"
@@ -237,22 +265,23 @@ export default function App() {
           />
           <Box sx={{ flex: 1 }} />
           <Clock />
-          <ToggleButtonGroup
+          <Tooltip title={t.mode === 'light' ? 'Switch to dark' : 'Switch to light'}>
+            <IconButton
+              aria-label={t.mode === 'light' ? 'Switch to dark' : 'Switch to light'}
+              onClick={() => { setLook({ theme: t.mode === 'light' ? 'neon' : 'light' }); sound.play('whoosh'); }}
+            >
+              {t.mode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+            </IconButton>
+          </Tooltip>
+          <Button
             size="small"
-            exclusive
-            value={themeName}
-            onChange={(_, v: ThemeName | null) => {
-              if (v) {
-                setThemeName(v);
-                sound.play('whoosh');
-              }
-            }}
-            aria-label="Theme"
+            variant="outlined"
+            startIcon={<PaletteRoundedIcon />}
+            onClick={() => { setCustomize(true); sound.play('click'); }}
+            sx={{ borderColor: t.panelBorder, color: t.textPrimary, '&:hover': { borderColor: t.accent, background: alpha(t.accent, 0.08) } }}
           >
-            <ToggleButton value="light" aria-label="Light theme"><Tooltip title="Light"><LightModeRoundedIcon fontSize="small" /></Tooltip></ToggleButton>
-            <ToggleButton value="midnight" aria-label="Midnight theme"><Tooltip title="Midnight"><DarkModeRoundedIcon fontSize="small" /></Tooltip></ToggleButton>
-            <ToggleButton value="neon" aria-label="Neon theme"><Tooltip title="Neon"><AutoAwesomeRoundedIcon fontSize="small" /></Tooltip></ToggleButton>
-          </ToggleButtonGroup>
+            Customize
+          </Button>
           <Tooltip title={sound.enabled ? 'Sound on' : 'Sound off'}>
             <IconButton aria-label={sound.enabled ? 'Turn sound off' : 'Turn sound on'} onClick={() => sound.setEnabled(!sound.enabled)}>
               {sound.enabled ? <VolumeUpRoundedIcon /> : <VolumeOffRoundedIcon />}
@@ -266,6 +295,7 @@ export default function App() {
             </Box>
           </Box>
         </Box>
+        {layout === 'top' && topMenu}
         <Box
           key={current.id}
           sx={{ animation: 'pageIn .55s cubic-bezier(.2,.8,.2,1) both', '@keyframes pageIn': { from: { opacity: 0, transform: 'translateY(10px)', filter: 'blur(4px)' }, to: { opacity: 1, transform: 'none', filter: 'none' } } }}

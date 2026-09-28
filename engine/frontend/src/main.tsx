@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { CssBaseline, ThemeProvider } from '@mui/material';
-import { buildTheme, ThemeName, themes, TokensContext } from './theme';
+import { buildTheme, lookTokens, themes, TokensContext } from './theme';
 import { play, SoundContext, SoundName } from './sound';
-import { PrefsContext } from './prefs';
+import { ACCENTS, DEFAULT_LOOK, FONTS, LAYOUTS, Look, NUMBERS, PrefsContext, SIZES } from './prefs';
 import App from './App';
 
 // Per-viewer preferences. Storage can be blocked (private windows), so every access is guarded.
@@ -24,12 +24,19 @@ function save(key: string, value: string) {
 }
 
 function Root() {
-  const [themeName, setThemeNameState] = useState<ThemeName>(() => stored('re.theme', 'neon', Object.keys(themes)));
+  const [look, setLookState] = useState<Look>(() => ({
+    theme: stored('re.theme', DEFAULT_LOOK.theme, Object.keys(themes)),
+    accent: stored('re.accent', DEFAULT_LOOK.accent, Object.keys(ACCENTS)),
+    font: stored('re.font', DEFAULT_LOOK.font, Object.keys(FONTS)),
+    numbers: stored('re.numbers', DEFAULT_LOOK.numbers, Object.keys(NUMBERS)),
+    size: stored('re.size', DEFAULT_LOOK.size, Object.keys(SIZES)),
+    layout: stored('re.layout', DEFAULT_LOOK.layout, Object.keys(LAYOUTS)),
+  }));
   const [soundOn, setSoundOn] = useState<boolean>(() => stored('re.sound', 'on', ['on', 'off']) === 'on');
 
-  const setThemeName = useCallback((t: ThemeName) => {
-    setThemeNameState(t);
-    save('re.theme', t);
+  const setLook = useCallback((patch: Partial<Look>) => {
+    setLookState((old) => ({ ...old, ...patch }));
+    for (const [k, v] of Object.entries(patch)) save(`re.${k}`, v);
   }, []);
   const setEnabled = useCallback((on: boolean) => {
     setSoundOn(on);
@@ -41,11 +48,11 @@ function Root() {
     [soundOn, setEnabled],
   );
 
-  const tokens = themes[themeName];
-  const muiTheme = useMemo(() => buildTheme(tokens), [tokens]);
+  const tokens = useMemo(() => lookTokens(look), [look]);
+  const muiTheme = useMemo(() => buildTheme(tokens, look), [tokens, look]);
 
   return (
-    <PrefsContext.Provider value={{ themeName, setThemeName }}>
+    <PrefsContext.Provider value={{ look, setLook }}>
       <TokensContext.Provider value={tokens}>
         <SoundContext.Provider value={sound}>
           <ThemeProvider theme={muiTheme}>
