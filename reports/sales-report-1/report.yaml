@@ -1,6 +1,6 @@
 # Sales Report 1 - spec for the report engine (AG-79). Source of truth: extracts/sales-report-1/01_model.md
 id: sales-report-1
-title: Sales Report 1
+title: Sales Report
 subtitle: Daily sales, transactions, labour and SPLH - against the same days last year
 dataset: dataset.sql
 calendar: retail   # needed for last year: the same weekday of the same retail week, one retail year earlier

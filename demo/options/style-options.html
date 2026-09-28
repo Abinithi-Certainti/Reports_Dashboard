@@ -184,7 +184,7 @@
 </div>
 <script>
 // Made-up example values, only to show each style.
-const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report 1', 'Budget 2026', 'Field Team', 'Financial Reports'];
+const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report', 'Budget 2026', 'Field Team', 'Financial Reports'];
 document.getElementById('nav').innerHTML = NAV.map((n, i) => `<div class="nav${i === 0 ? ' on' : ''}"><em>${String(i + 1).padStart(2, '0')}</em>${n}<span class="dot"></span></div>`).join('');
 const K = [['Total tender', '$128,450', '4.2'], ['Cash after paid-outs', '$31,220', '1.1'], ['Card and other', '$97,230', '5.0'], ['Paid-outs', '$1,140', '0.3']];
 document.getElementById('kpis').innerHTML = K.map(([l, v, d]) => `<div class="k"><small>${l}</small><b class="num">${v}</b><em>▲ ${d}% vs last week</em></div>`).join('');

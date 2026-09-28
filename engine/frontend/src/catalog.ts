@@ -9,7 +9,7 @@ export const CATALOG: CatalogEntry[] = [
   { no: 4, id: 'people-count', title: 'People Count', whyNot: 'The people_count table is empty on DEV, so there is nothing to show yet.' },
   { no: 5, id: 'radar-car-count', title: 'Radar Car Count', whyNot: 'The car_count table is empty on DEV, and no table holds the car / truck split.' },
   { no: 6, id: 'sales-margin-budget', title: 'Sales and Margin with Budget', jira: 'AG-76' },
-  { no: 7, id: 'sales-report-1', title: 'Sales Report 1', jira: 'AG-79' },
+  { no: 7, id: 'sales-report-1', title: 'Sales Report', jira: 'AG-79' },
   { no: 8, id: 'sales-budget-2026', title: 'Sales Report - Budget 2026', jira: 'AG-80' },
   { no: 9, id: 'sales-field-team', title: 'Sales Report Field Team', jira: 'AG-81' },
   { no: 10, id: 'financial-reports', title: 'Financial Reports', jira: 'AG-82' },

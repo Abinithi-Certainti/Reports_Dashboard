@@ -191,7 +191,7 @@ for (const [k, o] of Object.entries(OPTIONS)) {
 builder.insertAdjacentHTML('beforeend', '<span class="note-top">Mix and match. Tell me the combination you like, for example "Top menu, Emerald, Manrope, Compact, Light".</span>');
 
 // Made-up example values, only to show the look.
-const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report 1', 'Budget 2026', 'Field Team', 'Financial Reports'];
+const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report', 'Budget 2026', 'Field Team', 'Financial Reports'];
 document.getElementById('nav').innerHTML = NAV.map((n, i) => `<div class="nav${i === 0 ? ' on' : ''}" title="${n}"><em>${String(i + 1).padStart(2, '0')}</em><span class="t">${n}</span><span class="dot"></span></div>`).join('');
 const spark = (pts) => { const w = 200, h = 26, mx = Math.max(...pts), mn = Math.min(...pts);
   const d = pts.map((p, i) => `${(i / (pts.length - 1)) * w},${h - 3 - ((p - mn) / (mx - mn || 1)) * (h - 6)}`).join(' ');
