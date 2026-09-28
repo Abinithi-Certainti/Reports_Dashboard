@@ -1,0 +1,90 @@
+# Sales Report Field Team - spec for the report engine (AG-81). Source of truth: extracts/sales-field-team/01_model.md
+# Data: DEV database, schema master. Labour (employee_pay_summary, temp_dlh) is empty on DEV, so Labour Hours Direct
+# and SPLH show 0 / empty. DEV holds no last-year sales, so every PY / YOY measure is empty for now.
+id: sales-field-team
+title: Sales Report Field Team
+subtitle: Daily and weekly sales, transactions, labour and SPLH, with month to date - DEV data
+dataset: dataset.sql
+calendar: retail   # PY = the same weekday of the same retail week, one retail year earlier (the old DWY - 1)
+
+dimensions:
+  day:               { label: Date,              column: day, type: date }
+  weekday:           { label: Weekday,           column: weekday, sort_by: weekday_no }
+  week_end:          { label: Week Ending,       column: week_end, type: date }
+  plaza:             { label: Plaza,             column: plaza }
+  brand:             { label: Brand,             column: brand }
+  district_director: { label: District Director, column: district_director }
+  agm:               { label: AGM,               column: agm }   # OPEN: empty until the AGM list is confirmed
+
+# PY = the selected days one retail year earlier, YOY = value - PY (a missing PY counts as 0, as in Power BI),
+# YOY % = (value - PY) / PY. MTD = calendar month to date (1st of the month of the last selected day), not the
+# retail period. The old report has no budgets, no TPLH and no WTD / PTD / YTD measures.
+measures:
+  sales:                 { label: Sales, sql: "sum(sales)", format: currency }
+  transactions:          { label: Transactions, sql: "sum(transactions)", format: number }
+  labour:                { label: Labour Hours Direct, sql: "sum(labour_hours)", format: number }
+  splh:                  { label: SPLH, sql: "sum(sales) / nullif(sum(labour_hours), 0)", format: currency }
+  avg_check:             { label: Average Check, sql: "sum(sales) / nullif(sum(transactions), 0)", format: currency }
+  sales_py:              { label: Sales PY, of: sales, window: py, format: currency }
+  sales_yoy:             { label: Sales YOY $, of: sales, window: yoy, format: currency }
+  sales_yoy_pct:         { label: Sales YOY %, of: sales, window: yoy_pct, format: percent }
+  transactions_py:       { label: Transactions PY, of: transactions, window: py, format: number }
+  transactions_yoy:      { label: Transactions YOY, of: transactions, window: yoy, format: number }
+  transactions_yoy_pct:  { label: Transactions YOY %, of: transactions, window: yoy_pct, format: percent }
+  labour_py:             { label: Labour Hours Direct PY, of: labour, window: py, format: number }
+  labour_yoy:            { label: Labour Hours Direct YOY, of: labour, window: yoy, format: number }
+  labour_yoy_pct:        { label: Labour Hours Direct YOY %, of: labour, window: yoy_pct, format: percent }
+  splh_py:               { label: SPLH PY, of: splh, window: py, format: currency }
+  splh_yoy:              { label: SPLH YOY $, of: splh, window: yoy, format: currency }
+  splh_yoy_pct:          { label: SPLH YOY %, of: splh, window: yoy_pct, format: percent }
+  avg_check_py:          { label: Average Check PY, of: avg_check, window: py, format: currency }
+  avg_check_yoy:         { label: Average Check YOY $, of: avg_check, window: yoy, format: currency }
+  avg_check_yoy_pct:     { label: Average Check YOY %, of: avg_check, window: yoy_pct, format: percent }
+  sales_mtd:             { label: MTD Sales, of: sales, window: mtd, format: currency }
+  transactions_mtd:      { label: MTD Transactions, of: transactions, window: mtd, format: number }
+  labour_mtd:            { label: MTD Labour Hours Direct, of: labour, window: mtd, format: number }
+  splh_mtd:              { label: MTD SPLH, of: splh, window: mtd, format: currency }
+  avg_check_mtd:         { label: MTD Average Check, of: avg_check, window: mtd, format: currency }
+
+filters:
+  - { dimension: district_director, type: multi_select }
+  - { dimension: agm,               type: multi_select }
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: brand,             type: multi_select }
+  - { dimension: day,               type: date_range, default_last_days: 7 }
+
+visuals:
+  # Page 1 - Plaza Total Summary: weekday columns + WTD (the total of the selected days), and an MTD block.
+  - type: kpi
+    items:
+      - { label: MTD Sales,               measure: sales_mtd,        icon: total }
+      - { label: MTD Transactions,        measure: transactions_mtd, icon: count }
+      - { label: MTD Labour hours direct, measure: labour_mtd,       icon: store }
+      - { label: MTD SPLH,                measure: splh_mtd,         icon: cash }
+      - { label: MTD Average Check,       measure: avg_check_mtd,    icon: trend }
+  - type: table
+    title: Plaza Total Summary - sales and transactions (by weekday, total = WTD)
+    rows: [weekday]
+    values: [sales, sales_py, sales_yoy, sales_yoy_pct, transactions, transactions_py, transactions_yoy, transactions_yoy_pct, avg_check, avg_check_py, avg_check_yoy, avg_check_yoy_pct]
+    total_row: true
+    span: 12
+  - type: table
+    title: Plaza Total Summary - labour and SPLH (by weekday, total = WTD)
+    rows: [weekday]
+    values: [labour, labour_py, labour_yoy, labour_yoy_pct, splh, splh_py, splh_yoy, splh_yoy_pct]
+    total_row: true
+    span: 12
+  # Page 2 - Plaza by Brand: brand (and plaza) x each day.
+  - type: matrix
+    title: Plaza by Brand
+    rows: [brand, plaza]
+    columns: [day]
+    values: [sales, sales_py, sales_yoy_pct, labour, labour_py, labour_yoy_pct, splh]
+    span: 12
+  # Page 3 - Rolling Weekly Sales: week ending (Saturday) columns, the same measures.
+  - type: matrix
+    title: Rolling Weekly Sales
+    rows: [brand, plaza]
+    columns: [week_end]
+    values: [sales, sales_py, sales_yoy_pct, labour, labour_py, labour_yoy_pct, splh]
+    span: 12
