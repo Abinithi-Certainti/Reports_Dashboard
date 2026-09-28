@@ -107,7 +107,7 @@ public final class SqlBuilder {
 
     /** Where the week, period and year that contain {@code day} begin, and where last retail year began. */
     public static Built calendarDay(ReportSpec spec, String day) {
-        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT week_start, period_start, year_start,"
+        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT day, week_start, period_start, year_start,"
                 + " (SELECT min(p.day) FROM c p WHERE p.retail_year = c.retail_year - 1) AS prev_year_start FROM c WHERE day = ?";
         return new Built(sql, List.of(parseDate(day)));
     }

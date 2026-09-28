@@ -164,7 +164,7 @@ const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
 const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard'];
 const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
 const FILTER_TYPES: string[] = ['multi_select', 'date_range', 'retail_week'];
-const WINDOWS: string[] = ['wtd', 'ptd', 'ytd', 'py', 'yoy', 'yoy_pct'];
+const WINDOWS: string[] = ['wtd', 'ptd', 'mtd', 'ytd', 'py', 'yoy', 'yoy_pct', 'py_fin', 'yoy_fin', 'yoy_fin_pct'];
 const STARTS_WITH_SELECT = /^\s*(--[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*(select|with)\b/i;
 
 function cleanSql(sql: string) {
@@ -389,15 +389,23 @@ function dateDimension(spec: FullSpec): FullDimension | undefined {
 }
 
 const shiftDay = (day: string, days: number) => iso(Date.parse(`${day}T00:00:00Z`) + days * DAY);
+/** The same calendar date `years` years away; 29 Feb becomes 28 Feb, as in Java's LocalDate.plusYears. */
+const shiftYear = (day: string | undefined, years: number) => {
+  if (!day) return day;
+  const [y, m, d] = day.slice(0, 10).split('-').map(Number);
+  const last = new Date(Date.UTC(y + years, m, 0)).getUTCDate();
+  return `${y + years}-${String(m).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+};
 
 /**
  * Measures over other dates (same rules as Windows.java): wtd / ptd / ytd from the start of the retail week, period
  * or year of the last selected day; py = the selected days one retail year earlier, with rows grouped by a date moved
  * onto this year's dates; yoy = value - py (a missing py counts as 0); yoy_pct = (value - py) / py.
- * Each window runs over its own dates, widest first, then the rows are joined on the groups.
+ * mtd starts on the 1st of the calendar month; py_fin = the same calendar dates one year earlier, with yoy_fin /
+ * yoy_fin_pct against it. Each window runs over its own dates, widest first, then the rows are joined on the groups.
  */
 function runQuery(r: Report, q: QueryRequest): Row[] {
-  const order = ['ytd', 'ptd', 'wtd', 'py', ''];
+  const order = ['ytd', 'ptd', 'mtd', 'wtd', 'py', 'py_fin', ''];
   const plan = new Map<string, Map<string, string>>(order.map((w) => [w, new Map()]));
   for (const m of q.measures ?? []) {
     const spec = r.spec.measures[m];
@@ -405,6 +413,9 @@ function runQuery(r: Report, q: QueryRequest): Row[] {
     if (w === 'yoy' || w === 'yoy_pct') {
       plan.get('')!.set(`_cur__${spec!.of}`, spec!.of!);
       plan.get('py')!.set(`_py__${spec!.of}`, spec!.of!);
+    } else if (w === 'yoy_fin' || w === 'yoy_fin_pct') {
+      plan.get('')!.set(`_cur__${spec!.of}`, spec!.of!);
+      plan.get('py_fin')!.set(`_pyfin__${spec!.of}`, spec!.of!);
     } else plan.get(w)!.set(m, m);
   }
   for (const w of order) if (!plan.get(w)!.size) plan.delete(w);
@@ -415,7 +426,7 @@ function runQuery(r: Report, q: QueryRequest): Row[] {
     if (!q.dateTo) throw new BadRequest('Week, period, year to date and last year need a selected end date');
     const week = calendarWeekOf(q.dateTo);
     if (!week) throw new BadRequest(`${q.dateTo} is not in the retail calendar`);
-    const start: Record<string, string | undefined> = { wtd: week.week_start, ptd: week.period_start, ytd: week.year_start, py: q.dateFrom, '': q.dateFrom };
+    const start: Record<string, string | undefined> = { wtd: week.week_start, ptd: week.period_start, mtd: `${q.dateTo.slice(0, 7)}-01`, ytd: week.year_start, py: q.dateFrom, py_fin: q.dateFrom, '': q.dateFrom };
     const pyShift = Math.round((Date.parse(week.year_start) - retailYearStart(week.retail_year - 1)) / DAY);
     const groupBy = q.groupBy ?? [];
     const dateCols = groupBy.filter((g) => r.spec.dimensions[g]?.type === 'date');
@@ -425,10 +436,15 @@ function runQuery(r: Report, q: QueryRequest): Row[] {
       const evalFor: Record<string, Agg> = { ...r.eval };
       for (const [alias, id] of cols) evalFor[alias] = r.eval[id];
       const shift = w === 'py' ? pyShift : 0;
-      const from = start[w] && shift ? shiftDay(start[w]!, -shift) : start[w];
-      const to = shift ? shiftDay(q.dateTo, -shift) : q.dateTo;
+      const fin = w === 'py_fin';
+      const from = fin ? shiftYear(start[w], -1) : start[w] && shift ? shiftDay(start[w]!, -shift) : start[w];
+      const to = fin ? shiftYear(q.dateTo, -1)! : shift ? shiftDay(q.dateTo, -shift) : q.dateTo;
       for (const row of runOnce({ ...r, eval: evalFor }, { ...q, measures: aliases, calculations: undefined, dateFrom: from, dateTo: to })) {
-        for (const c of dateCols) if (shift && row[c] != null) row[c] = shiftDay(String(row[c]), shift);
+        for (const c of dateCols) {
+          if (row[c] == null) continue;
+          if (fin) row[c] = shiftYear(String(row[c]), 1)!;
+          else if (shift) row[c] = shiftDay(String(row[c]), shift);
+        }
         const key = JSON.stringify(groupBy.map((g) => row[g]));
         let out = merged.get(key);
         if (!out) {
@@ -443,15 +459,15 @@ function runQuery(r: Report, q: QueryRequest): Row[] {
     for (const row of rows) {
       for (const m of q.measures) {
         const spec = r.spec.measures[m];
-        if (spec?.window === 'yoy' || spec?.window === 'yoy_pct') {
+        if (spec?.window === 'yoy' || spec?.window === 'yoy_pct' || spec?.window === 'yoy_fin' || spec?.window === 'yoy_fin_pct') {
           const cur = row[`_cur__${spec.of}`] as number | null | undefined;
-          const py = row[`_py__${spec.of}`] as number | null | undefined;
-          row[m] = spec.window === 'yoy'
+          const py = row[`${spec.window.startsWith('yoy_fin') ? '_pyfin__' : '_py__'}${spec.of}`] as number | null | undefined;
+          row[m] = spec.window === 'yoy' || spec.window === 'yoy_fin'
             ? (cur == null && py == null ? null : round((cur ?? 0) - (py ?? 0)))
             : (cur == null || py == null || py === 0 ? null : (cur - py) / py);
         } else if (!(m in row)) row[m] = null;
       }
-      for (const k of Object.keys(row)) if (k.startsWith('_cur__') || k.startsWith('_py__')) delete row[k];
+      for (const k of Object.keys(row)) if (k.startsWith('_cur__') || k.startsWith('_py__') || k.startsWith('_pyfin__')) delete row[k];
     }
   }
   for (const [calcId, modeId] of Object.entries(q.calculations ?? {})) {

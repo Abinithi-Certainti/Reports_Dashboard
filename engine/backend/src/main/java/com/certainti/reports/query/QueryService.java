@@ -48,10 +48,17 @@ public class QueryService {
                     shift = Windows.pyShiftDays(starts);
                     from = Windows.minusDays(request.dateFrom(), shift);
                     to = Windows.minusDays(to, shift);
+                } else if (window.equals("py_fin")) {
+                    from = Windows.minusYear(request.dateFrom());
+                    to = Windows.minusYear(to);
                 }
                 List<Map<String, Object>> part = runOnce(spec, new QueryRequest(request.filters(), request.exclude(),
                         from, to, request.groupBy(), List.copyOf(cols.keySet()), null), cols);
-                Windows.shiftDates(part, dateColumns, shift);
+                if (window.equals("py_fin")) {
+                    Windows.shiftYear(part, dateColumns);
+                } else {
+                    Windows.shiftDates(part, dateColumns, shift);
+                }
                 parts.add(part);
             });
             rows = Windows.merge(request.groupByOrEmpty(), columns, parts);

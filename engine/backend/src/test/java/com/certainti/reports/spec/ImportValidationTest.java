@@ -122,7 +122,7 @@ class ImportValidationTest {
         ReportRegistry r = registryWithCalendar();
         assertThatThrownBy(() -> r.parse(WINDOWED.replace("calendar: retail\n", ""), sql))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("needs calendar: retail");
-        assertThatThrownBy(() -> r.parse(WINDOWED.replace("window: wtd", "window: mtd"), sql))
+        assertThatThrownBy(() -> r.parse(WINDOWED.replace("window: wtd", "window: qtd"), sql))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("window must be one of");
         assertThatThrownBy(() -> r.parse(WINDOWED.replace("of: sales", "of: wtd_sales"), sql))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("has its own sql");

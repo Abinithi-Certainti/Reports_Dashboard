@@ -23,6 +23,10 @@ class WindowsTest {
         m.put("ytd_sales", new Measure("YTD", null, "currency", "ytd", "sales"));
         m.put("sales_yoy", new Measure("YOY $", null, "currency", "yoy", "sales"));
         m.put("sales_yoy_pct", new Measure("YOY %", null, "percent", "yoy_pct", "sales"));
+        m.put("mtd_sales", new Measure("MTD", null, "currency", "mtd", "sales"));
+        m.put("sales_py_fin", new Measure("PY FIN", null, "currency", "py_fin", "sales"));
+        m.put("sales_yoy_fin", new Measure("YOY FIN $", null, "currency", "yoy_fin", "sales"));
+        m.put("sales_yoy_fin_pct", new Measure("YOY FIN %", null, "percent", "yoy_fin_pct", "sales"));
         return new ReportSpec("t", "T", null, "dataset.sql", null, Map.of("plaza", new Dimension("Plaza", "plaza", null, null)),
                 m, Map.of(), List.of(), List.of(), "retail", "SELECT 1", "SELECT 1");
     }
@@ -100,5 +104,36 @@ class WindowsTest {
     @Test
     void aWindowedMeasureUsesItsBaseSql() {
         assertThat(SqlBuilder.measureSql(spec(), "wtd_sales")).isEqualTo("sum(sales)");
+    }
+
+    @Test
+    void monthToDateStartsOnTheFirstOfTheCalendarMonth() {
+        Map<String, Object> starts = Map.of("day", "2026-02-18", "week_start", "2026-02-15");
+        assertThat(Windows.start("mtd", starts, "2026-02-15")).isEqualTo("2026-02-01");
+        Map<String, Map<String, String>> plan = Windows.plan(spec(), List.of("mtd_sales", "ytd_sales"));
+        assertThat(plan.keySet()).containsExactly("ytd", "mtd");
+    }
+
+    @Test
+    void financeLastYearIsTheSameCalendarDateAndLinesUpOnThisYear() {
+        assertThat(Windows.minusYear("2026-02-15")).isEqualTo("2025-02-15"); // a Saturday, while 2026-02-15 is a Sunday
+        List<Map<String, Object>> rows = new ArrayList<>(List.of(new HashMap<>(Map.of("day", java.sql.Date.valueOf("2025-02-15")))));
+        Windows.shiftYear(rows, List.of("day"));
+        assertThat(rows.get(0).get("day")).isEqualTo(java.sql.Date.valueOf("2026-02-15"));
+        Map<String, Map<String, String>> plan = Windows.plan(spec(), List.of("sales_py_fin", "sales_yoy_fin_pct"));
+        assertThat(plan.keySet()).containsExactly("py_fin", "");
+        assertThat(plan.get("py_fin")).containsEntry("sales_py_fin", "sales_py_fin").containsEntry("_pyfin__sales", "sales");
+    }
+
+    @Test
+    void yoyFinUsesTheFinanceLastYear() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("_cur__sales", new java.math.BigDecimal("524107"));
+        row.put("_pyfin__sales", new java.math.BigDecimal("443947"));
+        List<Map<String, Object>> rows = new ArrayList<>(List.of(row));
+        Windows.derive(spec(), List.of("sales_yoy_fin", "sales_yoy_fin_pct"), rows);
+        assertThat(rows.get(0).get("sales_yoy_fin")).isEqualTo(new java.math.BigDecimal("80160"));
+        assertThat(((java.math.BigDecimal) rows.get(0).get("sales_yoy_fin_pct")).doubleValue()).isCloseTo(0.1806, org.assertj.core.data.Offset.offset(0.0001));
+        assertThat(rows.get(0)).doesNotContainKeys("_cur__sales", "_pyfin__sales");
     }
 }
