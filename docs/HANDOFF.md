@@ -19,14 +19,20 @@ wrong way with the reason, official links only, never assume - ask. Tell them wh
 ## Can this session reach the database?
 The previous session could NOT: the cloud proxy carries HTTPS only, PostgreSQL (5432) got no response, even after the
 user widened network access. **First thing to do in a new session: test it** without credentials:
-`timeout 10 pg_isready -h <QA host from .env.example> -p 5432 -t 8`. If it answers, ask the user to put the QA
+`timeout 10 pg_isready -h <QA host> -p 5432 -t 8` (the host name is no longer in git - ask the user). If it answers, ask the user to put the QA
 credentials in a local, git-ignored `.env` (never in chat) - see `.env.example`. If not, keep the CSV route: give the
 user a SELECT, they export CSV from QA and attach it.
+
+**Re-tested 2026-09-28 (second session): still blocked.** The name resolves (DNS works), but port 5432 gives no
+response (pg_isready "no response", raw TCP connect timed out). Same result as before: CSV route.
+
+**A fresh session has no `demo/private-data/`** (it is git-ignored, so it is not in the clone). The user must attach
+the QA structure file and CSVs again if they are needed.
 
 ## The 10 reports
 | # | Report | Jira | Stage | Data now |
 |---|---|---|---|---|
-| 1 | Tender Report | AG-66 | built | mock -> rewrite for QA (`location_code_mappings`) |
+| 1 | Tender Report | AG-66 | built, QA-only SQL | demo still on mock rows until the user's QA CSV (`tools/export_tender_for_demo.sql`) |
 | 2 | Detailed Waste Report | - | built | real DEV; `weekly_cogs` not in QA - user to decide keep/remove |
 | 3 | Market Category | - | mapped | no QA tables |
 | 4 | People Count | - | mapped | no QA tables |
@@ -54,7 +60,8 @@ Also: AG-83 = DevOps request for a private repo in the onroute-ca GitHub org + a
 
 ## Next steps
 1. Test database reach (above).
-2. Rewrite #1 Tender, #7 Sales Report 1 to QA-only tables; build #9 Field Team (reuse #7, `mtd` window exists).
+2. ~~Rewrite #1 Tender~~ (done). Rewrite #7 Sales Report 1 to QA-only tables (needs the user's decisions on
+   weekday / week end without date_table, and AGM / district without netsuite mapping); build #9 Field Team (reuse #7, `mtd` window exists).
 3. Load the user's QA CSVs into `demo/private-data/*-qa-rows.json`, delete mock rows, republish the demo.
 4. Plaza names: a one-off DEV lookup (ct_location -> plaza name) when the user can run DEV (after 10 am).
 5. Build #8 (budget part stays empty on QA; `py_fin` window exists).
