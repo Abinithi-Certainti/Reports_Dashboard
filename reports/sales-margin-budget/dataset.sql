@@ -5,8 +5,9 @@
 -- Sales $ = POS net (not Cash Drop) - Market "Card Fee" - "Alcohol Deposit - Beer", as the old report does from
 -- 2021-08-13 on. Its older sources (GuestCheckHist, POS Order and Ref, the SharePoint lottery file) are not needed.
 -- COGS $  = weekly_cogs.cogs, dated on the week-ending Saturday (period), like the old model.
--- Budget  = vena_sales and vena_gross_margin, daily rows. NOT YET CONFIRMED: probe 15 decides whether these or the
---           tables "Sales" and "Gross Margin" hold the budget (tools/sales_margin_probe.sql).
+-- Budget  = vena_sales and vena_gross_margin. Probe 15 on DEV (2026-09-28): both loaded, "Sales" and "Gross Margin"
+--           are empty. OPEN: vena_sales has 6 rows per day, location and brand, so the budget is summed 6 times
+--           until we know which column tells those rows apart.
 --
 -- Brand names are matched after the old report's renames (NYF, MIC, ONCARE, STARBUCKS KIOSK / DT, TIM HORTONS DT,
 -- WENDY'S, BURGERKING). The old report replaced text inside names. Here only whole names are replaced, on purpose.
