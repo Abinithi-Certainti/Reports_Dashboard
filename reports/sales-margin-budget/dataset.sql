@@ -6,8 +6,9 @@
 -- 2021-08-13 on. Its older sources (GuestCheckHist, POS Order and Ref, the SharePoint lottery file) are not needed.
 -- COGS $  = weekly_cogs.cogs, dated on the week-ending Saturday (period), like the old model.
 -- Budget  = vena_sales and vena_gross_margin. Probe 15 on DEV (2026-09-28): both loaded, "Sales" and "Gross Margin"
---           are empty. OPEN: vena_sales has 6 rows per day, location and brand, so the budget is summed 6 times
---           until we know which column tells those rows apart.
+--           are empty. vena_sales holds the same budget loaded 6 times (rows differ only in id and timestamps), so
+--           only the latest load per day, location and brand is kept. OPEN: vena_gross_margin is not checked yet
+--           for the same repeated loads, so it is still summed as is.
 --
 -- Brand names are matched after the old report's renames (NYF, MIC, ONCARE, STARBUCKS KIOSK / DT, TIM HORTONS DT,
 -- WENDY'S, BURGERKING). The old report replaced text inside names. Here only whole names are replaced, on purpose.
@@ -48,7 +49,9 @@ WITH loc AS (
     UNION ALL
     SELECT b."TimePeriod_Date", b."HostLocationID", b."Brand",
            0, 0, 0, 0, 0, sum(b.value), 0
-    FROM master.vena_sales b
+    FROM (SELECT DISTINCT ON ("TimePeriod_Date", "HostLocationID", "Brand") *
+          FROM master.vena_sales
+          ORDER BY "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp DESC) b
     GROUP BY 1, 2, 3
     UNION ALL
     SELECT g."TimePeriod_Date", g."HostLocationID", g."Brand",
