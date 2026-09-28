@@ -305,7 +305,8 @@ final_price = (ValueAddedBasePrice, or Price if 0) − Discountamount`,sql:`sum(
    {n:"Budget TPLH / Budget Avg Check",k:"measure",dax:`Trans budget / LHD budget;  Sales budget / Trans budget`,sql:`ratios of the budget sums`,plain:"Planned transactions per hour and planned average check.",t:["vena_sales","vena_transactions","vena_labour_hours"]},
    {n:"… vs Budget $ / %",k:"measure",dax:`actual − budget;  (actual − budget) / budget`,sql:`cur − budget;  (cur − budget) / nullif(budget, 0)`,plain:"Difference from plan.",t:["vena_sales","vena_transactions","vena_labour_hours","pos_orders","netsuite_location_mapping"]},
    PY,
-   {n:"… PY FIN",k:"measure",dax:`CALCULATE([m], 'Date'[YMD] = MAX('Date'[YMD]) − 10000)`,sql:`new engine window "py_fin": same calendar date one year earlier`,plain:"Last year on the same calendar date.",t:["date_table"],note:"Engine window not built yet."},
+   {n:"… PY FIN",k:"measure",dax:`CALCULATE([m], 'Date'[YMD] = MAX('Date'[YMD]) − 10000)`,sql:`engine window "py_fin": same calendar date one year earlier
+yoy_fin = cur − py_fin;  yoy_fin_pct = (cur − py_fin) / py_fin`,plain:"Last year on the same calendar date.",t:["date_table"]},
    {n:"WTD / PTD / YTD …",k:"measure",dax:`from Start of Week / Start of week by period / first retail week by year`,sql:`engine windows wtd / ptd / ytd`,plain:"Week, retail period and year to date.",t:["date_table"]},
    DIMS.plaza, DIMS.brand, DIMS.dd, DIMS.agm]},
  {id:"field",name:"Sales Report Field Team",jira:"AG-81",state:"extracted",
@@ -321,7 +322,7 @@ MANAGER IN TRAINING, OPERATIONS MANAGER, BRAND MANAGER
   and pay_category in ('Reg','OT1.5','Hol1.5')
 + sum(temp_dlh.dlh)`,plain:"Hours worked by everyone except managers.",t:["employee_pay_summary","temp_dlh","netsuite_location_mapping"],note:"Vending hours have no new table."},
    SPLH, AVG, PY,
-   {n:"MTD …",k:"measure",dax:`CALCULATE([m], DATESMTD('Date'[Date]))`,sql:`new engine window "mtd": calendar month to date`,plain:"From the 1st of the month to the selected day.",t:[],note:"Engine window not built yet."},
+   {n:"MTD …",k:"measure",dax:`CALCULATE([m], DATESMTD('Date'[Date]))`,sql:`engine window "mtd": from the 1st of the calendar month`,plain:"From the 1st of the month to the selected day.",t:[]},
    {n:"Week ending",k:"dimension",dax:`'Date'[End of Week]`,sql:`date_table.end_of_week`,plain:"The Saturday that ends each week.",t:["date_table"]},
    DIMS.plaza, DIMS.brand, DIMS.dd, DIMS.agm]},
  {id:"fin",name:"Financial Reports",jira:"AG-82",state:"extracted",
