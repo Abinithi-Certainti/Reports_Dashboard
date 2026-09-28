@@ -25,7 +25,12 @@ Formulas, tables, mappings and fields matter most. Matching the old numbers exac
 | 9 | Sales Report Field Team | AG-81 | extracted |
 | 10 | Financial Reports (HST, Gift Card, Donations, Lottery) | AG-82 | extracted; 2 helper queries needed |
 
-## Data rule (the user, 2026-09-28)
+## Data rule v2 (the user, 2026-09-28, replaces v1 below)
+- **Remove all mock / sample data.** Every report shows only data loaded from the QA database.
+- **No fixed dates.** Each report uses whatever date range QA holds; the date filter opens on QA's available days.
+- A report whose tables are not in QA shows a clear "no QA data yet" state instead of made-up rows.
+
+## Data rule v1 (superseded)
 Every report takes its data from **QA**. Where QA has no data for a table (a missing table, an empty table, or a
 store/day QA does not hold), the demo uses **made-up sample rows**, clearly labelled as sample. DEV is used only to copy
 lookups (plaza names) once.
