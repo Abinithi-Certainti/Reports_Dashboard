@@ -55,3 +55,25 @@ Source: `information_schema.columns` for schema `master` on **QA**, exported by 
   grants are the wrong way round. We do not query it.
 - Result: **no report can be run on QA with readonly_user today.** The tech lead needs to grant SELECT on the business
   tables (and review access to credentials_reference).
+
+## location_code_mappings on QA (2026-09-28, Read_Write login, SELECT only)
+Sample rows (30 of them, created 2026-09-04):
+| description | location_code | store_id |
+|---|---|---|
+| ONRoute : TIM23 : 23 TIM HORTONS | TIM23 | 101518 |
+| ONRoute : MKT01 : 01 MARKET | MKT01 | 1 |
+| ONRoute : PLK13 : 13 POPEYES | PLK13 | 13711 |
+
+- `description` = "ONRoute : <location_code> : <plaza number> <BRAND>". So QA gives **store -> brand** (text) and
+  **store -> plaza number**, but **no plaza name, no host_location_id, no rollout, no district**.
+- `location_code` (TIM23, MKT01 ...) has the same shape as the old `CTLocation` / new `netsuite_location_mapping.ct_location`,
+  which is how the Waste and Market reports join `weekly_cogs.loc_code` to a plaza. To confirm with one DEV query.
+- Market store_ids are 1, 10, 11, 12, 13 - short numbers, unlike the 6-digit Tim Hortons ids. To check against pos_orders.
+- Coverage: pos_orders on QA has 1 store; it is found in location_code_mappings (1 of 1).
+- **AG-79 unblocked in part:** store 101518 = TIM23 = Tim Hortons, plaza number 23. The plaza *name* for number 23 still
+  needs a lookup (DEV netsuite_location_mapping.ct_location = 'TIM23').
+
+## Proposed plaza source until the mapping is loaded into QA
+1. QA `location_code_mappings`: store_id -> location_code, plaza number, brand.
+2. A small plaza lookup (plaza number / ct_location -> plaza name, host_location_id, district director), taken once from
+   DEV `netsuite_location_mapping` + `district_directors` and kept as a seed table. About 25 plazas.
