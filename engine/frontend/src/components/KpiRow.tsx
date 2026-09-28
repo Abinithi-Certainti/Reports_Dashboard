@@ -161,7 +161,10 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
             textShadow: t.glow ? `0 0 28px ${alpha(colour, 0.45)}` : 'none', whiteSpace: 'nowrap', position: 'relative', zIndex: 1,
           }}
         >
-          <AnimatedNumber value={Number(value ?? 0)} format={format} />
+          {/* No value (e.g. a YOY % with no last-year data) shows a dash, never a made-up 0. */}
+          {value === null || value === undefined
+            ? <Box component="span" title="No data for this yet" sx={{ color: t.textMuted }}>–</Box>
+            : <AnimatedNumber value={Number(value)} format={format} />}
         </Typography>
       )}
       <Typography sx={{ fontSize: '0.68rem', color: t.textMuted, minHeight: 14, lineHeight: 1.3 }}>{delta ? 'vs previous period' : ' '}</Typography>
