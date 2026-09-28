@@ -25,6 +25,11 @@ Formulas, tables, mappings and fields matter most. Matching the old numbers exac
 | 9 | Sales Report Field Team | AG-81 | extracted |
 | 10 | Financial Reports (HST, Gift Card, Donations, Lottery) | AG-82 | extracted; 2 helper queries needed |
 
+## Data rule (the user, 2026-09-28)
+Every report takes its data from **QA**. Where QA has no data for a table (a missing table, an empty table, or a
+store/day QA does not hold), the demo uses **made-up sample rows**, clearly labelled as sample. DEV is used only to copy
+lookups (plaza names) once.
+
 ## Rules that still apply
 - **2026-09-28 decision (the user):** QA checks run with the Read_Write login (`kios_etl_QA`), without waiting for
   readonly_user grants. Only SELECT queries are run with it - never UPDATE / DELETE / INSERT / DROP / ALTER.

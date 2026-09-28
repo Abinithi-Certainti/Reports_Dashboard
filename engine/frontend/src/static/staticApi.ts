@@ -19,6 +19,9 @@ import salesMarginSql from '../../../../reports/sales-margin-budget/dataset.sql?
 import salesMarginRows from '../../../../demo/static-data/sales-margin-rows.json';
 import salesReport1Yaml from '../../../../reports/sales-report-1/report.yaml?raw';
 import salesReport1Sql from '../../../../reports/sales-report-1/dataset.sql?raw';
+import financialYaml from '../../../../reports/financial-reports/report.yaml?raw';
+import financialSql from '../../../../reports/financial-reports/dataset.sql?raw';
+import financialSampleRows from '../../../../demo/static-data/financial-rows.json';
 
 // Real figures live in demo/private-data/ (git-ignored - the repository is public). The glob is empty when the
 // folder is absent, so a build from a fresh clone simply leaves the real-data report out.
@@ -26,6 +29,8 @@ const privateData = import.meta.glob('../../../../demo/private-data/*.json', { e
 const privateRows = (file: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${file}`))?.[1];
 const wasteRows = privateRows('waste-rows.json');
 const salesReport1Rows = privateRows('sales-report-1-qa-rows.json');
+// Real QA rows when the private export exists, otherwise the made-up sample (tools/make_financial_sample.sql).
+const financialQaRows = privateRows('financial-reports-qa-rows.json');
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
@@ -66,6 +71,7 @@ const DATASETS: { sql: string; rows: DataRow[] }[] = [
   { sql: normalise(salesMarginSql), rows: salesMarginRows as DataRow[] },
   ...(wasteRows ? [{ sql: normalise(wasteSql), rows: wasteRows }] : []),
   ...(salesReport1Rows ? [{ sql: normalise(salesReport1Sql), rows: salesReport1Rows }] : []),
+  { sql: normalise(financialSql), rows: (financialQaRows ?? financialSampleRows) as DataRow[] },
 ];
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
@@ -274,6 +280,7 @@ const builtIns: [string, string, string, boolean][] = [
   ['waste-report', wasteYaml, wasteSql, !!wasteRows],
   ['sales-margin-budget', salesMarginYaml, salesMarginSql, true],
   ['sales-report-1', salesReport1Yaml, salesReport1Sql, !!salesReport1Rows],
+  ['financial-reports', financialYaml, financialSql, true],
 ];
 for (const [id, yaml, sql, available] of builtIns) {
   if (!available) continue;
