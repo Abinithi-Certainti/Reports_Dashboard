@@ -111,6 +111,37 @@
   body.C .k:nth-child(3) { background: linear-gradient(135deg, #fda4af, #fb7185); }
   body.C .k:nth-child(4) { background: linear-gradient(135deg, #fde68a, #fbbf24); }
   body.C .k:hover { border: 0; }
+
+  /* ---------- light versions ---------- */
+  html[data-mode="light"] { color-scheme: light; }
+  html[data-mode="light"] .switch { background: rgba(255,255,255,.85); color: #0f172a; border-bottom-color: #e2e8f0; }
+  html[data-mode="light"] .switch button { border-color: #cbd5e1; }
+  html[data-mode="light"] .switch span { color: #64748b; }
+  html[data-mode="light"] body.A {
+    --side: rgba(255,255,255,.7); --panel: rgba(255,255,255,.72); --input: rgba(248,250,252,.9); --line: rgba(148,163,184,.3);
+    --text: #0b1324; --text2: #475569; --muted: #64748b; --k-label: #475569; --accent: #0891b2; --on-accent: #fff; --good: #059669;
+    --chip: rgba(100,116,139,.12); --dot: #059669; --nav-on: linear-gradient(90deg, rgba(8,145,178,.14), rgba(124,58,237,.06));
+    --nav-on-shadow: inset 0 0 0 1px rgba(8,145,178,.35), 0 8px 20px -10px rgba(8,145,178,.5);
+    --track: rgba(148,163,184,.2); --bar: linear-gradient(90deg, #2563eb, #06b6d4); --bar-glow: 0 2px 8px rgba(6,182,212,.35);
+    background: #eef3fa radial-gradient(700px 300px at 15% -5%, rgba(34,211,238,.35), transparent 70%) no-repeat,
+                radial-gradient(600px 300px at 95% 0%, rgba(167,139,250,.35), transparent 70%) no-repeat;
+    background-color: #eef3fa;
+  }
+  html[data-mode="light"] body.A .k, html[data-mode="light"] body.A .p, html[data-mode="light"] body.A .filters { box-shadow: 0 10px 30px -18px rgba(30,64,175,.35); }
+  html[data-mode="light"] body.B {
+    --bg: #ffffff; --side: #f6f8fa; --panel: #ffffff; --input: #f6f8fa; --line: #d0d7de;
+    --text: #1f2328; --text2: #424a53; --muted: #656d76; --k-label: #656d76; --accent: #0969da; --on-accent: #fff; --good: #1a7f37;
+    --chip: #eaeef2; --dot: #1a7f37; --nav-on: #eaeef2; --nav-on-shadow: inset 2px 0 0 #0969da; --logo: #0969da;
+    --track: #eaeef2; --bar: #0969da; background: #ffffff;
+  }
+  html[data-mode="light"] body.B tbody tr:nth-child(even) td { background: #f6f8fa; }
+  html[data-mode="light"] body.C {
+    --bg: #faf9ff; --side: #f3f1ff; --panel: #ffffff; --input: #f3f1ff; --line: #e7e3fb;
+    --text: #1a1333; --text2: #4c4470; --muted: #7a73a0; --accent: #7c3aed; --on-accent: #fff;
+    --chip: #ede9fe; --dot: #059669; --nav-on: #ede9fe; --track: #ede9fe; --bar: linear-gradient(90deg, #7c3aed, #e11d48);
+    background: #faf9ff;
+  }
+  html[data-mode="light"] body.C .p { box-shadow: 0 10px 30px -20px rgba(76,29,149,.35); }
 </style>
 </head>
 <body class="A">
@@ -119,6 +150,9 @@
   <button type="button" data-s="A" aria-pressed="true">A · Glass Neon</button>
   <button type="button" data-s="B" aria-pressed="false">B · Clean Pro</button>
   <button type="button" data-s="C" aria-pressed="false">C · Bento Colour</button>
+  <b style="margin-left:8px">MODE</b>
+  <button type="button" data-m="dark" aria-pressed="true">☾ Dark</button>
+  <button type="button" data-m="light" aria-pressed="false">☀ Light</button>
   <span>Made-up example numbers, only to show the look.</span>
 </div>
 <div class="app">
@@ -162,13 +196,18 @@ document.getElementById('bars').innerHTML = ROWS.map(([p, v]) => `<div class="ba
 const DET = [['Barrie', [5120, 4880, 5310]], ['  Tim Hortons', [3400, 3150, 3520]], ['  Market', [1720, 1730, 1790]], ['Innisfil', [4210, 4390, 4050]], ['  Tim Hortons', [2900, 3010, 2780]], ['  Market', [1310, 1380, 1270]]];
 document.getElementById('det').innerHTML = DET.map(([n, v]) => `<tr class="${n.startsWith('  ') ? 'lvl2' : 'lvl1'}"><td>${n.startsWith('  ') ? '' : '▾ '}${n.trim()}</td>${v.map((x) => `<td class="num">${fmt(x)}</td>`).join('')}<td class="num">${fmt(v.reduce((a, b) => a + b, 0))}</td></tr>`).join('');
 const grow = () => document.querySelectorAll('.track i').forEach((i) => { i.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { i.style.width = i.dataset.w + '%'; })); });
-document.querySelectorAll('.switch button').forEach((b) => b.addEventListener('click', () => {
+document.querySelectorAll('.switch button[data-s]').forEach((b) => b.addEventListener('click', () => {
   document.body.className = b.dataset.s;
-  document.querySelectorAll('.switch button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll('.switch button[data-s]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   grow();
 }));
-const start = new URLSearchParams(location.search).get('s');
-if (start) document.querySelector(`.switch button[data-s="${start}"]`)?.click(); else grow();
+document.querySelectorAll('.switch button[data-m]').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.mode = b.dataset.m;
+  document.querySelectorAll('.switch button[data-m]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+}));
+const q = new URLSearchParams(location.search);
+if (q.get('m')) document.querySelector(`.switch button[data-m="${q.get('m')}"]`)?.click();
+if (q.get('s')) document.querySelector(`.switch button[data-s="${q.get('s')}"]`)?.click(); else grow();
 </script>
 </body>
 </html>
