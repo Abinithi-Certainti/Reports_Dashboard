@@ -45,3 +45,13 @@ Source: `information_schema.columns` for schema `master` on **QA**, exported by 
    people_count and car_count be loaded into QA? When?
 2. Until then, may the report engine read those from DEV while reading POS/labour from QA?
 3. Is `location_code_mappings` meant to replace netsuite_location_mapping?
+
+## readonly_user permissions on QA (2026-09-28, has_table_privilege)
+- **Cannot read (19):** every business table: pos_orders, pos_order_details, pos_order_payments, pos_order_paid_outs,
+  pos_order_taxes, pos_order_voids (+ their _trickle copies), employee_pay_summary, ceridian_employees,
+  location_code_mappings, store_pairing_config, invoice_header, invoice_detail, middleware_execution_history.
+- **Can read (4):** credentials_reference, file_metadata, flow_definition, system_definition. These are ETL
+  configuration tables, not report data. credentials_reference holds key-vault secret names, so this looks like the
+  grants are the wrong way round. We do not query it.
+- Result: **no report can be run on QA with readonly_user today.** The tech lead needs to grant SELECT on the business
+  tables (and review access to credentials_reference).
