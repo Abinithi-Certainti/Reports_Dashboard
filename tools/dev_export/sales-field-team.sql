@@ -3,33 +3,6 @@
 -- screen) as demo/private-data/dev_sales-field-team.csv, then run: python3 tools/private_to_json.py sales-field-team demo/private-data/dev_sales-field-team.csv
 -- The result holds real figures: it goes to demo/private-data/, never into git. Never paste a password.
 SELECT * FROM (
-    -- Sales Report Field Team (AG-81). Source of truth for the old report: extracts/sales-field-team/01_model.md
-    -- An older, smaller copy of Sales Report 1 (reports/sales-report-1). Reads the DEV database, schema master.
-    -- One row per day, location and brand, per source (POS, card fees, labour, temp labour). Amount columns are 0 on the
-    -- other sources' rows, so every measure is a plain sum.
-    --
-    -- Sales        = POS net (not Cash Drop) - Market "Card Fee" (from 2022-04-01, rollout 'Yes' stores only).
-    --                Unlike Sales Report 1, beer deposits are NOT subtracted (the old model does not subtract them).
-    -- Transactions = number of POS orders (not Cash Drop)
-    -- Labour hours = employee_pay_summary (Reg / OT1.5 / Hol1.5, not HR, every job except the 5 manager jobs) + temp_dlh.
-    --                Both tables are EMPTY on DEV, so Labour Hours Direct and SPLH show 0 / empty until they are loaded.
-    --                The old report also added vending / Market Express hours from TimeCardDetail, which has no table in
-    --                the new DB, so those hours are missing here.
-    -- PY / YOY     = there is no last-year data on DEV, so every PY / YOY measure is empty for now.
-    -- Store mapping: netsuite_location_mapping (rollout yes / suspended, any case), the Revenue_Append plaza renames and
-    --                brand renames, and district_directors - the same as Sales Report 1.
-    -- Weekday and week ending (Saturday) come from master.date_table.
-    --
-    -- OPEN (not built until confirmed):
-    --   1. AGM: the old model says "the hard-coded AGM list" but the extract does not list its host locations. Sales
-    --      Report 1's list is not copied on a guess, so agm is empty here.
-    --   2. Maple Tim Hortons drive-thru as its own brand (TIM HORTONS DT): Sales Report 1 does it, the extract for this
-    --      report does not mention it, so it is not applied.
-    --   3. Labour location clean-up: the extract names only 3 fixes (TRAVEL PLAZA, ONSITE, NYF). The exact text of each
-    --      is taken from Sales Report 1, and the location is joined on "PLAZA BRAND" text as there.
-    --   4. Vending / Market Express hours: still needed, and from which table?
-    --   5. One shared Sales / LHD definition with Sales Report 1, or keep this report's own rules (as built here)?
-    -- Checked only against the table structure so far. No semicolons anywhere in this file, comments included.
     WITH plaza_rename (old_name, new_name) AS (
         VALUES ('New Castle TO S', 'Newcastle'), ('S. Tilbury ON S', 'Tilbury South'), ('N. Tilbury ON S', 'Tilbury North'),
                ('Dutton ON S', 'Dutton'), ('W. Lorne ON S', 'West Lorne'), ('N. Trenton ON S', 'Trenton North'),
@@ -52,7 +25,6 @@ SELECT * FROM (
         LEFT JOIN plaza_rename r ON r.old_name = trim(m.location_name)
         WHERE m.host_location_id IS NOT NULL AND lower(trim(m.rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too
     ), lb AS (
-        -- The old report's "LB name": plaza (Bainsville / Morrisburg without " ON S") + space + brand, upper case.
         SELECT DISTINCT host_location_id, brand, upper(plaza_base || ' ' || brand) AS lb_name FROM loc
     ), facts AS (
         SELECT o.end_day::date AS day, l.host_location_id, l.brand,
@@ -63,7 +35,6 @@ SELECT * FROM (
         WHERE o.order_type_name::text <> 'Cash Drop'
         GROUP BY 1, 2, 3
         UNION ALL
-        -- Card fees: Market brands, rollout 'Yes' only (suspended stores keep their fees in Sales, as in the old SQL).
         SELECT d.end_day::date, l.host_location_id, l.brand, 0, sum(d.value_added_base_price), 0, 0
         FROM master.pos_order_details d
         JOIN loc l ON l.store_id = d.store_id
@@ -71,7 +42,6 @@ SELECT * FROM (
           AND d.end_day > timestamp '2022-04-01 00:15:00'
         GROUP BY 1, 2, 3
         UNION ALL
-        -- Labour (EMPTY on DEV). The job exclusion is the old DAX measure's: a blank job is kept, as DAX NOT IN keeps it.
         SELECT p.pay_date::date, lb.host_location_id, lb.brand, 0, 0, 0, sum(p.hours)
         FROM master.employee_pay_summary p
         JOIN lb ON lb.lb_name =
@@ -82,13 +52,11 @@ SELECT * FROM (
                                           'BRAND MANAGER')
         GROUP BY 1, 2, 3
         UNION ALL
-        -- Temp labour (EMPTY on DEV)
         SELECT t.dlh_date, lb.host_location_id, lb.brand, 0, 0, 0, sum(t.dlh)
         FROM master.temp_dlh t
         JOIN lb ON lb.lb_name = upper(trim(t.plaza) || ' ' || trim(t.brand))
         GROUP BY 1, 2, 3
     ), plaza AS (
-        -- One plaza per host location. 4606 (Maple) and 3640 (Newcastle) are Revenue_Append's two hard-coded rows.
         SELECT host_location_id, min(plaza_base) AS plaza_base
         FROM (SELECT host_location_id, plaza_base FROM loc UNION ALL VALUES (4606, 'Maple'), (3640, 'Newcastle')) x
         GROUP BY host_location_id

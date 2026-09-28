@@ -5,10 +5,6 @@
 SELECT end_day, plaza, brand, district_director, payment_type, sequence,
        sum(tender_amount) AS tender_amount, sum(paidout_amount) AS paidout_amount
 FROM (
-    -- Tender Report dataset for the report engine (DEV database - decision 2026-09-28): one flat row per store / brand / day / payment type.
-    -- Built from the translated queries in queries.sql. Tenders and paid-outs are stacked (UNION ALL) so one
-    -- measure, tender_amount - paidout_amount, gives the old "Tender amount 2".
-    -- Single statement, no semicolons: the engine wraps it as WITH d AS (...).
     WITH nslm AS (
         SELECT DISTINCT location_name, brand_name, host_location_id, store_id
         FROM master.netsuite_location_mapping
@@ -58,7 +54,6 @@ FROM (
         UNION ALL
         SELECT end_day, lb_name, 'Cash', 0::numeric, amount FROM paidouts
     )
-    -- LEFT JOINs keep rows whose store key has no match, as Power BI does (they show as blank Plaza/Brand).
     SELECT s.end_day,
            lb.plaza,
            lb.brand,

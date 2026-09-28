@@ -18,13 +18,15 @@ for r in tender-report waste-report market-category sales-margin-budget sales-re
       echo "SELECT end_day, plaza, brand, district_director, payment_type, sequence,"
       echo "       sum(tender_amount) AS tender_amount, sum(paidout_amount) AS paidout_amount"
       echo "FROM ("
-      sed 's/^/    /' "$HERE/reports/$r/dataset.sql"
+      # Full-line comments are left out: shorter text, and nothing for a SQL editor to mis-split on.
+      grep -v '^[[:space:]]*--' "$HERE/reports/$r/dataset.sql" | sed 's/^/    /' 
       echo ") d"
       echo "GROUP BY end_day, plaza, brand, district_director, payment_type, sequence"
       echo "ORDER BY end_day, plaza, brand, sequence"
     else
       echo "SELECT * FROM ("
-      sed 's/^/    /' "$HERE/reports/$r/dataset.sql"
+      # Full-line comments are left out: shorter text, and nothing for a SQL editor to mis-split on.
+      grep -v '^[[:space:]]*--' "$HERE/reports/$r/dataset.sql" | sed 's/^/    /' 
       echo ") d"
     fi
   } > "$out"

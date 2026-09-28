@@ -3,20 +3,6 @@
 -- screen) as demo/private-data/dev_financial-reports.csv, then run: python3 tools/private_to_json.py financial-reports demo/private-data/dev_financial-reports.csv
 -- The result holds real figures: it goes to demo/private-data/, never into git. Never paste a password.
 SELECT * FROM (
-    -- Financial Reports (AG-82). Source of truth for the old report: extracts/financial-reports/01_model.md
-    -- Runs on DEV (decision 2026-09-28): pos_orders, pos_order_details, pos_order_paid_outs, location_code_mappings,
-    -- and netsuite_location_mapping for the plaza name (joined on location code = ct_location).
-    -- One row per day, store and item group. Each amount column is 0 on the other groups' rows, so every measure is a sum.
-    --   hst            = POS order tax
-    --   gift_card      = gift card sales (department Gift Card, Retail - gift card, Tim Card, gift cards - any case, as in DAX)
-    --   donations      = department Donations, or the menu item Camp Day Bracelet, by donation item (kitchen name)
-    --   lottery_amount = lottery sales (Instant Tickets, Open Lottery) minus redemptions (Lottery Redemption / Lottery
-    --                    Payout items, and every cash paid out, as in the old report)
-    -- Plaza: the name from netsuite_location_mapping. A store with no match falls back to the plaza number inside
-    -- location_code_mappings.description ("ONRoute : TIM23 : 23 TIM HORTONS" -> "Plaza 23").
-    -- District Director is not in QA, so it is not offered as a filter here.
-    -- location_code_mappings holds 120 rows for 115 stores, so one row per store is kept (the lowest location_code).
-    -- No semicolons anywhere in this file, comments included.
     WITH store AS (
         SELECT DISTINCT ON (m.store_id)
                m.store_id,
