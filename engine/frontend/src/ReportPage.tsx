@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Box, CircularProgress, Container, Tooltip, Typography } from '@mui/material';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { useTokens } from './theme';
@@ -13,17 +13,23 @@ import MatrixVisual from './components/MatrixVisual';
 import LineChartVisual from './components/LineChartVisual';
 import DonutVisual from './components/DonutVisual';
 import SplitVisual from './components/SplitVisual';
+import WaterfallVisual from './components/WaterfallVisual';
+import StackVisual from './components/StackVisual';
+import HeatmapVisual from './components/HeatmapVisual';
 import LeaderboardVisual from './components/LeaderboardVisual';
 import Reveal from './components/Reveal';
 import { Visual } from './api';
 import { CatalogEntry } from './catalog';
 import ReportHeader from './components/ReportHeader';
+import PlazaDetail, { PLAZA_DIM, PlazaContext } from './components/PlazaDetail';
+import { formatRange } from './components/CalendarPopover';
 import { alpha } from '@mui/material/styles';
 
 /** Default width of each visual on the 12-column grid (a report can override it with `span`). */
-const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12, split: 6 };
+const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12, split: 6, waterfall: 6, stack: 6, heatmap: 12 };
 const COMPONENTS = {
   table: SummaryTable, bar: BarChartVisual, matrix: MatrixVisual, line: LineChartVisual, donut: DonutVisual, leaderboard: LeaderboardVisual, split: SplitVisual,
+  waterfall: WaterfallVisual, stack: StackVisual, heatmap: HeatmapVisual,
 } as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
@@ -33,6 +39,8 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
   const [filters, setFilters] = useState<FilterState>();
   const [defaults, setDefaults] = useState<FilterState>();
   const [error, setError] = useState<string>();
+  const [plaza, setPlaza] = useState<string | null>(null);
+  const openPlaza = useCallback((name: string) => setPlaza(name), []);
 
   useEffect(() => {
     setSpec(undefined);
@@ -67,9 +75,20 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
     () => filters && { filters: filters.values, dateFrom: filters.dateFrom, dateTo: filters.dateTo },
     [filters],
   );
+  // The plaza popup's trend: the selected days, or on a retail-week report the last 8 weeks up to the selected one.
+  const trendBase = useMemo(() => {
+    if (!filters || !base) return undefined;
+    const weeks = filters.weeks;
+    const i = weeks?.findIndex((w) => w.week_start === filters.dateFrom) ?? -1;
+    if (weeks && i >= 0) {
+      const first = weeks[Math.max(0, i - 7)];
+      return { ...base, dateFrom: first.week_start, dateTo: filters.dateTo, label: i === 0 ? 'the selected week' : `the ${Math.min(8, i + 1)} weeks up to the selected one` };
+    }
+    return { ...base, label: 'selected days' };
+  }, [filters, base]);
 
   if (error) return <Container sx={{ py: 4 }}><Alert severity="error">{error}</Alert></Container>;
-  if (!spec || !filters || !base || !defaults) {
+  if (!spec || !filters || !base || !defaults || !trendBase) {
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 12 }}><CircularProgress thickness={2.5} size={46} /></Box>;
   }
 
@@ -79,7 +98,11 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
   // Made-up rows keep one compact orange line, so nobody takes sample numbers for real ones. A DEV export shows no banner.
   // (Live mode only sends a notice when the backend itself runs on sample rows.)
   const warn = !!spec.sampleDataNotice && source !== 'export';
+  const rangeLabel = weekLabel(filters) ?? formatRange(filters.dateFrom, filters.dateTo);
+  const hasPlaza = !!spec.dimensions[PLAZA_DIM];
+  const plazaFilter = spec.filters.some((f) => f.dimension === PLAZA_DIM && f.type === 'multi_select');
   return (
+    <PlazaContext.Provider value={hasPlaza ? openPlaza : null}>
     <Container maxWidth={false} sx={{ py: 2, maxWidth: 1500 }}>
       <ReportHeader
         entry={entry}
@@ -93,7 +116,7 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
                 '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
               }}
             />
-            {weekLabel(filters) ?? `${filters.dateFrom} → ${filters.dateTo}`}
+            {rangeLabel}
           </Box>
         )}
       />
@@ -135,7 +158,20 @@ export default function ReportPage({ reportId, entry, source: listedSource }: { 
           );
         })}
       </Box>
+      {hasPlaza && (
+        <PlazaDetail
+          reportId={reportId}
+          spec={spec}
+          base={base}
+          trendBase={trendBase}
+          rangeLabel={rangeLabel}
+          plaza={plaza}
+          onClose={() => setPlaza(null)}
+          onFilter={plazaFilter ? (name) => setFilters({ ...filters, values: { ...filters.values, [PLAZA_DIM]: [name] } }) : undefined}
+        />
+      )}
     </Container>
+    </PlazaContext.Provider>
   );
 }
 

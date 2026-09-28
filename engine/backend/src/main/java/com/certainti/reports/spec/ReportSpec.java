@@ -85,7 +85,7 @@ public record ReportSpec(
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Visual(String type, String title, List<String> rows, List<String> columns, List<String> values,
                          List<KpiItem> items, @JsonProperty("total_row") Boolean totalRow, Integer span, Integer limit,
-                         List<String> highlight) {
+                         List<String> highlight, List<String> signs, String total) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

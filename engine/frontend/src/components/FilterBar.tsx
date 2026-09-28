@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, ButtonBase, Checkbox, InputBase, MenuItem, Paper, Popover, TextField, Typography } from '@mui/material';
+import { Box, Button, ButtonBase, Checkbox, InputBase, MenuItem, Paper, Popover, TextField, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
+import CalendarPopover, { formatRange } from './CalendarPopover';
 import { api, RetailWeek, Spec } from '../api';
 import { useSound } from '../sound';
 import { useTokens } from '../theme';
@@ -54,7 +56,7 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
         aria-expanded={open}
         aria-label={`${label}: ${on ? `${selected.length} selected` : 'All'}`}
         sx={{
-          height: FIELD_H, minWidth: 120, px: 1.25, gap: 0.75, justifyContent: 'space-between', borderRadius: '10px', fontSize: '0.84rem',
+          height: FIELD_H, minWidth: 120, flex: { xs: '1 1 140px', sm: '0 0 auto' }, px: 1.25, gap: 0.75, justifyContent: 'space-between', borderRadius: '10px', fontSize: '0.84rem',
           color: t.textPrimary, bgcolor: t.mode === 'light' ? '#f8fafc' : 'rgba(15,23,42,0.6)',
           border: `1px solid ${on || open ? t.accent : t.panelBorder}`,
           boxShadow: on || open ? `0 0 0 3px ${alpha(t.accent, 0.13)}` : 'none',
@@ -140,9 +142,69 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
 
 const mmdd = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
 
-/** Year, Period and Week, like the old report's slicers. Changing the year or period jumps to its latest week. */
-function RetailWeekPicker({ value, onChange }: { value: FilterState; onChange: (v: FilterState) => void }) {
+/** The field look shared by the date button and the calendar button (same height and border as the other fields). */
+function fieldButtonSx(t: ReturnType<typeof useTokens>, open: boolean) {
+  return {
+    height: FIELD_H, px: 1.25, gap: 0.75, borderRadius: '10px', fontSize: '0.84rem', color: t.textPrimary, flexShrink: 0,
+    bgcolor: t.mode === 'light' ? '#f8fafc' : 'rgba(15,23,42,0.6)',
+    border: `1px solid ${open ? t.accent : t.panelBorder}`,
+    boxShadow: open ? `0 0 0 3px ${alpha(t.accent, 0.13)}` : 'none',
+    transition: 'border-color .2s ease, box-shadow .2s ease',
+    '&:hover': { borderColor: alpha(t.accent, 0.6) },
+    '&.Mui-focusVisible': { outline: `2px solid ${t.accent}`, outlineOffset: 2 },
+  } as const;
+}
+
+/** One button with the selected range ("19 May 2026 → 24 Jul 2026"); it opens the calendar. */
+function DateRangeFilter({ value, dataDays, onChange }: { value: FilterState; dataDays?: Set<string>; onChange: (v: FilterState) => void }) {
+  const t = useTokens();
+  const anchor = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ButtonBase
+        ref={anchor}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Dates: ${formatRange(value.dateFrom, value.dateTo)}. Change dates`}
+        sx={{ ...fieldButtonSx(t, open), justifyContent: 'space-between', maxWidth: '100%' }}
+      >
+        <CalendarMonthRoundedIcon sx={{ fontSize: 17, color: t.accent }} />
+        <Box component="span" sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {formatRange(value.dateFrom, value.dateTo)}
+        </Box>
+        <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, color: t.textMuted, transition: 'transform .2s ease', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </ButtonBase>
+      <CalendarPopover
+        anchorEl={anchor.current}
+        open={open}
+        onClose={() => setOpen(false)}
+        mode="range"
+        from={value.dateFrom}
+        to={value.dateTo}
+        minDate={value.minDate}
+        maxDate={value.maxDate}
+        dataDays={dataDays}
+        onPick={(from, to) => onChange({ ...value, dateFrom: from, dateTo: to })}
+      />
+    </>
+  );
+}
+
+/**
+ * Year, Period and Week, like the old report's slicers. Changing the year or period jumps to its latest week.
+ * The calendar button next to them picks a week on a calendar instead: a click on any day selects its whole week.
+ */
+function RetailWeekPicker({ value, dataDays, onChange }: { value: FilterState; dataDays?: Set<string>; onChange: (v: FilterState) => void }) {
+  const t = useTokens();
+  const anchor = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   const weeks = value.weeks ?? [];
+  const calendarWeeks = useMemo(
+    () => weeks.map((w) => ({ week_start: w.week_start, week_end: w.week_end, label: `${w.retail_year} · P${w.retail_period} · Week ${w.retail_week}` })),
+    [weeks],
+  );
   const current = weeks.find((w) => w.week_start === value.dateFrom) ?? weeks[weeks.length - 1];
   if (!current) return null;
   const pick = (w: RetailWeek | undefined) => w && onChange({ ...value, dateFrom: w.week_start, dateTo: w.week_end });
@@ -152,22 +214,47 @@ function RetailWeekPicker({ value, onChange }: { value: FilterState; onChange: (
   const inPeriod = weeks.filter((w) => w.retail_year === current.retail_year && w.retail_period === current.retail_period);
   const field = { size: 'small' as const, select: true, InputLabelProps: { shrink: true }, sx: fieldSx };
   return (
-    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-      <TextField {...field} label="Year" value={current.retail_year} sx={{ ...fieldSx, width: 92 }}
+    <>
+      <Tooltip title="Pick a week on the calendar">
+        <ButtonBase
+          ref={anchor}
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="Pick a week on the calendar"
+          sx={{ ...fieldButtonSx(t, open), px: 0, width: FIELD_H + 4 }}
+        >
+          <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: t.accent }} />
+        </ButtonBase>
+      </Tooltip>
+      <TextField {...field} label="Year" value={current.retail_year} sx={{ ...fieldSx, width: 88, flexShrink: 0 }}
         onChange={(e) => pick(latest((w) => w.retail_year === Number(e.target.value)))}>
         {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
       </TextField>
-      <TextField {...field} label="Period" value={current.retail_period} sx={{ ...fieldSx, width: 84 }}
+      <TextField {...field} label="Period" value={current.retail_period} sx={{ ...fieldSx, width: 78, flexShrink: 0 }}
         onChange={(e) => pick(latest((w) => w.retail_year === current.retail_year && w.retail_period === Number(e.target.value)))}>
         {periods.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
       </TextField>
-      <TextField {...field} label="Week" value={current.week_start} sx={{ ...fieldSx, width: { xs: '100%', sm: 200 } }}
+      <TextField {...field} label="Week" value={current.week_start} sx={{ ...fieldSx, width: 188, flexShrink: 0 }}
         onChange={(e) => pick(weeks.find((w) => w.week_start === e.target.value))}>
         {inPeriod.map((w) => (
           <MenuItem key={w.week_start} value={w.week_start}>Week {w.retail_week}: {mmdd(w.week_start)} – {mmdd(w.week_end)}</MenuItem>
         ))}
       </TextField>
-    </Box>
+      <CalendarPopover
+        anchorEl={anchor.current}
+        open={open}
+        onClose={() => setOpen(false)}
+        mode="week"
+        from={value.dateFrom}
+        to={value.dateTo}
+        minDate={weeks[0]?.week_start ?? value.minDate}
+        maxDate={weeks[weeks.length - 1]?.week_end ?? value.maxDate}
+        dataDays={dataDays}
+        weeks={calendarWeeks}
+        onPick={(from) => pick(weeks.find((w) => w.week_start === from))}
+      />
+    </>
   );
 }
 
@@ -179,7 +266,11 @@ type Props = {
   onReset: () => void;
 };
 
-/** All filters in one compact row above the visuals (it wraps on narrow screens). Nothing ticked means "All". */
+/**
+ * All filters in one compact row above the visuals: the multi-selects first, then the date or week controls grouped
+ * with Reset at the right end. When the row is too narrow, the date group moves down as a whole (Reset stays with it,
+ * so it is never left alone on a line). Nothing ticked means "All".
+ */
 export default function FilterBar({ reportId, spec, value, onChange: change, onReset }: Props) {
   const sound = useSound();
   const onChange = (v: FilterState) => {
@@ -187,6 +278,7 @@ export default function FilterBar({ reportId, spec, value, onChange: change, onR
     change(v);
   };
   const [options, setOptions] = useState<Record<string, string[]>>({});
+  const [dataDays, setDataDays] = useState<Set<string>>();
 
   useEffect(() => {
     spec.filters
@@ -194,59 +286,52 @@ export default function FilterBar({ reportId, spec, value, onChange: change, onR
       .forEach((f) =>
         api.values(reportId, f.dimension).then((vals) => setOptions((o) => ({ ...o, [f.dimension]: vals.map(String) }))),
       );
+    // The days that have rows, for the dots on the calendar (one cheap distinct-values call; no dots if it fails).
+    const dateFilter = spec.filters.find((f) => f.type !== 'multi_select');
+    if (dateFilter) {
+      api.values(reportId, dateFilter.dimension)
+        .then((vals) => setDataDays(new Set(vals.map((v) => String(v).slice(0, 10)))))
+        .catch(() => setDataDays(undefined));
+    }
   }, [reportId, spec]);
+
+  const multi = spec.filters.filter((f) => f.type === 'multi_select');
+  const dates = spec.filters.filter((f) => f.type !== 'multi_select');
 
   return (
     <Paper sx={{ px: 1.25, py: 1, mb: 1.5, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-      {spec.filters.map((f) =>
-        f.type === 'multi_select' ? (
-          <MultiSelectFilter
-            key={f.dimension}
-            label={spec.dimensions[f.dimension].label}
-            options={options[f.dimension] ?? []}
-            selected={value.values[f.dimension] ?? []}
-            onChange={(selected) => onChange({ ...value, values: { ...value.values, [f.dimension]: selected } })}
-          />
-        ) : f.type === 'retail_week' ? (
-          <RetailWeekPicker key={f.dimension} value={value} onChange={onChange} />
-        ) : (
-          <Box key={f.dimension} sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              size="small"
-              type="date"
-              label="From"
-              sx={{ ...fieldSx, width: 150 }}
-              value={value.dateFrom}
-              inputProps={{ min: value.minDate, max: value.dateTo }}
-              onChange={(e) => e.target.value && onChange({ ...value, dateFrom: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              size="small"
-              type="date"
-              label="To"
-              sx={{ ...fieldSx, width: 150 }}
-              value={value.dateTo}
-              inputProps={{ min: value.dateFrom, max: value.maxDate }}
-              onChange={(e) => e.target.value && onChange({ ...value, dateTo: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Box>
-        ),
-      )}
-      <Box sx={{ flex: 1 }} />
-      <Button
-        size="small"
-        startIcon={<RestartAltRoundedIcon sx={{ fontSize: '1rem !important' }} />}
-        aria-label="Reset filters"
-        sx={{ minWidth: 0, px: 1, whiteSpace: 'nowrap' }}
-        onClick={() => {
-          sound.play('whoosh');
-          onReset();
-        }}
+      {multi.map((f) => (
+        <MultiSelectFilter
+          key={f.dimension}
+          label={spec.dimensions[f.dimension].label}
+          options={options[f.dimension] ?? []}
+          selected={value.values[f.dimension] ?? []}
+          onChange={(selected) => onChange({ ...value, values: { ...value.values, [f.dimension]: selected } })}
+        />
+      ))}
+      <Box
+        role="group"
+        aria-label="Dates"
+        sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', flex: '1 1 auto', minWidth: 0 }}
       >
-        Reset
-      </Button>
+        {dates.map((f) =>
+          f.type === 'retail_week'
+            ? <RetailWeekPicker key={f.dimension} value={value} dataDays={dataDays} onChange={onChange} />
+            : <DateRangeFilter key={f.dimension} value={value} dataDays={dataDays} onChange={onChange} />,
+        )}
+        <Button
+          size="small"
+          startIcon={<RestartAltRoundedIcon sx={{ fontSize: '1rem !important' }} />}
+          aria-label="Reset filters"
+          sx={{ minWidth: 0, height: FIELD_H, px: 1.25, ml: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}
+          onClick={() => {
+            sound.play('whoosh');
+            onReset();
+          }}
+        >
+          Reset
+        </Button>
+      </Box>
     </Paper>
   );
 }

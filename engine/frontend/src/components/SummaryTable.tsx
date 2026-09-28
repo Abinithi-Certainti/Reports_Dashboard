@@ -4,6 +4,7 @@ import { formatValue } from '../format';
 import { useTokens } from '../theme';
 import { useQuery } from '../useQuery';
 import { FULL_WIDTH_MAX_HEIGHT } from './MatrixVisual';
+import { PLAZA_DIM, PlazaLink } from './PlazaDetail';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -64,7 +65,11 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
                   '&:hover td:first-of-type': { boxShadow: `inset 3px 0 0 ${tokens.accent}` },
                 }}
               >
-                {rowDims.map((d) => <TableCell key={d} sx={{ fontWeight: 500 }}>{r[d] ?? '(Blank)'}</TableCell>)}
+                {rowDims.map((d) => (
+                  <TableCell key={d} sx={{ fontWeight: 500 }}>
+                    {d === PLAZA_DIM && r[d] != null ? <PlazaLink name={String(r[d])} /> : r[d] ?? '(Blank)'}
+                  </TableCell>
+                ))}
                 {values.map((v) => {
                   const isBar = v === measures[0] && maxOf[v] > 0;
                   const share = isBar ? Math.max(0, Number(r[v] ?? 0)) / maxOf[v] : 0;

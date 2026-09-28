@@ -5,6 +5,7 @@ import { formatDay, formatValue } from '../format';
 import { useQuery } from '../useQuery';
 import { useSound } from '../sound';
 import { useTokens } from '../theme';
+import { PLAZA_DIM, PlazaLink } from './PlazaDetail';
 
 /** Height limit for full-width tables and matrices; taller content scrolls inside the panel. */
 export const FULL_WIDTH_MAX_HEIGHT = 560;
@@ -103,7 +104,8 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
             ) : (
               <Box component="span" sx={{ display: 'inline-block', width: 26 }} />
             )}
-            {n.label}
+            {/* The chevron expands the row; a plaza name opens the plaza popup. */}
+            {rowDims[n.depth] === PLAZA_DIM ? <PlazaLink name={n.label} /> : n.label}
           </TableCell>
           {tree!.columns.map((c) => (
             <TableCell

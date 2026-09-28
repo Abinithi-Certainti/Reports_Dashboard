@@ -172,7 +172,6 @@ export default function App() {
   const brand = (
         <Box>
           <Typography sx={{ fontWeight: 800, lineHeight: 1.1, color: t.textPrimary, letterSpacing: '-0.01em' }}>Report Engine</Typography>
-          <Typography sx={{ fontSize: '0.7rem', color: t.textMuted, fontFamily: t.mono }}>Certainti · Reports 2.0</Typography>
         </Box>
   );
 

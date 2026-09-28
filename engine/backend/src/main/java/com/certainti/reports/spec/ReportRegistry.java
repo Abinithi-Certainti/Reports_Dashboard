@@ -33,7 +33,8 @@ public class ReportRegistry {
     private static final Pattern REPORT_ID = Pattern.compile("^[a-z0-9][a-z0-9-]{1,60}$");
     private static final Pattern STARTS_WITH_SELECT = Pattern.compile("^\\s*(--[^\\n]*\\n\\s*|/\\*.*?\\*/\\s*)*(select|with)\\b",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard", "split");
+    static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard", "split",
+            "waterfall", "stack", "heatmap");
     static final java.util.Set<String> FILTER_TYPES = java.util.Set.of("multi_select", "date_range", "retail_week");
     static final java.util.Set<String> WINDOWS = java.util.Set.of("wtd", "ptd", "mtd", "ytd", "py", "yoy", "yoy_pct", "py_fin", "yoy_fin", "yoy_fin_pct");
     static final java.util.Set<String> KPI_ICONS = java.util.Set.of("total", "cash", "card", "paidout", "count", "store", "trend");
@@ -218,6 +219,15 @@ public class ReportRegistry {
                                 file, "visual '" + v.title() + "' uses unknown value " + val);
                     }
                 }
+                // waterfall: one sign (+ or -) per step, and a total that is a known measure.
+                if (v.signs() != null) {
+                    require(v.values() != null && v.signs().size() == v.values().size(), file,
+                            "visual '" + v.title() + "' needs one sign per value");
+                    v.signs().forEach(sg -> require("+".equals(sg) || "-".equals(sg), file,
+                            "visual '" + v.title() + "' signs must be + or -"));
+                }
+                require(v.total() == null || spec.measures().containsKey(v.total()), file,
+                        "visual '" + v.title() + "' uses unknown total " + v.total());
                 if (v.items() != null) {
                     v.items().forEach(i -> {
                         require(spec.measures().containsKey(i.measure()), file, "KPI '" + i.label() + "' uses unknown measure " + i.measure());

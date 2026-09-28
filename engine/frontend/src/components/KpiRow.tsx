@@ -19,7 +19,7 @@ import AnimatedNumber from './AnimatedNumber';
 type Base = Omit<QueryRequest, 'measures'>;
 
 /** A KPI's own include list narrows the user's filter (intersection); its exclude list is added on top. */
-function requestFor(item: KpiItem, base: Base, groupBy: string[]): QueryRequest | null {
+export function requestFor(item: KpiItem, base: Base, groupBy: string[]): QueryRequest | null {
   const filters: Record<string, string[]> = { ...(base.filters ?? {}) };
   for (const [dim, only] of Object.entries(item.include ?? {})) {
     const chosen = filters[dim] ?? [];
@@ -74,7 +74,7 @@ function Sparkline({ rows, measure, dateDim, format, colour }: { rows: Record<st
   return <ReactECharts option={option} style={{ height: 38 }} notMerge />;
 }
 
-function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: Spec; item: KpiItem; base: Base; index: number }) {
+function Tile({ reportId, spec, item, base, index, many }: { reportId: string; spec: Spec; item: KpiItem; base: Base; index: number; many?: boolean }) {
   const t = useTokens();
   const dateDim = Object.entries(spec.dimensions).find(([, d]) => d.type === 'date')?.[0];
   const prevBase = previousPeriod(base);
@@ -157,7 +157,8 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
       ) : (
         <Typography
           sx={{
-            fontFamily: t.mono, fontSize: { xs: '1.3rem', md: '1.65rem' }, fontWeight: 700, mt: 0.5, lineHeight: 1.25, color: t.textPrimary, letterSpacing: '-0.02em',
+            // More than 4 cards in a row: a smaller number, so large amounts are never cut off.
+            fontFamily: t.mono, fontSize: many ? { xs: '1.3rem', md: '1.2rem', xl: '1.4rem' } : { xs: '1.3rem', md: '1.65rem' }, fontWeight: 700, mt: 0.5, lineHeight: 1.25, color: t.textPrimary, letterSpacing: '-0.02em',
             textShadow: t.glow ? `0 0 28px ${alpha(colour, 0.45)}` : 'none', whiteSpace: 'nowrap', position: 'relative', zIndex: 1,
           }}
         >
@@ -178,7 +179,7 @@ function Tile({ reportId, spec, item, base, index }: { reportId: string; spec: S
 export default function KpiRow({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: `repeat(${visual.items?.length ?? 1}, minmax(0, 1fr))` }, gap: 1.5 }}>
-      {visual.items?.map((item, i) => <Tile key={item.label} index={i} reportId={reportId} spec={spec} item={item} base={base} />)}
+      {visual.items?.map((item, i) => <Tile key={item.label} index={i} reportId={reportId} spec={spec} item={item} base={base} many={(visual.items?.length ?? 0) > 4} />)}
     </Box>
   );
 }

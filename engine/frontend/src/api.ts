@@ -16,7 +16,7 @@ export type KpiItem = {
   icon?: 'total' | 'cash' | 'card' | 'paidout' | 'count' | 'store' | 'trend' | null;
 };
 export type Visual = {
-  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard' | 'split';
+  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard' | 'split' | 'waterfall' | 'stack' | 'heatmap';
   title?: string;
   rows?: string[];
   columns?: string[];
@@ -26,6 +26,8 @@ export type Visual = {
   span?: number | null;  // width on a 12-column grid; each type has a default
   limit?: number | null; // leaderboard: how many rows. donut: how many slices before the rest become "Other"
   highlight?: string[] | null; // split: the values of rows[0] shown as the first part (e.g. [Cash]); the rest is the second part
+  signs?: string[] | null; // waterfall: '+' or '-' per value (step)
+  total?: string | null;   // waterfall: the measure the steps should arrive at
 };
 export type Spec = {
   id: string;

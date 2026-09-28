@@ -6,6 +6,7 @@ import { formatValue } from '../format';
 import { useQuery } from '../useQuery';
 import { chartTheme, useTokens } from '../theme';
 import { useSound } from '../sound';
+import { PLAZA_DIM, usePlazaOpener } from './PlazaDetail';
 
 type Base = Omit<QueryRequest, 'measures'>;
 const percent = new Intl.NumberFormat('en-CA', { style: 'percent', maximumFractionDigits: 1 });
@@ -23,6 +24,9 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
   const format = spec.measures[measure]?.format;
   const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures: [measure] });
   const [hover, setHover] = useState<number | null>(null);
+  const openPlaza = usePlazaOpener();
+  const clickable = dim === PLAZA_DIM && !!openPlaza;
+  const openSlice = (name: string) => { if (clickable && name !== 'Other' && name !== '(Blank)') openPlaza!(name); };
 
   // Largest first. With `limit`, the smaller slices are added up as one "Other" slice so the ring stays readable.
   const sorted = (rows ?? [])
@@ -38,7 +42,7 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
   const option = rows && {
     tooltip: { show: false },
     series: [{
-      type: 'pie', radius: ['62%', '84%'], center: ['50%', '50%'], padAngle: 2, minAngle: 2,
+      type: 'pie', cursor: clickable ? 'pointer' : 'default', radius: ['62%', '84%'], center: ['50%', '50%'], padAngle: 2, minAngle: 2,
       itemStyle: { borderRadius: 6, borderColor: t.panelSolid, borderWidth: 2, shadowBlur: t.glow ? 12 : 0, shadowColor: t.glow || 'transparent' },
       label: { show: false },
       emphasis: { scale: true, scaleSize: 6, itemStyle: { shadowBlur: 20, shadowColor: t.glow || 'rgba(15,23,42,0.25)' } },
@@ -52,6 +56,7 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
       sound.play('click');
     },
     mouseout: () => setHover(null),
+    click: (p: { name: string }) => openSlice(p.name),
   };
 
   return (
@@ -85,13 +90,19 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
                 key={x.name}
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
+                {...(clickable && x.name !== 'Other' ? {
+                  role: 'button', tabIndex: 0, 'aria-label': `Open plaza ${x.name}`, onClick: () => openSlice(x.name),
+                  onKeyDown: (e: { key: string; preventDefault: () => void }) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlice(x.name); } },
+                } : {})}
                 sx={{
+                  cursor: clickable && x.name !== 'Other' ? 'pointer' : 'default',
+                  ...(clickable && x.name !== 'Other' ? { '&:hover .donut-name': { textDecoration: 'underline', color: t.accent } } : {}),
                   display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: 1, px: 1, py: 0.35, borderRadius: '8px',
                   bgcolor: hover === i ? `${x.colour}1a` : 'transparent', transition: 'background .2s ease',
                 }}
               >
                 <Box sx={{ width: 10, height: 10, borderRadius: '3px', bgcolor: x.colour, boxShadow: t.glow ? `0 0 8px ${x.colour}` : 'none' }} />
-                <Typography sx={{ fontSize: '0.82rem', color: t.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}</Typography>
+                <Typography className="donut-name" sx={{ fontSize: '0.82rem', color: t.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}</Typography>
                 <Typography sx={{ fontFamily: t.mono, fontSize: '0.78rem', color: t.textSecondary }}>{formatValue(x.value, format)}</Typography>
                 <Typography sx={{ fontFamily: t.mono, fontSize: '0.78rem', color: t.textPrimary, minWidth: 48, textAlign: 'right' }}>
                   {total > 0 ? percent.format(Math.max(0, x.value) / total) : ''}

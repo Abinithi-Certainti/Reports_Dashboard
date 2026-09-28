@@ -27,6 +27,9 @@ measures:
   theo_cost:      { label: Theocost $,   sql: "sum(theo_cost)",      format: currency }
   waste:          { label: Waste $,      sql: "sum(waste_value) + sum(waste_adj_value)", format: currency }
   variance:       { label: Variance $,   sql: "sum(cogs) - sum(theo_cost) - sum(waste_value) - sum(waste_adj_value)", format: currency }
+  # Shares of COGS, for the number cards and the heatmap. Blank when COGS is 0.
+  waste_pct:      { label: Waste % of COGS,    sql: "(sum(waste_value) + sum(waste_adj_value)) / nullif(sum(cogs), 0)", format: percent }
+  variance_pct:   { label: Variance % of COGS, sql: "(sum(cogs) - sum(theo_cost) - sum(waste_value) - sum(waste_adj_value)) / nullif(sum(cogs), 0)", format: percent }
 
 filters:
   - { dimension: district_director, type: multi_select }
@@ -36,24 +39,41 @@ filters:
   - { dimension: item_description,  type: multi_select }
   - { dimension: period,            type: retail_week }   # period = week-ending Saturday, so each week holds one
 
+# Layout (user decision 2026-09-28, a mix of redesign options A, B and C in demo/options/waste-options.html):
+# number cards, the cost story (stock -> COGS, and what COGS is made of per plaza), a waste % heatmap by plaza and
+# category, the items to act on, and the full detail table.
 visuals:
   - type: kpi
     items:
-      - { label: COGS,               measure: cogs,      icon: total }
-      - { label: Theoretical cost,   measure: theo_cost, icon: trend }
-      - { label: Waste,              measure: waste,     good_direction: down, icon: paidout }
-      - { label: Variance,           measure: variance,  good_direction: down, icon: count }
-  - type: bar
-    title: Variance by plaza
+      - { label: COGS,               measure: cogs,         icon: total }
+      - { label: Theoretical cost,   measure: theo_cost,    icon: trend }
+      - { label: Waste,              measure: waste,        good_direction: down, icon: paidout }
+      - { label: Waste % of COGS,    measure: waste_pct,    good_direction: down, icon: count }
+      - { label: Variance,           measure: variance,     good_direction: down, icon: cash }
+      - { label: Variance % of COGS, measure: variance_pct, good_direction: down, icon: store }
+  - type: waterfall
+    title: From stock to cost of goods
+    values: [begin_value, purchase_value, transfer_out, end_value]
+    signs:  ['+', '+', '-', '-']
+    total: cogs          # any gap between the steps and COGS is shown as "Other adjustments", not hidden
+    span: 6
+  - type: stack
+    title: What COGS is made of, by plaza
     rows: [plaza]
-    values: [variance]
-    span: 7
+    values: [theo_cost, waste, variance]
+    span: 6
+  - type: heatmap
+    title: Waste % of COGS - plaza by category
+    rows: [plaza]
+    columns: [category]
+    values: [waste_pct]
+    span: 12
   - type: leaderboard
-    title: Highest waste
-    rows: [plaza]
+    title: Items to act on - highest waste
+    rows: [item_description, plaza]
     values: [waste, cogs]
-    limit: 7
-    span: 5
+    limit: 8
+    span: 12
   - type: table
     title: Detailed Waste - by plaza
     rows: [plaza]
