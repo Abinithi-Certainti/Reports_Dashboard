@@ -1,0 +1,82 @@
+# Market Category Report - spec for the report engine (report #3).
+# Source of truth for the old report: extracts/market-category/01_model.md. Data: DEV, schema master.
+#
+# OPEN: needs PLU -> category mapping, no table in the new DB. Stock rows have Category / Sub Category, sales rows
+# do not (they have the POS department instead). So:
+#   - Sales $, Sales U, GP $ and GP % are right by plaza, district director and in total - NOT by category.
+#     Picking a Category in the filter leaves only stock rows, so sales (and GP) show 0 for it.
+#   - The POS Department filter works the other way round: it leaves only sales rows.
+# OPEN: BOP U, Receipt U, EOP U and Waste U are left out - the unit columns are not confirmed on master.weekly_cogs.
+# OPEN: LW / LLW / LLLW columns (the week 7 / 14 / 21 days earlier) - the engine has no such window yet.
+id: market-category
+title: Market Category
+subtitle: Market stock, cost, sales and GP by plaza (DEV data)
+dataset: dataset.sql
+calendar: retail   # Year / Period / Week picker, from reports/_shared/retail_calendar.sql
+
+dimensions:
+  plaza:             { label: Plaza,             column: plaza }
+  district_director: { label: District Director, column: district_director }
+  category:          { label: Category,          column: category }
+  sub_category:      { label: Sub Category,      column: sub_category }
+  department:        { label: POS Department,    column: department }   # not the old Category - see OPEN above
+  day:               { label: Day,               column: day, type: date }
+
+# BOP $ and EOP $ are plain sums: right for ONE week (same as the old report, finding 5 in 01_model.md).
+measures:
+  begin_value:    { label: BOP $,     sql: "sum(begin_value)",    format: currency }
+  purchase_value: { label: Rec $,     sql: "sum(purchase_value)", format: currency }
+  end_value:      { label: EOP $,     sql: "sum(end_value)",      format: currency }
+  waste:          { label: Waste $,   sql: "sum(waste_value)",    format: currency }
+  cogs:           { label: COGS $,    sql: "sum(cogs)",           format: currency }
+  sales:          { label: Sales $,   sql: "sum(sales)",          format: currency }
+  sales_units:    { label: Sales U,   sql: "sum(sales_units)",    format: number }
+  gp:             { label: GP $,      sql: "sum(sales) - sum(cogs)", format: currency }
+  gp_pct:         { label: GP %,      sql: "(sum(sales) - sum(cogs)) / nullif(sum(sales), 0)", format: percent }
+  wtd_sales:       { label: WTD Sales $, of: sales,       window: wtd, format: currency }
+  wtd_sales_units: { label: WTD Sales U, of: sales_units, window: wtd, format: number }
+  wtd_cogs:        { label: WTD COGS $,  of: cogs,        window: wtd, format: currency }
+  wtd_gp:          { label: WTD GP $,    of: gp,          window: wtd, format: currency }
+  wtd_gp_pct:      { label: WTD GP %,    of: gp_pct,      window: wtd, format: percent }
+  ytd_sales:       { label: YTD Sales $, of: sales,       window: ytd, format: currency }
+  ytd_sales_units: { label: YTD Sales U, of: sales_units, window: ytd, format: number }
+  ytd_gp:          { label: YTD GP $,    of: gp,          window: ytd, format: currency }
+  ytd_gp_pct:      { label: YTD GP %,    of: gp_pct,      window: ytd, format: percent }
+
+filters:
+  - { dimension: district_director, type: multi_select }
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: category,          type: multi_select }   # stock rows only - see OPEN above
+  - { dimension: department,        type: multi_select }   # sales rows only - see OPEN above
+  - { dimension: day,               type: retail_week }    # stock is dated on the week-ending Saturday
+
+visuals:
+  - type: kpi
+    items:
+      - { label: Week to date sales, measure: wtd_sales,  icon: total }
+      - { label: Week to date COGS,  measure: wtd_cogs,   icon: trend }
+      - { label: Week to date GP,    measure: wtd_gp,     icon: cash }
+      - { label: GP % (week to date), measure: wtd_gp_pct, icon: count }
+  - type: table
+    title: Market by plaza - stock, waste, sales and GP
+    rows: [plaza]
+    values: [begin_value, purchase_value, end_value, waste, wtd_sales_units, wtd_sales, wtd_gp_pct, ytd_sales, ytd_gp_pct]
+    total_row: true
+    span: 12
+  - type: table
+    title: Stock and waste by category (no sales - PLU mapping missing)
+    rows: [plaza, category, sub_category]
+    values: [begin_value, purchase_value, end_value, waste, cogs]
+    total_row: true
+    span: 12
+  - type: bar
+    title: Week to date sales by POS department
+    rows: [department]
+    values: [wtd_sales]
+    span: 7
+  - type: leaderboard
+    title: Highest waste by category
+    rows: [category]
+    values: [waste, cogs]
+    limit: 8
+    span: 5
