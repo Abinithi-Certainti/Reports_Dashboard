@@ -77,3 +77,19 @@ Sample rows (30 of them, created 2026-09-04):
 1. QA `location_code_mappings`: store_id -> location_code, plaza number, brand.
 2. A small plaza lookup (plaza number / ct_location -> plaza name, host_location_id, district director), taken once from
    DEV `netsuite_location_mapping` + `district_directors` and kept as a seed table. About 25 plazas.
+
+## QA data coverage (2026-09-28, Read_Write login, SELECT only)
+| Table | First day | Last day | Stores | Rows |
+|---|---|---|---|---|
+| pos_orders | 2026-09-06 | 2026-09-21 | 1 | 18,649 |
+| pos_order_details | 2026-09-06 | 2026-09-21 | 1 | 89,368 |
+| pos_order_payments | 2026-09-06 | 2026-09-21 | 1 | 18,854 |
+| pos_order_paid_outs | - | - | 0 | **0 (empty)** |
+| location_code_mappings | - | - | 115 | 120 |
+
+Meaning:
+- QA is a **test load: one store (101518, TIM23 Tim Hortons), 16 days**. It proves the queries and formulas run; it
+  cannot show all-plaza totals, last year, or any PDF figure.
+- pos_order_paid_outs is **empty**: Tender Report paid-outs and Financial Reports lottery redemptions come out as 0 on QA.
+- location_code_mappings covers **115 stores**: the store -> brand / plaza-number mapping is complete enough for the
+  whole estate, even though the sales are only loaded for one store.
