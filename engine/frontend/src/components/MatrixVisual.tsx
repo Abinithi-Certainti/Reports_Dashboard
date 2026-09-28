@@ -6,6 +6,9 @@ import { useQuery } from '../useQuery';
 import { useSound } from '../sound';
 import { useTokens } from '../theme';
 
+/** Height limit for full-width tables and matrices; taller content scrolls inside the panel. */
+export const FULL_WIDTH_MAX_HEIGHT = 560;
+
 type Base = Omit<QueryRequest, 'measures'>;
 
 /** A node in the row tree. Leaves sit at the last row dimension; every node carries per-column totals. */
@@ -139,9 +142,10 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
       {!tree ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        // Many date columns may scroll sideways; the panel grows with the open rows instead of scrolling up and down.
-        <Box sx={{ overflowX: 'auto', overflowY: 'hidden' }}>
-          <Table size="small" sx={{ '& th, & td': { px: 1 } }}>
+        // Full-width detail: at most about 15 rows high, then it scrolls inside with the header kept in view
+        // (the user's choice). Many date columns may also scroll sideways.
+        <Box sx={{ overflow: 'auto', maxHeight: FULL_WIDTH_MAX_HEIGHT }}>
+          <Table size="small" stickyHeader sx={{ '& th, & td': { px: 1 } }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ ...firstColSx, zIndex: 3 }}>{rowDims.map((d) => spec.dimensions[d].label).join(' › ')}</TableCell>

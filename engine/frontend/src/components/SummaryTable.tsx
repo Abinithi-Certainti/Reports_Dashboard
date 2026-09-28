@@ -3,6 +3,7 @@ import { QueryRequest, Spec, Visual } from '../api';
 import { formatValue } from '../format';
 import { useTokens } from '../theme';
 import { useQuery } from '../useQuery';
+import { FULL_WIDTH_MAX_HEIGHT } from './MatrixVisual';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -20,6 +21,7 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
   const rowDims = visual.rows ?? [];
   // Half-width (or narrower) tables with many values get smaller cells so they fit without scrolling sideways.
   const narrow = (visual.span ?? 5) < 12 && rowDims.length + values.length > 4;
+  const fullWidth = (visual.span ?? 5) >= 12;
   const maxOf: Record<string, number> = Object.fromEntries(
     measures.map((m) => [m, Math.max(0, ...(rowsQuery.rows ?? []).map((r) => Number(r[m] ?? 0)))]),
   );
@@ -27,11 +29,13 @@ export default function SummaryTable({ reportId, spec, visual, base }: { reportI
   return (
     <Paper sx={{ p: 1.5, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
-      {/* Wide tables may scroll sideways on narrow screens; never up and down. */}
-      <Box sx={{ overflowX: 'auto', overflowY: 'hidden' }}>
+      {/* Half-width tables show every row (same height as their neighbour). A full-width table stops at the
+          height limit and scrolls inside, with its header kept in view. Wide tables may scroll sideways. */}
+      <Box sx={fullWidth ? { overflow: 'auto', maxHeight: FULL_WIDTH_MAX_HEIGHT } : { overflowX: 'auto', overflowY: 'hidden' }}>
         {/* Tight cells so wide tables (ten or more values) still fit their panel. */}
         <Table
           size="small"
+          stickyHeader={fullWidth}
           sx={{
             '& th, & td': { px: narrow ? 0.75 : 1 }, '& th:first-of-type, & td:first-of-type': { pl: narrow ? 1 : 1.5 }, '& td': { whiteSpace: 'nowrap' },
             ...(narrow && { '& td': { whiteSpace: 'nowrap', fontSize: '0.76rem !important' }, '& th': { fontSize: '0.66rem' } }),
