@@ -1,5 +1,5 @@
 # Tender Report - data sources (from EVALUATE INFO.PARTITIONS(), 24 Sep 2026)
-Server: etlsqlservercaeprd01.database.windows.net  Database: ETLServerSQL  Schema: dbo  Mode: Import
+Server: old-sql-server  Database: ETLServerSQL  Schema: dbo  Mode: Import
 Source tables used: POS_ORDERPAYMENTS, POS_ORDERPAIDOUTS, NetSuiteLocation_Mapping, District_Directors
 
 ## Payment Type Summary  (tenders)

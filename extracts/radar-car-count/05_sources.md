@@ -4,8 +4,8 @@ The report reads from THREE databases:
 
 | Table | Source |
 |---|---|
-| POS_ORDERS, Plaza, Date | SQL Server `etlsqlservercaeprd01.database.windows.net` / `ETLServerSQL` |
-| Radar | **MySQL `52.138.56.151:3306` / `onroutenew`, table `smats_raw`** |
+| POS_ORDERS, Plaza, Date | SQL Server `old-sql-server` / `ETLServerSQL` |
+| Radar | **MySQL `mysql-server` / `onroutenew`, table `smats_raw`** |
 
 ## POS_ORDERS
 ```sql
