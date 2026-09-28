@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" data-mode="dark" data-layout="side" data-size="compact">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Look Builder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root {
+    --font: Inter, "Segoe UI", system-ui, sans-serif; --numfont: "JetBrains Mono", ui-monospace, monospace;
+    --a1: #22d3ee; --a2: #a78bfa; --a3: #3b82f6;
+    --fs: 13px; --pad: 10px; --gap: 10px; --kpi: 1.2rem; --h1: 1.45rem; --row: 4px;
+    --good: #34d399;
+  }
+  /* ---------- mode ---------- */
+  html[data-mode="dark"] {
+    color-scheme: dark;
+    --bg: #04060d; --side: rgba(4,6,13,.72); --panel: rgba(12,18,32,.58); --input: rgba(15,23,42,.6); --line: rgba(148,163,184,.15);
+    --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --glow-o: .34; --grid: rgba(148,163,184,.06); --shadow: 0 24px 48px -28px rgba(0,0,0,.8);
+  }
+  html[data-mode="light"] {
+    color-scheme: light;
+    --bg: #eef2f8; --side: rgba(255,255,255,.78); --panel: rgba(255,255,255,.82); --input: #f8fafc; --line: #e2e7f0;
+    --text: #0b1324; --text2: #4e5a70; --muted: #8390a5; --glow-o: .45; --grid: rgba(15,23,42,.04); --shadow: 0 12px 32px -16px rgba(30,58,138,.22);
+    --good: #0f8a4f;
+  }
+  /* ---------- size ---------- */
+  html[data-size="comfortable"] { --fs: 14px; --pad: 16px; --gap: 16px; --kpi: 1.7rem; --h1: 1.9rem; --row: 8px; }
+  html[data-size="compact"]     { --fs: 13px; --pad: 11px; --gap: 10px; --kpi: 1.25rem; --h1: 1.45rem; --row: 5px; }
+  html[data-size="dense"]       { --fs: 12px; --pad: 8px;  --gap: 7px;  --kpi: 1.05rem; --h1: 1.2rem; --row: 3px; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: var(--fs)/1.45 var(--font); color: var(--text); background: var(--bg);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 44px 44px; transition: background-color .4s ease, color .4s ease;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+  .num { font-family: var(--numfont); font-variant-numeric: tabular-nums; }
+
+  /* ---------- builder bar ---------- */
+  .builder { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 8px 16px;
+             background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); font: 12px Inter, sans-serif; }
+  .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .grp > b { font-size: .68rem; letter-spacing: .12em; color: var(--muted); margin-right: 2px; }
+  .grp button { border: 1px solid var(--line); background: var(--input); border-radius: 999px; padding: 3px 10px; color: var(--text2); }
+  .grp button[aria-pressed="true"] { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; border-color: transparent; font-weight: 600; }
+  .sw { width: 16px; height: 16px; border-radius: 50%; display: inline-block; vertical-align: -3px; margin-right: 4px; }
+  .note-top { color: var(--muted); font-size: .72rem; flex-basis: 100%; }
+
+  /* ---------- aurora ---------- */
+  .aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .aurora i { position: absolute; border-radius: 50%; filter: blur(50px); opacity: var(--glow-o); animation: drift 40s ease-in-out infinite alternate; }
+  .aurora i:nth-child(1) { width: 55vmax; height: 55vmax; left: -18vmax; top: -24vmax; background: radial-gradient(circle, var(--a1), transparent 65%); }
+  .aurora i:nth-child(2) { width: 48vmax; height: 48vmax; right: -16vmax; top: -14vmax; background: radial-gradient(circle, var(--a2), transparent 65%); animation-duration: 52s; }
+  .aurora i:nth-child(3) { width: 40vmax; height: 40vmax; left: 35vw; bottom: -28vmax; background: radial-gradient(circle, var(--a3), transparent 65%); animation-duration: 46s; }
+  @keyframes drift { to { transform: translate(8vw, 6vh) scale(1.1); } }
+
+  /* ---------- app shell: 3 layouts ---------- */
+  .app { position: relative; z-index: 1; display: grid; min-height: calc(100vh - 44px); }
+  html[data-layout="side"] .app { grid-template-columns: 236px minmax(0, 1fr); }
+  html[data-layout="rail"] .app { grid-template-columns: 64px minmax(0, 1fr); }
+  html[data-layout="top"]  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .side { background: var(--side); backdrop-filter: blur(16px); border-right: 1px solid var(--line); padding: 14px 10px; }
+  html[data-layout="top"] .side { border-right: 0; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; padding: 8px 16px; overflow-x: auto; }
+  .logo { display: flex; gap: 9px; align-items: center; font-weight: 800; margin: 0 4px 16px; white-space: nowrap; }
+  html[data-layout="top"] .logo { margin: 0 8px 0 0; }
+  .logo i { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; background: conic-gradient(from 200deg, var(--a1), var(--a2), var(--a3), var(--a1)); box-shadow: 0 0 20px color-mix(in srgb, var(--a1) 45%, transparent); }
+  html[data-layout="rail"] .logo span, html[data-layout="rail"] .nav-h, html[data-layout="rail"] .nav .t, html[data-layout="top"] .nav-h { display: none; }
+  .nav-h { font-size: .64rem; letter-spacing: .16em; color: var(--muted); font-weight: 700; margin: 0 8px 6px; }
+  .navs { display: grid; gap: 2px; }
+  html[data-layout="top"] .navs { display: flex; gap: 4px; }
+  .nav { display: flex; gap: 9px; align-items: center; padding: 6px 8px; border-radius: 11px; color: var(--text2); white-space: nowrap; position: relative; transition: background .2s, transform .2s; }
+  .nav:hover { background: color-mix(in srgb, var(--a1) 9%, transparent); transform: translateX(2px); }
+  .nav em { font: 700 .66rem var(--numfont); font-style: normal; min-width: 24px; text-align: center; padding: 3px 0; border-radius: 7px; background: color-mix(in srgb, var(--muted) 14%, transparent); color: var(--muted); }
+  .nav.on { color: var(--text); background: linear-gradient(90deg, color-mix(in srgb, var(--a1) 17%, transparent), color-mix(in srgb, var(--a2) 5%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a1) 40%, transparent); }
+  .nav.on em { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; }
+  .nav .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); }
+  html[data-layout="rail"] .nav { justify-content: center; padding: 7px 0; }
+  html[data-layout="rail"] .nav .dot { position: absolute; right: 6px; top: 6px; }
+  html[data-layout="top"] .nav .dot { margin-left: 4px; }
+
+  .main { padding: 14px 18px 28px; min-width: 0; }
+  .eyebrow { font: 700 .68rem var(--numfont); letter-spacing: .14em; color: var(--a1); display: flex; gap: 8px; align-items: center; }
+  h1 { margin: 2px 0 var(--gap); font-size: var(--h1); font-weight: 750; letter-spacing: -.02em;
+       background: linear-gradient(90deg, var(--text) 0%, var(--text) 30%, var(--a1) 55%, var(--a2) 75%, var(--text) 100%); background-size: 220% 100%;
+       -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 9s ease-in-out infinite alternate; }
+  @keyframes shine { from { background-position: 0 0; } to { background-position: 100% 0; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; backdrop-filter: blur(16px); box-shadow: var(--shadow); padding: var(--pad); transition: border-color .25s, box-shadow .25s; }
+  .panel:hover { border-color: color-mix(in srgb, var(--a1) 55%, transparent); }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--gap); }
+  .fbtn { display: flex; gap: 6px; align-items: center; padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--input); }
+  .fbtn small { color: var(--muted); }
+  .count { background: var(--a1); color: #fff; border-radius: 5px; padding: 0 5px; font-size: .68rem; font-weight: 700; }
+  .kpis { display: grid; gap: var(--gap); grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--gap); }
+  .k { position: relative; overflow: hidden; }
+  .k small { display: block; color: var(--text2); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+  .k b { display: block; font: 700 var(--kpi) var(--numfont); margin-top: 3px; }
+  .k svg { display: block; width: 100%; height: 26px; margin-top: 4px; }
+  .k::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, var(--a1), var(--a2)); }
+  .row2 { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); margin-bottom: var(--gap); }
+  h3 { margin: 0 0 8px; font-size: .68rem; letter-spacing: .12em; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: var(--row) 6px; text-align: left; } th:last-child, td:last-child { text-align: right; }
+  th { color: var(--muted); font-weight: 600; font-size: .7rem; } td { border-top: 1px solid var(--line); }
+  tr.total td { font-weight: 700; }
+  .bars { display: grid; gap: calc(var(--row) * 2 + 2px); }
+  .bar { display: grid; grid-template-columns: 84px minmax(0, 1fr) 72px; gap: 8px; align-items: center; }
+  .track { height: 9px; border-radius: 5px; background: color-mix(in srgb, var(--muted) 16%, transparent); overflow: hidden; }
+  .track i { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--a3), var(--a1)); box-shadow: 0 0 10px color-mix(in srgb, var(--a1) 55%, transparent); width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .lvl2 td:first-child { padding-left: 22px; color: var(--text2); }
+  .foot { color: var(--muted); font-size: .7rem; margin-top: 10px; }
+  @media (max-width: 800px) {
+    html[data-layout] .app { grid-template-columns: 1fr; } .side { display: none !important; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .row2 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="builder" id="builder"></div>
+<div class="app">
+  <nav class="side" aria-label="Reports">
+    <div class="logo"><i></i><span>Report Engine</span></div>
+    <div class="nav-h">REPORTS</div>
+    <div class="navs" id="nav"></div>
+  </nav>
+  <main class="main">
+    <div class="eyebrow">REPORT 01 / 10</div>
+    <h1>Tender Report</h1>
+    <div class="panel filters">
+      <span class="fbtn"><small>Plaza:</small><span class="count">3</span> ▾</span>
+      <span class="fbtn"><small>District:</small> All ▾</span>
+      <span class="fbtn"><small>Brand:</small><span class="count">2</span> ▾</span>
+      <span class="fbtn"><small>Payment type:</small> All ▾</span>
+      <span class="fbtn"><small>Dates:</small> 13 May → 19 May ▾</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="row2">
+      <section class="panel"><h3>Selected locations - summary</h3><table><thead><tr><th>Payment type</th><th>Tender</th></tr></thead><tbody id="sum"></tbody></table></section>
+      <section class="panel"><h3>Tender amount by payment type</h3><div class="bars" id="bars"></div></section>
+    </div>
+    <section class="panel"><h3>All locations - detail</h3>
+      <table><thead><tr><th>Plaza / Brand</th><th>13 May</th><th>14 May</th><th>15 May</th><th>Total</th></tr></thead><tbody id="det"></tbody></table>
+    </section>
+    <div class="foot">Made-up example numbers, only to show the look.</div>
+  </main>
+</div>
+<script>
+const OPTIONS = {
+  layout: { label: 'LAYOUT', attr: 'layout', items: [['side', 'Side menu (now)'], ['rail', 'Slim icon rail'], ['top', 'Top menu']] },
+  colour: { label: 'COLOUR', items: [
+    ['cyan', 'Cyan + violet (now)', ['#22d3ee', '#a78bfa', '#3b82f6']],
+    ['emerald', 'Emerald + teal', ['#10b981', '#14b8a6', '#22c55e']],
+    ['sunset', 'Amber + coral', ['#f59e0b', '#f43f5e', '#fb923c']],
+    ['royal', 'Royal blue + indigo', ['#3b82f6', '#6366f1', '#0ea5e9']],
+    ['rose', 'Rose + magenta', ['#ec4899', '#d946ef', '#f43f5e']],
+  ] },
+  font: { label: 'FONT', items: [
+    ['inter', 'Inter (now)', 'Inter'], ['manrope', 'Manrope', 'Manrope'], ['jakarta', 'Plus Jakarta Sans', '"Plus Jakarta Sans"'], ['plex', 'IBM Plex Sans', '"IBM Plex Sans"'],
+  ] },
+  numbers: { label: 'NUMBERS', items: [['mono', 'Code style (now)'], ['same', 'Same as text']] },
+  size: { label: 'SIZE', attr: 'size', items: [['comfortable', 'Big (now)'], ['compact', 'Compact'], ['dense', 'Extra compact']] },
+  mode: { label: 'MODE', attr: 'mode', items: [['dark', '☾ Dark'], ['light', '☀ Light']] },
+};
+const state = { layout: 'side', colour: 'cyan', font: 'inter', numbers: 'mono', size: 'compact', mode: 'dark' };
+const root = document.documentElement;
+function apply() {
+  root.dataset.layout = state.layout; root.dataset.size = state.size; root.dataset.mode = state.mode;
+  const c = OPTIONS.colour.items.find((x) => x[0] === state.colour)[2];
+  root.style.setProperty('--a1', c[0]); root.style.setProperty('--a2', c[1]); root.style.setProperty('--a3', c[2]);
+  const f = OPTIONS.font.items.find((x) => x[0] === state.font)[2];
+  root.style.setProperty('--font', `${f}, "Segoe UI", system-ui, sans-serif`);
+  root.style.setProperty('--numfont', state.numbers === 'mono' ? '"JetBrains Mono", ui-monospace, monospace' : 'var(--font)');
+  document.querySelectorAll('.builder button').forEach((b) => b.setAttribute('aria-pressed', String(state[b.dataset.k] === b.dataset.v)));
+  grow();
+}
+const builder = document.getElementById('builder');
+for (const [k, o] of Object.entries(OPTIONS)) {
+  const g = document.createElement('div'); g.className = 'grp'; g.innerHTML = `<b>${o.label}</b>`;
+  for (const it of o.items) {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.dataset.v = it[0];
+    b.innerHTML = k === 'colour' ? `<span class="sw" style="background:linear-gradient(135deg,${it[2][0]},${it[2][1]})"></span>${it[1]}` : it[1];
+    b.onclick = () => { state[k] = it[0]; apply(); };
+    g.append(b);
+  }
+  builder.append(g);
+}
+builder.insertAdjacentHTML('beforeend', '<span class="note-top">Mix and match. Tell me the combination you like, for example "Top menu, Emerald, Manrope, Compact, Light".</span>');
+
+// Made-up example values, only to show the look.
+const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report 1', 'Budget 2026', 'Field Team', 'Financial Reports'];
+document.getElementById('nav').innerHTML = NAV.map((n, i) => `<div class="nav${i === 0 ? ' on' : ''}" title="${n}"><em>${String(i + 1).padStart(2, '0')}</em><span class="t">${n}</span><span class="dot"></span></div>`).join('');
+const spark = (pts) => { const w = 200, h = 26, mx = Math.max(...pts), mn = Math.min(...pts);
+  const d = pts.map((p, i) => `${(i / (pts.length - 1)) * w},${h - 3 - ((p - mn) / (mx - mn || 1)) * (h - 6)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${d}" fill="none" stroke="var(--a1)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`; };
+const K = [['Total tender', '$128,450', [5, 7, 6, 9, 8, 11, 12]], ['Cash after paid-outs', '$31,220', [4, 5, 5, 4, 6, 5, 6]], ['Card and other', '$97,230', [3, 5, 6, 7, 7, 9, 10]], ['Paid-outs', '$1,140', [2, 3, 2, 2, 3, 2, 3]]];
+document.getElementById('kpis').innerHTML = K.map(([l, v, s]) => `<div class="panel k"><small>${l}</small><b>${v}</b>${spark(s)}</div>`).join('');
+const ROWS = [['Visa', 41300], ['Cash', 31220], ['Mastercard', 28950], ['Debit', 22410], ['Amex', 4570]];
+const fmt = (n) => '$' + n.toLocaleString('en-CA');
+document.getElementById('sum').innerHTML = ROWS.map(([p, v]) => `<tr><td>${p}</td><td class="num">${fmt(v)}</td></tr>`).join('')
+  + `<tr class="total"><td>Total</td><td class="num">${fmt(ROWS.reduce((s, r) => s + r[1], 0))}</td></tr>`;
+document.getElementById('bars').innerHTML = ROWS.map(([p, v]) => `<div class="bar"><span>${p}</span><span class="track"><i data-w="${Math.round(v / 41300 * 100)}"></i></span><span class="num" style="text-align:right">${fmt(v)}</span></div>`).join('');
+const DET = [['Barrie', [5120, 4880, 5310]], ['  Tim Hortons', [3400, 3150, 3520]], ['  Market', [1720, 1730, 1790]], ['Innisfil', [4210, 4390, 4050]], ['  Tim Hortons', [2900, 3010, 2780]], ['  Market', [1310, 1380, 1270]]];
+document.getElementById('det').innerHTML = DET.map(([n, v]) => `<tr class="${n.startsWith('  ') ? 'lvl2' : ''}"><td>${n.startsWith('  ') ? '' : '▾ '}${n.trim()}</td>${v.map((x) => `<td class="num">${fmt(x)}</td>`).join('')}<td class="num">${fmt(v.reduce((a, b) => a + b, 0))}</td></tr>`).join('');
+function grow() { document.querySelectorAll('.track i').forEach((i) => { i.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { i.style.width = i.dataset.w + '%'; })); }); }
+const q = new URLSearchParams(location.search);
+for (const k of Object.keys(state)) if (q.get(k)) state[k] = q.get(k);
+apply();
+</script>
+</body>
+</html>
