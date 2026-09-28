@@ -1,0 +1,74 @@
+# Financial Reports - spec for the report engine (AG-82). Source of truth: extracts/financial-reports/01_model.md
+id: financial-reports
+title: Financial Reports
+subtitle: HST, gift cards, donations and lottery by plaza and brand, day by day
+dataset: dataset.sql
+
+dimensions:
+  day:              { label: Date,             column: day, type: date }
+  plaza:            { label: Plaza,            column: plaza }
+  brand:            { label: Brand,            column: brand }
+  donation_item:    { label: Donation item,    column: donation_item }
+  lottery_category: { label: Lottery category, column: lottery_category }
+  lottery_type:     { label: Lottery type,     column: lottery_type }
+
+measures:
+  hst:       { label: HST,          sql: "sum(hst)",            format: currency }
+  gift_card: { label: Gift Card,    sql: "sum(gift_card)",      format: currency }
+  donations: { label: Donations,    sql: "sum(donations)",      format: currency }
+  lottery:   { label: Lottery (net), sql: "sum(lottery_amount)", format: currency }
+
+filters:
+  - { dimension: plaza, type: multi_select }
+  - { dimension: brand, type: multi_select }
+  - { dimension: day,   type: date_range, default_last_days: 16 }
+
+visuals:
+  - type: kpi
+    items:
+      - { label: HST,           measure: hst,       icon: total }
+      - { label: Gift cards,    measure: gift_card, icon: cash }
+      - { label: Donations,     measure: donations, icon: count }
+      - { label: Lottery (net), measure: lottery,   icon: trend }
+  - type: matrix
+    title: HST by Plaza and Brand
+    rows: [plaza, brand]
+    columns: [day]
+    values: [hst]
+    span: 12
+  - type: matrix
+    title: Gift Card by Plaza and Brand
+    rows: [plaza, brand]
+    columns: [day]
+    values: [gift_card]
+    span: 12
+  - type: table
+    title: Gift Card by Brand
+    rows: [brand]
+    values: [gift_card]
+    total_row: true
+    span: 6
+  - type: table
+    title: Donations by item
+    rows: [donation_item]
+    values: [donations]
+    total_row: true
+    span: 6
+  - type: matrix
+    title: Donations by Brand and Plaza
+    rows: [brand, plaza]
+    columns: [day]
+    values: [donations]
+    span: 12
+  - type: matrix
+    title: Lottery by Plaza, category and type
+    rows: [plaza, lottery_category, lottery_type]
+    columns: [day]
+    values: [lottery]
+    span: 12
+  - type: table
+    title: Lottery summary
+    rows: [lottery_category, lottery_type]
+    values: [lottery]
+    total_row: true
+    span: 6

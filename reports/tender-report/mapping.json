@@ -34,7 +34,7 @@
     "report": "Tender Report",
     "source": {
         "schema": "dbo",
-        "server": "etlsqlservercaeprd01.database.windows.net",
+        "server": "old-sql-server",
         "database": "ETLServerSQL"
     },
     "tables": [

@@ -1,0 +1,18 @@
+table	column	data_type	source_column	format
+POS_ORDERS	LocationName	text	LocationName	
+POS_ORDERS	OrderNumber	integer	OrderNumber	0	(count of orders, not an order number)
+POS_ORDERS	endday	datetime	endday	General Date
+POS_ORDERS	hour_of_sale	integer	hour_of_sale	0
+Radar	location	text	location	
+Radar	zone_name	text	zone_name	
+Radar	new_zone_name	text	new_zone_name	
+Radar	vehicle_class	text	vehicle_class	
+Radar	volume	decimal	volume	
+Radar	hour_only	integer	hour_only	0
+Radar	date_only	date	date_only	Long Date
+Radar	Include	integer	Include	0
+Radar	vehicle_group	text	vehicle_group	
+Plaza	LocationName	text	LocationName	
+Date	Date	date	Date	Long Date
+Date	Day, Month, Year, DayInWeek, Weekday, DayInWeek 3, Start of Week, End of Week, Week of Year, DWY, YMD, Period, Day in past, week in past, Retail weeknum, Retail Period, Week filter across reports, Start of week by period, End of Date by period, first retail week by year, Retail Year, Retail Weeks, Retail Periods, Start of Month, End of month, year_month_rank, Retail Week filter	mixed		(retail calendar columns; this page uses only Date[Date] for the date slicer)
+report data	Column1	text	Column1	

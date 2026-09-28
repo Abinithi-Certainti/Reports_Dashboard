@@ -1,4 +1,4 @@
--- Tender Report dataset for the report engine: one flat row per store / brand / day / payment type.
+-- Tender Report dataset for the report engine (DEV database - decision 2026-09-28): one flat row per store / brand / day / payment type.
 -- Built from the translated queries in queries.sql. Tenders and paid-outs are stacked (UNION ALL) so one
 -- measure, tender_amount - paidout_amount, gives the old "Tender amount 2".
 -- Single statement, no semicolons: the engine wraps it as WITH d AS (...).

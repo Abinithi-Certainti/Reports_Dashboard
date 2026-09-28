@@ -63,6 +63,12 @@ public class ReportController {
         return queries.dateBounds(report(id));
     }
 
+    /** The retail weeks, for a report with calendar: retail. */
+    @GetMapping("/{id}/calendar")
+    public List<Map<String, Object>> calendar(@PathVariable String id) {
+        return queries.calendarWeeks(report(id));
+    }
+
     /** Old -> new field mapping for a report, exported from the catalog (tools/export_mapping.sh). */
     @GetMapping(value = "/{id}/mapping", produces = "application/json")
     public String mapping(@PathVariable String id) throws IOException {

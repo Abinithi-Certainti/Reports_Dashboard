@@ -118,7 +118,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, height: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Typography variant="h2">{visual.title}</Typography>
         {tree && (

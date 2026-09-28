@@ -27,6 +27,16 @@ public final class SqlBuilder {
     }
 
     public static Built build(ReportSpec spec, QueryRequest request) {
+        Map<String, String> columns = new java.util.LinkedHashMap<>();
+        request.measuresOrEmpty().forEach(m -> columns.put(m, m));
+        return build(spec, request, columns);
+    }
+
+    /**
+     * @param columns output column -> measure whose SQL fills it. The column names are measure ids, or helper names
+     *                built from measure ids by {@link Windows#plan}, so they are safe identifiers.
+     */
+    static Built build(ReportSpec spec, QueryRequest request, Map<String, String> columns) {
         List<Object> params = new ArrayList<>();
         StringJoiner select = new StringJoiner(", ");
         StringJoiner groupBy = new StringJoiner(", ");
@@ -42,16 +52,10 @@ public final class SqlBuilder {
             }
             orderBy.add("d." + dim.column() + " NULLS LAST");
         }
-        if (request.measuresOrEmpty().isEmpty()) {
+        if (columns.isEmpty()) {
             throw new BadRequest("At least one measure is required");
         }
-        for (String measureId : request.measuresOrEmpty()) {
-            Measure measure = spec.measures().get(measureId);
-            if (measure == null) {
-                throw new BadRequest("Unknown measure: " + measureId);
-            }
-            select.add("(" + measure.sql() + ") AS " + measureId);
-        }
+        columns.forEach((column, measureId) -> select.add("(" + measureSql(spec, measureId) + ") AS " + column));
 
         StringBuilder where = new StringBuilder(" WHERE 1 = 1");
         addValueFilters(spec, request.filtersOrEmpty(), where, params, false);
@@ -83,12 +87,52 @@ public final class SqlBuilder {
         return new Built(sql, List.of());
     }
 
-    /** Earliest and latest date in the dataset, for the date filter. */
+    /**
+     * Earliest and latest date in the dataset, for the date filter. With {@code open_on}, the latest date is the last
+     * day where that column is not 0 (e.g. the last day with sales when the budget runs further ahead).
+     */
     public static Built dateBounds(ReportSpec spec) {
         Dimension dim = requireDate(dateDimension(spec));
-        String sql = "WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT min(d." + dim.column() + ") AS min_date, max(d."
-                + dim.column() + ") AS max_date FROM d";
+        String openOn = spec.filters() == null ? null : spec.filters().stream()
+                .filter(f -> f.openOn() != null && !"multi_select".equals(f.type())).map(ReportSpec.Filter::openOn).findFirst().orElse(null);
+        String max = openOn == null ? "max(d." + dim.column() + ")"
+                : "coalesce(max(CASE WHEN d." + openOn + " <> 0 THEN d." + dim.column() + " END), max(d." + dim.column() + "))";
+        String sql = "WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT min(d." + dim.column() + ") AS min_date, " + max
+                + " AS max_date FROM d";
         return new Built(sql, List.of());
+    }
+
+    /**
+     * The retail weeks, oldest first, for the week filter. Calendar columns: day, retail_year, retail_period,
+     * retail_week, week_start, week_end, period_start, year_start (see reports/_shared/retail_calendar.sql).
+     */
+    public static Built calendarWeeks(ReportSpec spec) {
+        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT retail_year, retail_period, retail_week, week_start, week_end"
+                + " FROM c GROUP BY retail_year, retail_period, retail_week, week_start, week_end ORDER BY week_start";
+        return new Built(sql, List.of());
+    }
+
+    /** Where the week, period and year that contain {@code day} begin, and where last retail year began. */
+    public static Built calendarDay(ReportSpec spec, String day) {
+        String sql = "WITH c AS (\n" + requireCalendar(spec) + "\n)\nSELECT day, week_start, period_start, year_start,"
+                + " (SELECT min(p.day) FROM c p WHERE p.retail_year = c.retail_year - 1) AS prev_year_start FROM c WHERE day = ?";
+        return new Built(sql, List.of(parseDate(day)));
+    }
+
+    /** A windowed measure is its base measure's SQL; the window only changes the dates it is run over. */
+    static String measureSql(ReportSpec spec, String measureId) {
+        Measure measure = spec.measures().get(measureId);
+        if (measure == null) {
+            throw new BadRequest("Unknown measure: " + measureId);
+        }
+        return measure.isWindowed() ? spec.measures().get(measure.of()).sql() : measure.sql();
+    }
+
+    private static String requireCalendar(ReportSpec spec) {
+        if (spec.calendarSql() == null) {
+            throw new BadRequest("This report has no retail calendar");
+        }
+        return spec.calendarSql();
     }
 
     private static void addValueFilters(ReportSpec spec, Map<String, List<String>> filters, StringBuilder where,
@@ -117,7 +161,16 @@ public final class SqlBuilder {
         return dim;
     }
 
-    private static Dimension dateDimension(ReportSpec spec) {
+    /** The date the date filter applies to: the dimension of the report's date filter, else its first date dimension. */
+    static Dimension dateDimension(ReportSpec spec) {
+        if (spec.filters() != null) {
+            for (ReportSpec.Filter f : spec.filters()) {
+                Dimension d = f.dimension() == null ? null : spec.dimensions().get(f.dimension());
+                if (d != null && d.isDate() && !"multi_select".equals(f.type())) {
+                    return d;
+                }
+            }
+        }
         return spec.dimensions().values().stream().filter(Dimension::isDate).findFirst().orElse(null);
     }
 

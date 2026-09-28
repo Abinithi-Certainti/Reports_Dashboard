@@ -7,7 +7,7 @@ BEGIN;
 INSERT INTO catalog.report (report_name, workspace, owner, source_server, source_database, source_schema,
                             extracted_on, extraction_method, status, notes)
 VALUES ('Tender Report', 'Finance', 'Finance (report), Power BI Reports (semantic model)',
-        'etlsqlservercaeprd01.database.windows.net', 'ETLServerSQL', 'dbo',
+        'old-sql-server', 'ETLServerSQL', 'dbo',
         '2026-09-24', 'DAX INFO queries in Viewing mode + PDF export', 'extracted',
         'Download disabled in the Power BI Service. Rebuild on PostgreSQL tracked on AG-66.');
 

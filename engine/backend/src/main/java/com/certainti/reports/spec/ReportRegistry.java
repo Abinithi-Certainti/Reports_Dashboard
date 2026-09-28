@@ -33,15 +33,22 @@ public class ReportRegistry {
     private static final Pattern REPORT_ID = Pattern.compile("^[a-z0-9][a-z0-9-]{1,60}$");
     private static final Pattern STARTS_WITH_SELECT = Pattern.compile("^\\s*(--[^\\n]*\\n\\s*|/\\*.*?\\*/\\s*)*(select|with)\\b",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard");
+    static final java.util.Set<String> FILTER_TYPES = java.util.Set.of("multi_select", "date_range", "retail_week");
+    static final java.util.Set<String> WINDOWS = java.util.Set.of("wtd", "ptd", "mtd", "ytd", "py", "yoy", "yoy_pct", "py_fin", "yoy_fin", "yoy_fin_pct");
+    static final java.util.Set<String> KPI_ICONS = java.util.Set.of("total", "cash", "card", "paidout", "count", "store", "trend");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     private final Map<String, ReportSpec> reports = new ConcurrentSkipListMap<>();
     private final Map<String, Path> folders = new ConcurrentSkipListMap<>();
     private final Path importDir;
+    /** reports/_shared/retail_calendar.sql, or null when the folder has none. Shared by every report that asks for it. */
+    private final String calendarSql;
 
     public ReportRegistry(@Value("${reports.dir}") String reportsDir,
                           @Value("${reports.import-dir}") String importDir) {
         this.importDir = Path.of(importDir);
+        this.calendarSql = readCalendar(Path.of(reportsDir).resolve("_shared").resolve("retail_calendar.sql"));
         loadAll(Path.of(reportsDir), false);
         loadAll(this.importDir, true);
     }
@@ -68,7 +75,7 @@ public class ReportRegistry {
             String msg = e instanceof com.fasterxml.jackson.core.JsonProcessingException j ? j.getOriginalMessage() : e.getMessage();
             throw new IllegalArgumentException("report.yaml is not valid YAML: " + msg);
         }
-        spec = spec.withDatasetSql(cleanSql(datasetSql));
+        spec = withCalendar(spec.withDatasetSql(cleanSql(datasetSql)));
         try {
             validate(spec, Path.of("upload"));
         } catch (IllegalStateException e) {
@@ -110,12 +117,31 @@ public class ReportRegistry {
     private void load(Path file) {
         try {
             ReportSpec spec = YAML.readValue(file.toFile(), ReportSpec.class);
-            spec = spec.withDatasetSql(cleanSql(Files.readString(file.getParent().resolve(spec.dataset()))));
+            spec = withCalendar(spec.withDatasetSql(cleanSql(Files.readString(file.getParent().resolve(spec.dataset())))));
             validate(spec, file);
             reports.put(spec.id(), spec);
             folders.put(spec.id(), file.getParent());
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot load report spec " + file, e);
+        }
+    }
+
+    private ReportSpec withCalendar(ReportSpec spec) {
+        return spec.calendar() == null ? spec : spec.withCalendarSql(calendarSql);
+    }
+
+    private static String readCalendar(Path file) {
+        if (!Files.exists(file)) {
+            return null;
+        }
+        try {
+            String sql = cleanSql(Files.readString(file));
+            if (sql.contains(";") || !STARTS_WITH_SELECT.matcher(sql).find()) {
+                throw new IllegalStateException(file + ": the calendar must be a single SELECT with no semicolons");
+            }
+            return sql;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot read " + file, e);
         }
     }
 
@@ -142,16 +168,47 @@ public class ReportRegistry {
                     "bad dimension name " + id);
             require(d.sortBy() == null || IDENTIFIER.matcher(d.sortBy()).matches(), file, "bad sort_by on " + id);
         });
+        if (spec.calendar() != null) {
+            require(ReportSpec.RETAIL_CALENDAR.equals(spec.calendar()), file, "calendar must be 'retail' (found " + spec.calendar() + ")");
+            require(spec.calendarSql() != null && !spec.calendarSql().isBlank(), file,
+                    "calendar: retail needs reports/_shared/retail_calendar.sql, which is missing");
+        }
         spec.measures().forEach((id, m) -> {
             require(IDENTIFIER.matcher(id).matches(), file, "bad measure name " + id);
-            require(m.sql() != null && !m.sql().contains(";"), file, "bad measure sql on " + id);
+            if (m.isWindowed()) {
+                require(WINDOWS.contains(m.window()), file, "measure " + id + " window must be one of " + String.join(", ", new java.util.TreeSet<>(WINDOWS)) + " (found " + m.window() + ")");
+                ReportSpec.Measure base = m.of() == null ? null : spec.measures().get(m.of());
+                require(base != null && !base.isWindowed(), file, "measure " + id + " must be 'of' a measure that has its own sql");
+                require(spec.calendar() != null, file, "measure " + id + " uses a window, so the report needs calendar: retail");
+            } else {
+                require(m.sql() != null && !m.sql().contains(";"), file, "bad measure sql on " + id);
+            }
         });
+        if (spec.filters() != null) {
+            for (ReportSpec.Filter f : spec.filters()) {
+                require(f.type() != null && FILTER_TYPES.contains(f.type()), file,
+                        "filter type must be one of " + String.join(", ", new java.util.TreeSet<>(FILTER_TYPES)) + " (found " + f.type() + ")");
+                ReportSpec.Dimension d = spec.dimensions().get(f.dimension());
+                require(d != null, file, "filter uses unknown dimension " + f.dimension());
+                require(f.openOn() == null || IDENTIFIER.matcher(f.openOn()).matches(), file, "bad open_on on filter " + f.dimension());
+                if (!"multi_select".equals(f.type())) {
+                    require(d.isDate(), file, "a " + f.type() + " filter needs a date dimension (" + f.dimension() + " is not)");
+                }
+                if ("retail_week".equals(f.type())) {
+                    require(spec.calendar() != null, file, "a retail_week filter needs calendar: retail");
+                }
+            }
+        }
         if (spec.calculations() != null) {
             spec.calculations().forEach((id, c) -> require(spec.measures().containsKey(c.of()), file,
                     "calculation " + id + " refers to unknown measure " + c.of()));
         }
         if (spec.visuals() != null) {
             for (ReportSpec.Visual v : spec.visuals()) {
+                require(v.type() != null && VISUAL_TYPES.contains(v.type()), file,
+                        "visual type must be one of " + String.join(", ", new java.util.TreeSet<>(VISUAL_TYPES)) + " (found " + v.type() + ")");
+                require(v.span() == null || (v.span() >= 1 && v.span() <= 12), file, "visual '" + v.title() + "' span must be 1 to 12");
+                require(v.limit() == null || (v.limit() >= 1 && v.limit() <= 50), file, "visual '" + v.title() + "' limit must be 1 to 50");
                 for (String d : concat(v.rows(), v.columns())) {
                     require(spec.dimensions().containsKey(d), file, "visual '" + v.title() + "' uses unknown dimension " + d);
                 }
@@ -162,8 +219,11 @@ public class ReportRegistry {
                     }
                 }
                 if (v.items() != null) {
-                    v.items().forEach(i -> require(spec.measures().containsKey(i.measure()), file,
-                            "KPI '" + i.label() + "' uses unknown measure " + i.measure()));
+                    v.items().forEach(i -> {
+                        require(spec.measures().containsKey(i.measure()), file, "KPI '" + i.label() + "' uses unknown measure " + i.measure());
+                        require(i.icon() == null || KPI_ICONS.contains(i.icon()), file,
+                                "KPI '" + i.label() + "' icon must be one of " + String.join(", ", new java.util.TreeSet<>(KPI_ICONS)));
+                    });
                 }
             }
         }

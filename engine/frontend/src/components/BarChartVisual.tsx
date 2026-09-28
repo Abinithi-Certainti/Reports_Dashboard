@@ -7,22 +7,25 @@ import { chartTheme, useTokens } from '../theme';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
-/** One series, horizontal bars (long category names read better), in the spec's sort order top to bottom. */
+/** Horizontal bars (long category names read better), in the spec's sort order top to bottom. Several values sit side by side. */
 export default function BarChartVisual({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   const tokens = useTokens();
   const chartColors = chartTheme(tokens);
   const dim = visual.rows?.[0] ?? '';
-  const measure = visual.values?.[0] ?? '';
-  const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures: [measure] });
-  const format = spec.measures[measure]?.format;
+  const measures = visual.values?.length ? visual.values : [''];
+  const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures });
+  const format = spec.measures[measures[0]]?.format;
+  const many = measures.length > 1;
 
   const option = rows && {
-    grid: { left: 8, right: 64, top: 8, bottom: 8, containLabel: true },
+    grid: { left: 8, right: 64, top: many ? 32 : 8, bottom: 8, containLabel: true },
     tooltip: {
       trigger: 'item',
       ...chartColors.tooltip,
-      formatter: (p: { name: string; value: number }) => `${p.name}<br/><b>${formatValue(p.value, format)}</b>`,
+      formatter: (p: { name: string; value: number; seriesName: string }) =>
+        `${p.name}${many ? ` · ${p.seriesName}` : ''}<br/><b>${formatValue(p.value, format)}</b>`,
     },
+    legend: many ? { top: 0, textStyle: { color: chartColors.axisText } } : undefined,
     xAxis: {
       type: 'value',
       axisLabel: { color: chartColors.axisText, formatter: (v: number) => formatCompactCurrency(v) },
@@ -36,19 +39,24 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
       axisLine: { lineStyle: { color: chartColors.grid } },
       axisLabel: { color: chartColors.axisText },
     },
-    series: [
-      {
+    series: measures.map((measure, i) => ({
         type: 'bar',
+        name: spec.measures[measure]?.label ?? measure,
         data: rows.map((r) => Number(r[measure] ?? 0)),
-        barMaxWidth: 20,
+        barMaxWidth: 18,
+        showBackground: true,
+        backgroundStyle: { color: tokens.mode === 'light' ? 'rgba(15,23,42,0.035)' : 'rgba(148,163,184,0.06)', borderRadius: 9 },
         itemStyle: {
-          borderRadius: [0, 4, 4, 0],
-          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [
-            { offset: 0, color: chartColors.series1 }, { offset: 1, color: chartColors.series1Light }] },
+          borderRadius: 9,
+          // The first value keeps the gradient; any further ones take the next colours of the palette.
+          color: i === 0 ? { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [
+            { offset: 0, color: chartColors.series1 }, { offset: 0.7, color: chartColors.series1Light }, { offset: 1, color: tokens.accent2 }] }
+            : tokens.palette[i % tokens.palette.length],
           shadowColor: tokens.glow || 'transparent', shadowBlur: tokens.glow ? 10 : 0,
         },
-        animationDuration: 900,
+        animationDuration: 1000,
         animationEasing: 'cubicOut',
+        animationDelay: (i: number) => i * 70, // bars grow one after another
         label: {
           show: true,
           position: 'right',
@@ -58,16 +66,15 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
           formatter: (p: { value: number }) => formatCompactCurrency(p.value),
         },
         emphasis: { itemStyle: { shadowBlur: 16, shadowColor: tokens.glow || 'rgba(42,120,214,0.35)' } },
-      },
-    ],
+      })),
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, height: '100%' }}>
       <Typography variant="h2" sx={{ mb: 1 }}>{visual.title}</Typography>
       {error && <Typography color="error">{error}</Typography>}
       {option ? (
-        <ReactECharts option={option} style={{ height: Math.max(260, rows!.length * 34) }} notMerge />
+        <ReactECharts option={option} style={{ height: Math.max(260, rows!.length * (many ? 30 * measures.length : 34) + (many ? 32 : 0)) }} notMerge />
       ) : (
         <Skeleton variant="rectangular" height={300} />
       )}

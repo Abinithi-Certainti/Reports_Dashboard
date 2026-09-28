@@ -1,0 +1,101 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>How field mapping works</title>
+<style>
+  :root { --bg:#f3f5f9; --panel:#fff; --line:#e3e7ee; --text:#0f172a; --muted:#5b6475; --blue:#2a78d6; --blue2:#e8f1fc;
+          --good:#0f8a4f; --goodbg:#e6f5ec; --amber:#b45309; --amberbg:#fdf3e2; --red:#c93434; --redbg:#fbeaea; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 "Inter", "Segoe UI", system-ui, sans-serif; }
+  .wrap { width:1440px; padding:40px 48px 48px; }
+  h1 { font-size:30px; margin:0 0 4px; letter-spacing:-.02em; }
+  .sub { color:var(--muted); margin:0 0 28px; font-size:16px; }
+  h2 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:34px 0 14px; }
+  .flow { display:grid; grid-template-columns: repeat(6, 1fr); gap:14px; align-items:stretch; }
+  .step { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; position:relative; }
+  .step:not(:last-child)::after { content:"→"; position:absolute; right:-14px; top:50%; transform:translate(50%,-50%); color:var(--blue); font-size:20px; font-weight:700; }
+  .n { width:26px; height:26px; border-radius:50%; background:var(--blue); color:#fff; display:grid; place-items:center; font-weight:700; font-size:13px; margin-bottom:8px; }
+  .step b { display:block; font-size:15px; margin-bottom:4px; }
+  .step p { margin:0; color:var(--muted); font-size:13px; }
+  .who { display:inline-block; margin-top:10px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; }
+  .auto { background:var(--goodbg); color:var(--good); } .person { background:var(--amberbg); color:var(--amber); }
+  .rules { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
+  .rule { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .rule .tag { float:right; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; }
+  .rule b { font-size:15px; } .rule p { margin:6px 0 0; color:var(--muted); font-size:13px; }
+  code { font-family:"JetBrains Mono", ui-monospace, monospace; font-size:13px; }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  th { text-align:left; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); background:#f6f8fb; padding:10px 14px; }
+  td { padding:10px 14px; border-top:1px solid #eef1f5; vertical-align:middle; }
+  td.arrow { color:var(--blue); font-weight:700; text-align:center; width:30px; }
+  .pill { font-size:12px; font-weight:700; padding:3px 9px; border-radius:7px; white-space:nowrap; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  .code { background:#0f172a; color:#e2e8f0; border-radius:14px; padding:16px 18px; font:12.5px/1.6 "JetBrains Mono", ui-monospace, monospace; white-space:pre; }
+  .code .h { color:#7dd3fc; } .code .c { color:#94a3b8; }
+  .codeHead { font-weight:700; margin-bottom:8px; font-size:14px; }
+  .note { margin-top:18px; background:var(--blue2); border:1px solid #cfe0f6; border-radius:14px; padding:14px 18px; font-size:14px; }
+  .stats { display:flex; gap:14px; margin-top:14px; }
+  .stat { flex:1; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 16px; }
+  .stat .v { font:700 26px "JetBrains Mono", monospace; } .stat .l { color:var(--muted); font-size:12px; }
+</style></head>
+<body><div class="wrap">
+  <h1>How field mapping works</h1>
+  <p class="sub">From an old Power BI report on SQL Server to the new PostgreSQL database. Real example: the Tender Report (19 fields).</p>
+
+  <h2>The 6 steps</h2>
+  <div class="flow">
+    <div class="step"><div class="n">1</div><b>Extract</b><p>5 read-only queries read the old report: tables, fields, formulas, links, source SQL.</p><span class="who person">Person · 10 min</span></div>
+    <div class="step"><div class="n">2</div><b>Save in catalog</b><p>Everything goes into the catalog database, one record per report.</p><span class="who auto">Automatic</span></div>
+    <div class="step"><div class="n">3</div><b>Confirm tables once</b><p>Old table → new table. Shared by all reports, so each table is confirmed only once.</p><span class="who person">Person · once per table</span></div>
+    <div class="step"><div class="n">4</div><b>Match fields by rule</b><p><code>tools/auto_map.py</code> applies the rules below and checks each field exists in the new database.</p><span class="who auto">Automatic</span></div>
+    <div class="step"><div class="n">5</div><b>Review leftovers</b><p>Only fields marked Review or Missing reach a person. Nothing is guessed.</p><span class="who person">Person · only leftovers</span></div>
+    <div class="step"><div class="n">6</div><b>Go live</b><p>The report's SQL uses only confirmed new names, and a test runs it against the new tables.</p><span class="who auto">Automatic</span></div>
+  </div>
+
+  <h2>The matching rules (tried in order - the first one that finds a real field wins)</h2>
+  <div class="rules">
+    <div class="rule"><span class="tag auto">Auto</span><b>1 · Exact</b><p>Same name, lower-cased.<br><code>Plaza → plaza</code></p></div>
+    <div class="rule"><span class="tag auto">Auto</span><b>2 · Snake case</b><p>Split the words, join with "_".<br><code>PaymentTypeName → payment_type_name</code></p></div>
+    <div class="rule"><span class="tag person">Review</span><b>3 · Ignore underscores</b><p>Same letters, "_" in different places.<br><code>CTLOCATION → ct_location</code></p></div>
+    <div class="rule"><span class="tag" style="background:var(--redbg);color:var(--red)">Missing</span><b>4 · Nothing found</b><p>No field in the new database fits. A person maps it by hand.</p></div>
+  </div>
+
+  <h2>Tender Report - what the tool produced (examples from the 19)</h2>
+  <table>
+    <tr><th>Old table (SQL Server)</th><th>Old field</th><th></th><th>New table (PostgreSQL)</th><th>New field</th><th>Type</th><th>Rule</th><th>Result</th></tr>
+    <tr><td><code>POS_ORDERPAYMENTS</code></td><td><code>PaymentTypeName</code></td><td class="arrow">→</td><td><code>pos_order_payments</code></td><td><code>payment_type_name</code></td><td>text</td><td>snake case</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr><td><code>POS_ORDERPAYMENTS</code></td><td><code>PaymentAmount</code></td><td class="arrow">→</td><td><code>pos_order_payments</code></td><td><code>payment_amount</code></td><td>numeric</td><td>snake case</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr><td><code>POS_ORDERPAYMENTS</code></td><td><code>EndDay</code></td><td class="arrow">→</td><td><code>pos_order_payments</code></td><td><code>end_day</code></td><td>timestamp</td><td>snake case</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr><td><code>NetSuiteLocation_Mapping</code></td><td><code>HostLocationID</code></td><td class="arrow">→</td><td><code>netsuite_location_mapping</code></td><td><code>host_location_id</code></td><td>integer</td><td>snake case</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr><td><code>NetSuiteLocation_Mapping</code></td><td><code>GUID</code></td><td class="arrow">→</td><td><code>netsuite_location_mapping</code></td><td><code>guid</code></td><td>text</td><td>exact</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr><td><code>District_Directors</code></td><td><code>District_Director</code></td><td class="arrow">→</td><td><code>district_directors</code></td><td><code>district_director</code></td><td>text</td><td>exact</td><td><span class="pill auto">Auto</span></td></tr>
+    <tr style="background:#fffaf0"><td><code>NetSuiteLocation_Mapping</code></td><td><code>CTLOCATION</code></td><td class="arrow">→</td><td><code>netsuite_location_mapping</code></td><td><code>ct_location</code></td><td>text</td><td>ignore underscores</td><td><span class="pill person">Review</span></td></tr>
+  </table>
+  <div class="stats">
+    <div class="stat"><div class="v">4</div><div class="l">tables, each confirmed once</div></div>
+    <div class="stat"><div class="v">19</div><div class="l">fields the report uses</div></div>
+    <div class="stat"><div class="v" style="color:var(--good)">18</div><div class="l">matched automatically</div></div>
+    <div class="stat"><div class="v" style="color:var(--amber)">1</div><div class="l">waiting for a person</div></div>
+    <div class="stat"><div class="v">0</div><div class="l">guessed</div></div>
+  </div>
+
+  <h2>Step 6 - the same query, before and after</h2>
+  <div class="grid2">
+    <div><div class="codeHead">Old · SQL Server (Power BI)</div><div class="code"><span class="c">-- Payment Type Summary</span>
+SELECT COUNT(a.<span class="h">[OrderID]</span>),
+       SUM(a.<span class="h">[PaymentAmount]</span>),
+       a.<span class="h">[PaymentTypeName]</span>, e.<span class="h">LocationName</span>
+FROM <span class="h">[dbo].[POS_ORDERPAYMENTS]</span> a
+JOIN nslm e ON a.<span class="h">StoreId</span> = e.<span class="h">StoreID</span>
+WHERE <span class="h">Endday</span> BETWEEN ... AND ...</div></div>
+    <div><div class="codeHead">New · PostgreSQL (Report Engine)</div><div class="code"><span class="c">-- payment_type_summary</span>
+SELECT count(a.<span class="h">order_id</span>),
+       sum(a.<span class="h">payment_amount</span>),
+       a.<span class="h">payment_type_name</span>, e.<span class="h">location_name</span>
+FROM <span class="h">master.pos_order_payments</span> a
+JOIN nslm e ON a.<span class="h">store_id</span> = e.<span class="h">store_id</span>
+WHERE a.<span class="h">end_day</span> &gt;= ... AND ...</div></div>
+  </div>
+
+  <div class="note"><b>Why tables are confirmed by a person:</b> old table names often break the rule - <code>POS_ORDERPAYMENTS</code> is all capitals, so no rule can tell where the words split.
+  Without confirmed tables the tool marks 15 of 19 fields as Review; with the 4 tables confirmed once, 18 of 19 match automatically.
+  Every later report that uses these tables gets its fields matched automatically too.</div>
+</div></body></html>

@@ -1,0 +1,248 @@
+# Sales Report - Including Budget 2026 - spec for the report engine (AG-80).
+# Source of truth: extracts/sales-budget-2026/01_model.md. Data: DEV database, schema master (data rule v3).
+# This is Sales Report 1 (AG-79) plus the 2026 sales, transactions and labour hours budgets, TPLH, WTD / PTD / YTD,
+# and a second "last year" by calendar date (the Finance page).
+# On DEV: labour hours are empty (so labour, SPLH and TPLH show 0 or blank), and there are no last-year sales
+# (so every PY / YOY / PY FIN column is empty).
+# OPEN: the budget runs further ahead than the sales, so the date filter opens on the last budget days, which may
+# hold budget only. Pick earlier days to see sales against budget.
+# Not built here: page 3 (retail period / week lookup grid) and page 7 (Alert, a copy of page 1 plus PTD). Page 8
+# (Future) is the same as page 1.
+id: sales-budget-2026
+title: Sales Report - Including Budget 2026
+subtitle: Sales, transactions and labour against the 2026 budget and last year - week, period and year to date
+dataset: dataset.sql
+calendar: retail   # needed for WTD / PTD / YTD and for PY (same weekday of the same retail week, one retail year earlier)
+
+dimensions:
+  day:               { label: Date,              column: day, type: date }
+  weekday:           { label: Weekday,           column: weekday, sort_by: weekday_no }
+  week_end:          { label: End of Week,       column: week_end, type: date }
+  retail_period:     { label: Retail Period,     column: retail_period }
+  plaza:             { label: Plaza,             column: plaza }
+  brand:             { label: Brand,             column: brand }
+  district_director: { label: District Director, column: district_director }
+  agm:               { label: AGM,               column: agm }
+
+# PY = the selected days one retail year earlier. PY FIN = the same calendar dates one year earlier (page 9).
+# YOY = value - PY (a missing PY counts as 0, as in Power BI), YOY % = (value - PY) / PY.
+# vs Budget = actual - budget, vs Budget % = (actual - budget) / budget.
+# WTD / PTD / YTD = from the start of the retail week / period / year to the last selected day.
+# OPEN: page 1 shows a Budget line for SPLH too, but the extract gives no Budget SPLH formula, so it is left out.
+measures:
+  sales:                 { label: Sales, sql: "sum(sales)", format: currency }
+  transactions:          { label: Transactions, sql: "sum(transactions)", format: number }
+  labour:                { label: Labour Hours Direct, sql: "sum(labour_hours)", format: number }
+  splh:                  { label: SPLH, sql: "sum(sales) / nullif(sum(labour_hours), 0)", format: currency }
+  tplh:                  { label: TPLH, sql: "sum(transactions) / nullif(sum(labour_hours), 0)", format: number }
+  avg_check:             { label: Average Check, sql: "sum(sales) / nullif(sum(transactions), 0)", format: currency }
+
+  budget_sales:          { label: Sales Budget, sql: "sum(budget_sales)", format: currency }
+  budget_transactions:   { label: Trans Budget, sql: "sum(budget_transactions)", format: number }
+  budget_labour:         { label: LHD Budget, sql: "sum(budget_labour_hours)", format: number }
+  budget_tplh:           { label: Budget TPLH, sql: "sum(budget_transactions) / nullif(sum(budget_labour_hours), 0)", format: number }
+  budget_avg_check:      { label: Budget Avg Check, sql: "sum(budget_sales) / nullif(sum(budget_transactions), 0)", format: currency }
+
+  sales_vs_budget:         { label: Sales vs Budget, sql: "sum(sales) - sum(budget_sales)", format: currency }
+  sales_vs_budget_pct:     { label: Sales vs Budget %, sql: "(sum(sales) - sum(budget_sales)) / nullif(sum(budget_sales), 0)", format: percent }
+  transactions_vs_budget:  { label: Transactions vs Budget, sql: "sum(transactions) - sum(budget_transactions)", format: number }
+  transactions_vs_budget_pct: { label: Transactions vs Budget %, sql: "(sum(transactions) - sum(budget_transactions)) / nullif(sum(budget_transactions), 0)", format: percent }
+  labour_vs_budget:        { label: LHD vs Budget, sql: "sum(labour_hours) - sum(budget_labour_hours)", format: number }
+  labour_vs_budget_pct:    { label: LHD vs Budget %, sql: "(sum(labour_hours) - sum(budget_labour_hours)) / nullif(sum(budget_labour_hours), 0)", format: percent }
+  tplh_vs_budget:          { label: TPLH vs Budget, sql: "sum(transactions) / nullif(sum(labour_hours), 0) - sum(budget_transactions) / nullif(sum(budget_labour_hours), 0)", format: number }
+  tplh_vs_budget_pct:      { label: TPLH vs Budget %, sql: "(sum(transactions) / nullif(sum(labour_hours), 0) - sum(budget_transactions) / nullif(sum(budget_labour_hours), 0)) / nullif(sum(budget_transactions) / nullif(sum(budget_labour_hours), 0), 0)", format: percent }
+  avg_check_vs_budget:     { label: Avg Check vs Budget, sql: "sum(sales) / nullif(sum(transactions), 0) - sum(budget_sales) / nullif(sum(budget_transactions), 0)", format: currency }
+  avg_check_vs_budget_pct: { label: Avg Check vs Budget %, sql: "(sum(sales) / nullif(sum(transactions), 0) - sum(budget_sales) / nullif(sum(budget_transactions), 0)) / nullif(sum(budget_sales) / nullif(sum(budget_transactions), 0), 0)", format: percent }
+
+  # Last year, same retail weekday (empty on DEV: no last-year sales)
+  sales_py:              { label: Sales PY, of: sales, window: py, format: currency }
+  sales_yoy:             { label: Sales YOY $, of: sales, window: yoy, format: currency }
+  sales_yoy_pct:         { label: Sales YOY %, of: sales, window: yoy_pct, format: percent }
+  transactions_py:       { label: Transactions PY, of: transactions, window: py, format: number }
+  transactions_yoy:      { label: Transactions YOY, of: transactions, window: yoy, format: number }
+  transactions_yoy_pct:  { label: Transactions YOY %, of: transactions, window: yoy_pct, format: percent }
+  labour_py:             { label: LHD PY, of: labour, window: py, format: number }
+  labour_yoy:            { label: LHD YOY, of: labour, window: yoy, format: number }
+  labour_yoy_pct:        { label: LHD YOY %, of: labour, window: yoy_pct, format: percent }
+  splh_py:               { label: SPLH PY, of: splh, window: py, format: currency }
+  splh_yoy:              { label: SPLH YOY $, of: splh, window: yoy, format: currency }
+  splh_yoy_pct:          { label: SPLH YOY %, of: splh, window: yoy_pct, format: percent }
+  tplh_py:               { label: TPLH PY, of: tplh, window: py, format: number }
+  tplh_yoy:              { label: TPLH YOY, of: tplh, window: yoy, format: number }
+  tplh_yoy_pct:          { label: TPLH YOY %, of: tplh, window: yoy_pct, format: percent }
+  avg_check_py:          { label: Average Check PY, of: avg_check, window: py, format: currency }
+  avg_check_yoy:         { label: Average Check YOY $, of: avg_check, window: yoy, format: currency }
+  avg_check_yoy_pct:     { label: Average Check YOY %, of: avg_check, window: yoy_pct, format: percent }
+
+  # Last year, same calendar date - page 9 "Finance" (empty on DEV: no last-year sales)
+  sales_py_fin:              { label: Sales PY FIN, of: sales, window: py_fin, format: currency }
+  sales_yoy_fin:             { label: Sales YOY FIN $, of: sales, window: yoy_fin, format: currency }
+  sales_yoy_fin_pct:         { label: Sales YOY FIN %, of: sales, window: yoy_fin_pct, format: percent }
+  transactions_py_fin:       { label: Transactions PY FIN, of: transactions, window: py_fin, format: number }
+  transactions_yoy_fin:      { label: Transactions YOY FIN, of: transactions, window: yoy_fin, format: number }
+  transactions_yoy_fin_pct:  { label: Transactions YOY FIN %, of: transactions, window: yoy_fin_pct, format: percent }
+  labour_py_fin:             { label: LHD PY FIN, of: labour, window: py_fin, format: number }
+  labour_yoy_fin_pct:        { label: LHD YOY FIN %, of: labour, window: yoy_fin_pct, format: percent }
+  splh_py_fin:               { label: SPLH PY FIN, of: splh, window: py_fin, format: currency }
+  splh_yoy_fin_pct:          { label: SPLH YOY FIN %, of: splh, window: yoy_fin_pct, format: percent }
+  tplh_py_fin:               { label: TPLH PY FIN, of: tplh, window: py_fin, format: number }
+  tplh_yoy_fin_pct:          { label: TPLH YOY FIN %, of: tplh, window: yoy_fin_pct, format: percent }
+  avg_check_py_fin:          { label: Average Check PY FIN, of: avg_check, window: py_fin, format: currency }
+  avg_check_yoy_fin_pct:     { label: Average Check YOY FIN %, of: avg_check, window: yoy_fin_pct, format: percent }
+
+  # Week to date
+  wtd_sales:                  { label: WTD Sales, of: sales, window: wtd, format: currency }
+  wtd_budget_sales:           { label: WTD Sales Budget, of: budget_sales, window: wtd, format: currency }
+  wtd_sales_vs_budget_pct:    { label: WTD Sales vs Budget %, of: sales_vs_budget_pct, window: wtd, format: percent }
+  wtd_transactions:           { label: WTD Transactions, of: transactions, window: wtd, format: number }
+  wtd_budget_transactions:    { label: WTD Trans Budget, of: budget_transactions, window: wtd, format: number }
+  wtd_transactions_vs_budget_pct: { label: WTD Transactions vs Budget %, of: transactions_vs_budget_pct, window: wtd, format: percent }
+  wtd_labour:                 { label: WTD LHD, of: labour, window: wtd, format: number }
+  wtd_budget_labour:          { label: WTD LHD Budget, of: budget_labour, window: wtd, format: number }
+  wtd_labour_vs_budget_pct:   { label: WTD LHD vs Budget %, of: labour_vs_budget_pct, window: wtd, format: percent }
+  wtd_splh:                   { label: WTD SPLH, of: splh, window: wtd, format: currency }
+  wtd_tplh:                   { label: WTD TPLH, of: tplh, window: wtd, format: number }
+  wtd_budget_tplh:            { label: WTD Budget TPLH, of: budget_tplh, window: wtd, format: number }
+  wtd_avg_check:              { label: WTD Average Check, of: avg_check, window: wtd, format: currency }
+  wtd_budget_avg_check:       { label: WTD Budget Avg Check, of: budget_avg_check, window: wtd, format: currency }
+
+  # Period to date
+  ptd_sales:                  { label: PTD Sales, of: sales, window: ptd, format: currency }
+  ptd_budget_sales:           { label: PTD Sales Budget, of: budget_sales, window: ptd, format: currency }
+  ptd_sales_vs_budget_pct:    { label: PTD Sales vs Budget %, of: sales_vs_budget_pct, window: ptd, format: percent }
+  ptd_transactions:           { label: PTD Transactions, of: transactions, window: ptd, format: number }
+  ptd_budget_transactions:    { label: PTD Trans Budget, of: budget_transactions, window: ptd, format: number }
+  ptd_transactions_vs_budget_pct: { label: PTD Transactions vs Budget %, of: transactions_vs_budget_pct, window: ptd, format: percent }
+  ptd_labour:                 { label: PTD LHD, of: labour, window: ptd, format: number }
+  ptd_budget_labour:          { label: PTD LHD Budget, of: budget_labour, window: ptd, format: number }
+  ptd_labour_vs_budget_pct:   { label: PTD LHD vs Budget %, of: labour_vs_budget_pct, window: ptd, format: percent }
+  ptd_splh:                   { label: PTD SPLH, of: splh, window: ptd, format: currency }
+  ptd_tplh:                   { label: PTD TPLH, of: tplh, window: ptd, format: number }
+  ptd_budget_tplh:            { label: PTD Budget TPLH, of: budget_tplh, window: ptd, format: number }
+  ptd_avg_check:              { label: PTD Average Check, of: avg_check, window: ptd, format: currency }
+  ptd_budget_avg_check:       { label: PTD Budget Avg Check, of: budget_avg_check, window: ptd, format: currency }
+
+  # Year to date
+  ytd_sales:                  { label: YTD Sales, of: sales, window: ytd, format: currency }
+  ytd_budget_sales:           { label: YTD Sales Budget, of: budget_sales, window: ytd, format: currency }
+  ytd_sales_vs_budget_pct:    { label: YTD Sales vs Budget %, of: sales_vs_budget_pct, window: ytd, format: percent }
+  ytd_transactions:           { label: YTD Transactions, of: transactions, window: ytd, format: number }
+  ytd_budget_transactions:    { label: YTD Trans Budget, of: budget_transactions, window: ytd, format: number }
+  ytd_transactions_vs_budget_pct: { label: YTD Transactions vs Budget %, of: transactions_vs_budget_pct, window: ytd, format: percent }
+  ytd_labour:                 { label: YTD LHD, of: labour, window: ytd, format: number }
+  ytd_budget_labour:          { label: YTD LHD Budget, of: budget_labour, window: ytd, format: number }
+  ytd_labour_vs_budget_pct:   { label: YTD LHD vs Budget %, of: labour_vs_budget_pct, window: ytd, format: percent }
+  ytd_splh:                   { label: YTD SPLH, of: splh, window: ytd, format: currency }
+  ytd_tplh:                   { label: YTD TPLH, of: tplh, window: ytd, format: number }
+  ytd_budget_tplh:            { label: YTD Budget TPLH, of: budget_tplh, window: ytd, format: number }
+  ytd_avg_check:              { label: YTD Average Check, of: avg_check, window: ytd, format: currency }
+  ytd_budget_avg_check:       { label: YTD Budget Avg Check, of: budget_avg_check, window: ytd, format: currency }
+
+filters:
+  - { dimension: district_director, type: multi_select }
+  - { dimension: agm,               type: multi_select }
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: brand,             type: multi_select }
+  - { dimension: day,               type: date_range, default_last_days: 7, open_on: net_sales }   # budget runs ahead of sales: open on the last day with sales
+
+visuals:
+  - type: kpi
+    items:
+      - { label: Sales,               measure: sales,               icon: total }
+      - { label: Sales vs budget %,   measure: sales_vs_budget_pct, icon: trend }
+      - { label: Transactions,        measure: transactions,        icon: count }
+      - { label: Labour hours direct, measure: labour,              icon: store }
+      - { label: TPLH,                measure: tplh,                icon: cash }
+
+  # Page 1 "Plaza Total Summary - Retail Calendar" (also page 8 "Future"): one row per weekday, the total row is the
+  # selected days' total. The old page shows weekdays as columns, here they are rows.
+  - type: table
+    title: Sales - by weekday
+    rows: [weekday]
+    values: [sales, sales_py, sales_yoy, sales_yoy_pct, budget_sales, sales_vs_budget, sales_vs_budget_pct]
+    total_row: true
+    span: 12
+  - type: table
+    title: Transactions and Average Check - by weekday
+    rows: [weekday]
+    values: [transactions, transactions_py, transactions_yoy_pct, budget_transactions, transactions_vs_budget, transactions_vs_budget_pct, avg_check, avg_check_py, avg_check_yoy_pct, budget_avg_check, avg_check_vs_budget_pct]
+    total_row: true
+    span: 12
+  - type: table
+    title: Labour Hours Direct, SPLH and TPLH - by weekday
+    rows: [weekday]
+    values: [labour, labour_py, labour_yoy_pct, budget_labour, labour_vs_budget, labour_vs_budget_pct, splh, splh_py, splh_yoy_pct, tplh, tplh_py, tplh_yoy_pct, budget_tplh, tplh_vs_budget_pct]
+    total_row: true
+    span: 12
+
+  # Page 2 "Detailed View": WTD, PTD and YTD blocks
+  - type: table
+    title: Week to date - by plaza
+    rows: [plaza]
+    values: [wtd_sales, wtd_budget_sales, wtd_sales_vs_budget_pct, wtd_transactions, wtd_budget_transactions, wtd_transactions_vs_budget_pct, wtd_labour, wtd_budget_labour, wtd_labour_vs_budget_pct, wtd_splh, wtd_tplh, wtd_budget_tplh, wtd_avg_check, wtd_budget_avg_check]
+    total_row: true
+    span: 12
+  - type: table
+    title: Period to date - by plaza
+    rows: [plaza]
+    values: [ptd_sales, ptd_budget_sales, ptd_sales_vs_budget_pct, ptd_transactions, ptd_budget_transactions, ptd_transactions_vs_budget_pct, ptd_labour, ptd_budget_labour, ptd_labour_vs_budget_pct, ptd_splh, ptd_tplh, ptd_budget_tplh, ptd_avg_check, ptd_budget_avg_check]
+    total_row: true
+    span: 12
+  - type: table
+    title: Year to date - by plaza
+    rows: [plaza]
+    values: [ytd_sales, ytd_budget_sales, ytd_sales_vs_budget_pct, ytd_transactions, ytd_budget_transactions, ytd_transactions_vs_budget_pct, ytd_labour, ytd_budget_labour, ytd_labour_vs_budget_pct, ytd_splh, ytd_tplh, ytd_budget_tplh, ytd_avg_check, ytd_budget_avg_check]
+    total_row: true
+    span: 12
+
+  # Pages 4-6 "Budget by Dates": plaza x day, and brand / plaza x retail period (real retail calendar, see dataset.sql)
+  - type: matrix
+    title: Sales budget - by plaza and day
+    rows: [plaza]
+    columns: [day]
+    values: [budget_sales]
+    span: 12
+  - type: matrix
+    title: Sales budget - by brand and retail period
+    rows: [brand]
+    columns: [retail_period]
+    values: [budget_sales]
+    span: 12
+  - type: matrix
+    title: Transactions budget - by plaza and day
+    rows: [plaza]
+    columns: [day]
+    values: [budget_transactions]
+    span: 12
+  - type: matrix
+    title: Transactions budget - by plaza, brand and retail period
+    rows: [plaza, brand]
+    columns: [retail_period]
+    values: [budget_transactions]
+    span: 12
+  - type: matrix
+    title: Labour hours budget - by plaza and day
+    rows: [plaza]
+    columns: [day]
+    values: [budget_labour]
+    span: 12
+  - type: matrix
+    title: Labour hours budget - by plaza and retail period
+    rows: [plaza]
+    columns: [retail_period]
+    values: [budget_labour]
+    span: 12
+
+  # Page 9 "Plaza Total Summary - Finance": last year on the same calendar date
+  - type: table
+    title: Finance - against the same calendar dates last year (by weekday)
+    rows: [weekday]
+    values: [sales, sales_py_fin, sales_yoy_fin, sales_yoy_fin_pct, budget_sales, sales_vs_budget_pct, transactions, transactions_py_fin, transactions_yoy_fin_pct, avg_check, avg_check_py_fin, avg_check_yoy_fin_pct]
+    total_row: true
+    span: 12
+  - type: table
+    title: Finance - labour against the same calendar dates last year (by weekday)
+    rows: [weekday]
+    values: [labour, labour_py_fin, labour_yoy_fin_pct, budget_labour, splh, splh_py_fin, splh_yoy_fin_pct, tplh, tplh_py_fin, tplh_yoy_fin_pct, budget_tplh]
+    total_row: true
+    span: 12

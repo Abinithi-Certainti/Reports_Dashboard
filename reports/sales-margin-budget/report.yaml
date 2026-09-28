@@ -1,0 +1,100 @@
+# Sales and Margin report with Budget - spec for the report engine (AG-76).
+# Source of truth for the old report: extracts/sales-margin-budget/01_model.md. Page "GP by Locations".
+id: sales-margin-budget
+title: Sales and Margin with Budget
+subtitle: GP by location - week, period and year to date against budget
+dataset: dataset.sql
+calendar: retail
+
+dimensions:
+  plaza:             { label: Plaza,             column: plaza }
+  brand:             { label: Brand,             column: brand }
+  district_director: { label: District Director, column: district_director }
+  day:               { label: Day,               column: day, type: date }
+
+# Plain measures, then each one over a retail window that ends on the selected week's last day:
+# wtd = the selected week, ptd = from the start of its retail period, ytd = from the start of its retail year.
+# The old report calls the period window "MTD", so the labels keep that name.
+# COGS is dated on the week-ending Saturday, so a window counts a week's COGS when it holds that Saturday.
+measures:
+  cogs:           { label: COGS $,        sql: "sum(cogs)",           format: currency }
+  transactions:   { label: Transactions,  sql: "sum(transactions)",   format: number }
+  sales:          { label: Sales $, sql: "sum(sales)", format: currency }
+  budget_sales:   { label: Budget Sales, sql: "sum(budget_sales)", format: currency }
+  sales_var:      { label: Sales Variance, sql: "sum(sales) - sum(budget_sales)", format: currency }
+  gp:             { label: GP $, sql: "sum(sales) - sum(cogs)", format: currency }
+  budget_gp:      { label: Budget GP$, sql: "sum(budget_gp)", format: currency }
+  gp_var:         { label: GP$ Var, sql: "sum(sales) - sum(cogs) - sum(budget_gp)", format: currency }
+  gp_pct:         { label: GP %, sql: "(sum(sales) - sum(cogs)) / nullif(sum(sales), 0)", format: percent }
+  bud_pct:        { label: Bud %, sql: "sum(budget_gp) / nullif(sum(budget_sales), 0)", format: percent }
+  gp_pct_var:     { label: GP% Variance, sql: "(sum(sales) - sum(cogs)) / nullif(sum(sales), 0) - sum(budget_gp) / nullif(sum(budget_sales), 0)", format: percent }
+  wtd_sales:          { label: WTD Sales $, of: sales, window: wtd, format: currency }
+  wtd_budget_sales:   { label: WTD Budget Sales, of: budget_sales, window: wtd, format: currency }
+  wtd_sales_var:      { label: WTD Sales Variance, of: sales_var, window: wtd, format: currency }
+  wtd_gp:             { label: WTD GP $, of: gp, window: wtd, format: currency }
+  wtd_budget_gp:      { label: WTD Budget GP$, of: budget_gp, window: wtd, format: currency }
+  wtd_gp_var:         { label: WTD GP$ Var, of: gp_var, window: wtd, format: currency }
+  wtd_gp_pct:         { label: WTD GP %, of: gp_pct, window: wtd, format: percent }
+  wtd_bud_pct:        { label: WTD Bud %, of: bud_pct, window: wtd, format: percent }
+  wtd_gp_pct_var:     { label: WTD GP% Variance, of: gp_pct_var, window: wtd, format: percent }
+  ptd_sales:          { label: MTD Sales $, of: sales, window: ptd, format: currency }
+  ptd_budget_sales:   { label: MTD Budget Sales, of: budget_sales, window: ptd, format: currency }
+  ptd_sales_var:      { label: MTD Sales Variance, of: sales_var, window: ptd, format: currency }
+  ptd_gp:             { label: MTD GP $, of: gp, window: ptd, format: currency }
+  ptd_budget_gp:      { label: MTD Budget GP$, of: budget_gp, window: ptd, format: currency }
+  ptd_gp_var:         { label: MTD GP$ Var, of: gp_var, window: ptd, format: currency }
+  ptd_gp_pct:         { label: MTD GP %, of: gp_pct, window: ptd, format: percent }
+  ptd_bud_pct:        { label: MTD Bud %, of: bud_pct, window: ptd, format: percent }
+  ptd_gp_pct_var:     { label: MTD GP% Variance, of: gp_pct_var, window: ptd, format: percent }
+  ytd_sales:          { label: YTD Sales $, of: sales, window: ytd, format: currency }
+  ytd_budget_sales:   { label: YTD Budget Sales, of: budget_sales, window: ytd, format: currency }
+  ytd_sales_var:      { label: YTD Sales Variance, of: sales_var, window: ytd, format: currency }
+  ytd_gp:             { label: YTD GP $, of: gp, window: ytd, format: currency }
+  ytd_budget_gp:      { label: YTD Budget GP$, of: budget_gp, window: ytd, format: currency }
+  ytd_gp_var:         { label: YTD GP$ Var, of: gp_var, window: ytd, format: currency }
+  ytd_gp_pct:         { label: YTD GP %, of: gp_pct, window: ytd, format: percent }
+  ytd_bud_pct:        { label: YTD Bud %, of: bud_pct, window: ytd, format: percent }
+  ytd_gp_pct_var:     { label: YTD GP% Variance, of: gp_pct_var, window: ytd, format: percent }
+
+filters:
+  - { dimension: district_director, type: multi_select }
+  - { dimension: plaza,             type: multi_select }
+  - { dimension: brand,             type: multi_select }
+  - { dimension: day,               type: retail_week, open_on: net_sales }   # budget runs ahead of sales: open on the last week with sales
+
+visuals:
+  - type: kpi
+    items:
+      - { label: Week to date sales,   measure: wtd_sales,     icon: total }
+      - { label: Sales vs budget,      measure: wtd_sales_var, icon: trend }
+      - { label: Week to date GP,      measure: wtd_gp,        icon: cash }
+      - { label: GP % (week to date),  measure: wtd_gp_pct,    icon: count }
+  - type: bar
+    title: Week to date - sales against budget
+    rows: [plaza]
+    values: [wtd_sales, wtd_budget_sales]
+    span: 7
+  - type: leaderboard
+    title: GP$ above budget - week to date
+    rows: [plaza]
+    values: [wtd_gp_var, wtd_gp_pct_var]
+    limit: 8
+    span: 5
+  - type: table
+    title: GP by location - Week to date
+    rows: [plaza]
+    values: [wtd_sales, wtd_budget_sales, wtd_sales_var, wtd_gp, wtd_budget_gp, wtd_gp_var, wtd_gp_pct, wtd_bud_pct, wtd_gp_pct_var]
+    total_row: true
+    span: 12
+  - type: table
+    title: GP by location - Period to date (MTD)
+    rows: [plaza]
+    values: [ptd_sales, ptd_budget_sales, ptd_sales_var, ptd_gp, ptd_budget_gp, ptd_gp_var, ptd_gp_pct, ptd_bud_pct, ptd_gp_pct_var]
+    total_row: true
+    span: 12
+  - type: table
+    title: GP by location - Year to date
+    rows: [plaza]
+    values: [ytd_sales, ytd_budget_sales, ytd_sales_var, ytd_gp, ytd_budget_gp, ytd_gp_var, ytd_gp_pct, ytd_bud_pct, ytd_gp_pct_var]
+    total_row: true
+    span: 12

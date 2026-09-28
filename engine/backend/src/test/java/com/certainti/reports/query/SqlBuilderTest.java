@@ -22,7 +22,7 @@ class SqlBuilderTest {
         dims.put("end_day", new Dimension("Date", "end_day", "date", null));
         Map<String, Measure> measures = Map.of("amount", new Measure("Amount", "sum(amount)", "currency"));
         return new ReportSpec("t", "T", null, "dataset.sql", null, dims, measures, Map.of(), List.of(), List.of(),
-                "SELECT 1");
+                null, "SELECT 1", null);
     }
 
     private static QueryRequest request(Map<String, List<String>> filters, List<String> groupBy, List<String> measures) {
