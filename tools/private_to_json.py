@@ -38,6 +38,11 @@ def main() -> None:
         sys.exit(f"usage: python3 tools/private_to_json.py <{'|'.join(REPORTS)}> <export file> [--cap N]")
     report_id, src = args[0], Path(args[1])
     text = src.read_text(encoding="utf-8-sig")
+    # A character lost before the file reached us (shown as U+FFFD) becomes "?" and is reported, not guessed.
+    lost = text.count("\ufffd")
+    if lost:
+        print(f"WARNING: {lost} unreadable character(s) in the export, shown as '?'")
+        text = text.replace("\ufffd", "?")
     dialect = "excel-tab" if "\t" in text.splitlines()[0] else "excel"
     reader = csv.reader(text.splitlines(), dialect)
     header = [h.strip() for h in next(reader)]
