@@ -26,5 +26,6 @@ Formulas, tables, mappings and fields matter most. Matching the old numbers exac
 | 10 | Financial Reports (HST, Gift Card, Donations, Lottery) | AG-82 | extracted; 2 helper queries needed |
 
 ## Rules that still apply
-- Read-only login (`readonly_user`) only.
+- **2026-09-28 decision (the user):** QA checks run with the Read_Write login (`kios_etl_QA`), without waiting for
+  readonly_user grants. Only SELECT queries are run with it - never UPDATE / DELETE / INSERT / DROP / ALTER.
 - The repository is public: no real figures, hostnames, SharePoint links or email lists in git.
