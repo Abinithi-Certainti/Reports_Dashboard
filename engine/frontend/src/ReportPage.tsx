@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, CircularProgress, Container } from '@mui/material';
 import { useTokens } from './theme';
-import { api, QueryRequest, Spec } from './api';
+import { api, DataSource, QueryRequest, Spec } from './api';
+import { SOURCE_LABEL, sourceColour } from './dataSource';
 import { addDays } from './format';
 import FilterBar, { FilterState, weeksWithData } from './components/FilterBar';
 import KpiRow from './components/KpiRow';
@@ -24,7 +25,7 @@ const COMPONENTS = {
 } as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
-export default function ReportPage({ reportId, entry }: { reportId: string; entry: CatalogEntry }) {
+export default function ReportPage({ reportId, entry, source: listedSource }: { reportId: string; entry: CatalogEntry; source: DataSource }) {
   const tokens = useTokens();
   const [spec, setSpec] = useState<Spec>();
   const [filters, setFilters] = useState<FilterState>();
@@ -70,18 +71,22 @@ export default function ReportPage({ reportId, entry }: { reportId: string; entr
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 12 }}><CircularProgress thickness={2.5} size={46} /></Box>;
   }
 
+  // Where the rows come from: green live DEV data, blue DEV export, orange made-up sample rows.
+  const source = spec.dataSource ?? listedSource;
+  const colour = sourceColour(source, tokens);
+  const sample = source === 'sample';
   return (
     <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
       <ReportHeader
         entry={entry}
         subtitle={spec.subtitle}
-        status={spec.dataNoticeTitle?.replace(/\.$/, '') ?? 'Live'}
-        statusColour={tokens.good}
+        status={SOURCE_LABEL[source]}
+        statusColour={colour}
         right={(
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
             <Box
               sx={{
-                width: 8, height: 8, borderRadius: '50%', bgcolor: tokens.good, boxShadow: `0 0 10px ${tokens.good}`,
+                width: 8, height: 8, borderRadius: '50%', bgcolor: colour, boxShadow: `0 0 10px ${colour}`,
                 animation: 'pulse 2s ease-in-out infinite',
                 '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
               }}
@@ -90,15 +95,25 @@ export default function ReportPage({ reportId, entry }: { reportId: string; entr
           </Box>
         )}
       />
-      {spec.sampleDataNotice && (
-        <Alert
-          severity="info"
-          variant="outlined"
-          sx={{ mb: 2, bgcolor: alpha(tokens.accent, 0.06), borderColor: alpha(tokens.accent, 0.35), color: tokens.textSecondary, '& .MuiAlert-icon': { color: tokens.accent } }}
-        >
-          <strong style={{ color: tokens.textPrimary }}>{spec.dataNoticeTitle ?? 'Data.'}</strong> {spec.sampleDataNotice}
-        </Alert>
-      )}
+      {spec.sampleDataNotice && (() => {
+        // Live data keeps the quiet accent banner; a DEV export is blue; made-up rows get a loud orange one, so nobody
+        // takes sample numbers for real ones.
+        const c = source === 'live' ? tokens.accent : colour;
+        return (
+          <Alert
+            severity={sample ? 'warning' : 'info'}
+            variant="outlined"
+            role={sample ? 'alert' : undefined}
+            data-source={source}
+            sx={{
+              mb: 2, bgcolor: alpha(c, sample ? 0.16 : 0.06), borderColor: alpha(c, sample ? 0.9 : 0.35), borderWidth: sample ? 2 : 1,
+              color: tokens.textSecondary, '& .MuiAlert-icon': { color: c }, ...(sample && { fontSize: '0.95rem', boxShadow: `0 0 24px -8px ${c}` }),
+            }}
+          >
+            <strong style={{ color: sample ? c : tokens.textPrimary }}>{spec.dataNoticeTitle ?? 'Data.'}</strong> {spec.sampleDataNotice}
+          </Alert>
+        );
+      })()}
 
       <FilterBar reportId={reportId} spec={spec} value={filters} onChange={setFilters} onReset={() => setFilters(defaults)} />
 

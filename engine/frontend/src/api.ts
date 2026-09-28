@@ -1,5 +1,3 @@
-import { staticApi } from './static/staticApi';
-
 // Talks to the report engine API. The browser only ever sends names from the spec and filter values - never SQL.
 
 export type Dimension = { label: string; type: string | null };
@@ -34,13 +32,16 @@ export type Spec = {
   subtitle?: string;
   sampleDataNotice?: string;
   dataNoticeTitle?: string; // banner heading; "Sample data." when not set
+  dataSource?: DataSource; // set by the frontend: where this report's rows come from
   dimensions: Record<string, Dimension>;
   measures: Record<string, Measure>;
   calculations: Record<string, Calculation>;
   filters: Filter[];
   visuals: Visual[];
 };
-export type ReportSummary = { id: string; title: string; subtitle?: string; imported: boolean; visuals: number };
+export type ReportSummary = { id: string; title: string; subtitle?: string; imported: boolean; visuals: number; dataSource?: DataSource };
+/** Where a report's rows come from: the live backend, a DEV export loaded in the browser, or made-up sample rows. */
+export type DataSource = 'live' | 'export' | 'sample';
 export type Row = Record<string, string | number | null>;
 
 export type MappingColumn = { old_column: string; new_column: string; new_type: string; method: 'exact' | 'snake_case' | 'manual'; confirmed_by: string | null };
@@ -97,7 +98,58 @@ const httpApi = {
     }).then((r) => json<Row[]>(r)),
 };
 
-// VITE_STATIC_DEMO=1 builds the online demo: same calls, answered in the browser from bundled sample data.
-// The flag is fixed at build time, so the normal build does not carry the demo data.
+// Which data the dashboard uses is decided once, at start-up:
+//   live    - GET /api/health says the backend's database is up: every call goes to the Java engine (httpApi).
+//   offline - the backend is not running, its database is down, or it does not answer within 3 s: every call is
+//             answered in the browser by src/static/staticApi.ts, from the DEV export in demo/private-data/<id>.json
+//             when there is one, else from made-up sample rows (src/static/sampleData.ts), clearly labelled.
+// `npm run build:static` (VITE_STATIC_DEMO=1) has no server, so it skips the check and starts offline.
+export type DataMode = 'live' | 'offline';
 export const isStaticDemo = import.meta.env.VITE_STATIC_DEMO === '1';
-export const api: typeof httpApi = isStaticDemo ? staticApi : httpApi;
+const HEALTH_TIMEOUT_MS = 3000;
+
+async function detectMode(): Promise<DataMode> {
+  if (isStaticDemo) return 'offline';
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), HEALTH_TIMEOUT_MS);
+  try {
+    const res = await fetch('/api/health', { signal: abort.signal, cache: 'no-store' });
+    if (!res.ok) return 'offline';
+    const body = (await res.json()) as { database?: string };
+    return body?.database === 'up' ? 'live' : 'offline';
+  } catch {
+    return 'offline';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Resolves once the start-up check is done. */
+export const dataModeReady: Promise<DataMode> = detectMode();
+let currentMode: DataMode | undefined;
+dataModeReady.then((m) => (currentMode = m));
+/** The mode once known (undefined while the check runs). Components render only after api.reports() answers. */
+export const dataMode = () => currentMode;
+
+type Api = typeof httpApi;
+// Live answers carry their source, so the page can say "Live DEV data".
+const liveApi: Api = {
+  ...httpApi,
+  reports: () => httpApi.reports().then((list) => list.map((r) => ({ ...r, dataSource: 'live' as const }))),
+  spec: (id) => httpApi.spec(id).then((s) => ({ ...s, dataSource: 'live' as const })),
+};
+// The in-browser engine is loaded only when it is needed (the single-file build inlines it).
+const backend: Promise<Api> = dataModeReady.then((m) =>
+  m === 'live' ? liveApi : import('./static/staticApi').then((mod) => mod.staticApi as Api));
+
+/** One API for every component; each call waits for the start-up check, then goes to the chosen source. */
+export const api: Api = {
+  reports: () => backend.then((a) => a.reports()),
+  spec: (id) => backend.then((a) => a.spec(id)),
+  values: (id, dim) => backend.then((a) => a.values(id, dim)),
+  dateBounds: (id) => backend.then((a) => a.dateBounds(id)),
+  calendar: (id) => backend.then((a) => a.calendar(id)),
+  mapping: (id) => backend.then((a) => a.mapping(id)),
+  importReport: (yaml, sql, publish) => backend.then((a) => a.importReport(yaml, sql, publish)),
+  query: (id, body) => backend.then((a) => a.query(id, body)),
+};

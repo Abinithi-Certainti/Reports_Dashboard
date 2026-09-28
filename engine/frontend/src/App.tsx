@@ -10,7 +10,8 @@ import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
-import { api, isStaticDemo } from './api';
+import { api, DataSource, dataMode, isStaticDemo } from './api';
+import { SAMPLE_ORANGE, SOURCE_LABEL, sourceColour } from './dataSource';
 import { alpha } from '@mui/material/styles';
 import { ThemeName, useTokens } from './theme';
 import Aurora from './components/Aurora';
@@ -34,13 +35,15 @@ function useHashRoute(): string[] {
   return parts;
 }
 
-type ReportState = 'ready' | 'no-data' | 'cannot';
-const STATE_LABEL: Record<ReportState, string> = { ready: 'Real DEV data', 'no-data': 'DEV data not loaded', cannot: 'Cannot show yet' };
+/** A report that opens shows where its rows come from; the others say why they cannot show. */
+type ReportState = DataSource | 'no-data' | 'cannot';
+const STATE_LABEL: Record<ReportState, string> = { ...SOURCE_LABEL, 'no-data': 'Could not load', cannot: 'Cannot show yet' };
+const isOpen = (s: ReportState): s is DataSource => s === 'live' || s === 'export' || s === 'sample';
 
 function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state: ReportState; active: boolean; onPick: () => void }) {
   const t = useTokens();
   const sound = useSound();
-  const dot = state === 'ready' ? t.good : state === 'no-data' ? '#f59e0b' : t.textMuted;
+  const dot = isOpen(state) ? sourceColour(state, t) : state === 'no-data' ? SAMPLE_ORANGE : t.textMuted;
   return (
     <Tooltip title={STATE_LABEL[state]} placement="right">
       <ButtonBase
@@ -79,8 +82,8 @@ function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state:
           aria-label={STATE_LABEL[state]}
           sx={{
             width: 7, height: 7, borderRadius: '50%', flexShrink: 0, bgcolor: dot,
-            boxShadow: state === 'ready' ? `0 0 8px ${dot}` : 'none',
-            animation: state === 'ready' ? 'blink 2.4s ease-in-out infinite' : 'none',
+            boxShadow: isOpen(state) ? `0 0 8px ${dot}` : 'none',
+            animation: isOpen(state) ? 'blink 2.4s ease-in-out infinite' : 'none',
             '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } },
           }}
         />
@@ -108,15 +111,23 @@ export default function App() {
   const sound = useSound();
   const { themeName, setThemeName } = useContext(PrefsContext);
   const route = useHashRoute();
-  const [available, setAvailable] = useState<Set<string>>();
+  const [available, setAvailable] = useState<Map<string, DataSource>>();
   const [search, setSearch] = useState('');
   const [drawer, setDrawer] = useState(false);
 
   useEffect(() => {
-    api.reports().then((list) => setAvailable(new Set(list.map((r) => r.id)))).catch(() => setAvailable(new Set()));
+    api.reports()
+      .then((list) => setAvailable(new Map(list.map((r) => [r.id, r.dataSource ?? 'live']))))
+      .catch(() => setAvailable(new Map()));
   }, []);
 
-  const stateOf = (e: CatalogEntry): ReportState => (available?.has(e.id) ? 'ready' : e.whyNot ? 'cannot' : 'no-data');
+  const stateOf = (e: CatalogEntry): ReportState => available?.get(e.id) ?? (e.whyNot ? 'cannot' : 'no-data');
+  const mode = available ? dataMode() : undefined;
+  // The legend lists the states on screen, so it never shows a colour that is not in the list.
+  const legend = useMemo(
+    () => (['live', 'export', 'sample', 'no-data', 'cannot'] as ReportState[]).filter((s) => CATALOG.some((e) => stateOf(e) === s)),
+    [available],
+  );
   const [section, id] = route;
   const current = CATALOG.find((e) => section === 'r' && e.id === id) ?? CATALOG.find((e) => available?.has(e.id)) ?? CATALOG[0];
   const shown = useMemo(
@@ -128,7 +139,7 @@ export default function App() {
   const page = !available
     ? null
     : available.has(current.id)
-      ? <ReportPage key={current.id} reportId={current.id} entry={current} />
+      ? <ReportPage key={current.id} reportId={current.id} entry={current} source={available.get(current.id)!} />
       : <NotReadyPage key={current.id} entry={current} />;
 
   const sidebar = (
@@ -158,7 +169,7 @@ export default function App() {
 
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', px: 1.25, mb: 1 }}>
         <Typography sx={{ fontSize: '0.66rem', letterSpacing: '0.16em', color: t.textMuted, fontWeight: 700 }}>REPORTS</Typography>
-        <Typography sx={{ fontSize: '0.66rem', color: t.textMuted, fontFamily: t.mono }}>{readyCount}/{CATALOG.length} live</Typography>
+        <Typography sx={{ fontSize: '0.66rem', color: t.textMuted, fontFamily: t.mono }}>{readyCount}/{CATALOG.length} {mode === 'live' ? 'live' : 'open'}</Typography>
       </Box>
       <Box sx={{ overflowY: 'auto', flex: 1, pr: 0.5 }}>
         {shown.map((e, i) => (
@@ -171,14 +182,16 @@ export default function App() {
 
       <Box sx={{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' }}>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 1 }}>
-          {([['ready', t.good], ['no-data', '#f59e0b'], ['cannot', t.textMuted]] as const).map(([s, c]) => (
+          {legend.map((s) => (
             <Box key={s} sx={{ display: 'flex', alignItems: 'center', gap: 0.6, fontSize: '0.66rem', color: t.textSecondary }}>
-              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: c }} />{STATE_LABEL[s]}
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: isOpen(s) ? sourceColour(s, t) : s === 'no-data' ? SAMPLE_ORANGE : t.textMuted }} />{STATE_LABEL[s]}
             </Box>
           ))}
         </Box>
-        <Typography sx={{ fontSize: '0.7rem', color: t.textMuted }}>{isStaticDemo ? 'Data from' : 'Connected to'}</Typography>
-        <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary }}>{isStaticDemo ? 'DEV export · in your browser' : 'PostgreSQL DEV · read-only'}</Typography>
+        <Typography sx={{ fontSize: '0.7rem', color: t.textMuted }}>{mode === 'live' ? 'Connected to' : 'Data from'}</Typography>
+        <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary }}>
+          {mode === 'live' ? 'PostgreSQL DEV · read-only' : mode === 'offline' ? (isStaticDemo ? 'Offline copy · in your browser' : 'No DEV connection · in your browser') : 'Checking the connection…'}
+        </Typography>
       </Box>
     </Box>
   );

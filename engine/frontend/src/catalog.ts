@@ -1,5 +1,5 @@
 // The 10 business-priority reports, in their agreed order. The nav bar always lists all 10. A report opens when the
-// engine has it (built, and in the online copy: its DEV export is loaded); otherwise its page says why it cannot show.
+// engine has it (built, and offline: from its DEV export or made-up sample rows); otherwise its page says why it cannot show.
 export type CatalogEntry = { no: number; id: string; title: string; jira?: string; whyNot?: string };
 
 export const CATALOG: CatalogEntry[] = [

@@ -12,7 +12,9 @@ type Base = Omit<QueryRequest, 'measures'>;
 type Node = { key: string; label: string; depth: number; cells: Map<string, number>; total: number; children: Node[] };
 
 function buildTree(rows: Row[], rowDims: string[], colDim: string, measure: string): { roots: Node[]; columns: string[]; grand: Node } {
-  const columns = Array.from(new Set(rows.map((r) => String(r[colDim])))).sort();
+  // Numbers (e.g. retail period 9, 10) sort as numbers; dates and text as text.
+  const columns = Array.from(new Set(rows.map((r) => String(r[colDim])))).sort((a, b) =>
+    (/^-?\d+(\.\d+)?$/.test(a) && /^-?\d+(\.\d+)?$/.test(b) ? Number(a) - Number(b) : a < b ? -1 : a > b ? 1 : 0));
   const grand: Node = { key: '', label: 'Total', depth: -1, cells: new Map(), total: 0, children: [] };
   for (const r of rows) {
     const col = String(r[colDim]);
@@ -138,7 +140,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
               <TableRow>
                 <TableCell sx={{ ...firstColSx, zIndex: 3 }}>{rowDims.map((d) => spec.dimensions[d].label).join(' › ')}</TableCell>
                 {tree.columns.map((c) => (
-                  <TableCell key={c} align="right" sx={{ whiteSpace: 'nowrap' }}>{formatDay(c)}</TableCell>
+                  <TableCell key={c} align="right" sx={{ whiteSpace: 'nowrap' }}>{spec.dimensions[colDim]?.type === 'date' ? formatDay(c) : c}</TableCell>
                 ))}
                 <TableCell align="right">Total</TableCell>
               </TableRow>
