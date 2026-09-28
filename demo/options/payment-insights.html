@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment Mix Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root {
+    --a1: #22d3ee; --a2: #a78bfa; --a3: #3b82f6; --good: #34d399; --bad: #f87171;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --bg: #eef2f8; --panel: rgba(255,255,255,.86); --line: #e2e7f0; --text: #0b1324; --text2: #4e5a70; --muted: #8390a5; --track: #e8edf5;
+    color-scheme: light;
+  }
+  html[data-mode="dark"] {
+    color-scheme: dark;
+    --bg: #04060d; --panel: rgba(12,18,32,.62); --line: rgba(148,163,184,.15); --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --track: rgba(148,163,184,.12);
+  }
+  html[data-mode="light"] { --a1: #0891b2; --a2: #7c3aed; --a3: #2563eb; --good: #0f8a4f; --bad: #c93434; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 48px; background: var(--bg); color: var(--text); font: 13px/1.45 Inter, "Segoe UI", system-ui, sans-serif; transition: background .4s, color .4s;
+         background-image: radial-gradient(700px 300px at 10% 0, color-mix(in srgb, var(--a1) 22%, transparent), transparent 70%), radial-gradient(600px 300px at 95% 0, color-mix(in srgb, var(--a2) 20%, transparent), transparent 70%); background-repeat: no-repeat; }
+  .bar-top { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
+  .bar-top b { font-size: .7rem; letter-spacing: .12em; color: var(--muted); }
+  .bar-top button { border: 1px solid var(--line); background: var(--panel); color: var(--text2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .bar-top button[aria-pressed="true"] { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; border-color: transparent; font-weight: 600; }
+  .bar-top span { color: var(--muted); font-size: .75rem; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { margin: 6px 0 0; font-size: 1.45rem; letter-spacing: -.02em; }
+  .lead { margin: 2px 0 0; color: var(--text2); max-width: 75ch; }
+  .opt { display: grid; gap: 8px; }
+  .opt-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .opt-h .tag { font: 700 .72rem var(--mono); letter-spacing: .14em; color: var(--a1); }
+  .opt-h h2 { margin: 0; font-size: 1.05rem; }
+  .opt-h p { margin: 0; color: var(--text2); flex-basis: 100%; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; backdrop-filter: blur(14px); }
+  h3 { margin: 0 0 8px; font-size: .68rem; letter-spacing: .12em; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tiles { display: grid; gap: 10px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .tile small { display: block; font-size: .64rem; letter-spacing: .1em; color: var(--text2); text-transform: uppercase; font-weight: 600; }
+  .tile b { display: block; font: 700 1.15rem var(--mono); margin-top: 2px; }
+  .tile em { font-style: normal; font-size: .72rem; color: var(--muted); }
+  .rank { display: grid; gap: 7px; }
+  .rank div { display: grid; grid-template-columns: 22px 92px minmax(0, 1fr) 62px 76px; gap: 8px; align-items: center; }
+  .rank i { display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--a3), var(--a1)); }
+  .rank .t { height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; }
+  .rank .n { font: 700 .66rem var(--mono); color: var(--muted); }
+  .chip { font-size: .66rem; padding: 1px 6px; border-radius: 6px; font-weight: 700; }
+  .up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .down { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+  .donut-wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .legend { display: grid; gap: 6px; flex: 1; min-width: 180px; }
+  .legend div { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 8px; align-items: center; }
+  .legend s { width: 10px; height: 10px; border-radius: 3px; display: block; }
+  .heat { width: 100%; border-collapse: separate; border-spacing: 3px; }
+  .heat th { font-size: .66rem; color: var(--muted); font-weight: 600; text-align: center; padding: 2px; }
+  .heat th:first-child { text-align: left; }
+  .heat td { text-align: center; border-radius: 6px; padding: 6px 2px; font: 600 .74rem var(--mono); }
+  .heat td:first-child { text-align: left; font: 500 .78rem Inter, sans-serif; background: none !important; color: var(--text); }
+  .split { display: flex; height: 26px; border-radius: 8px; overflow: hidden; margin: 6px 0 4px; }
+  .split span { display: grid; place-items: center; color: #fff; font: 700 .72rem var(--mono); }
+  .note { color: var(--muted); font-size: .72rem; }
+  svg text { font-family: Inter, sans-serif; }
+  @media (max-width: 820px) { .row { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top" role="group" aria-label="Mode">
+    <b>MODE</b>
+    <button type="button" data-m="dark" aria-pressed="true">☾ Dark</button>
+    <button type="button" data-m="light" aria-pressed="false">☀ Light</button>
+    <span>Made-up example numbers, only to show each idea.</span>
+  </div>
+  <div>
+    <h1>Payment-type insights: pick the ones you want</h1>
+    <p class="lead">Each block is one idea for the Tender Report. You can pick several, for example "A and C". They all follow the page filters (plaza, brand, dates). They use only the tender amount per payment type, which DEV already has.</p>
+  </div>
+
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION A</span><h2>Payment summary tiles</h2><p>One row of small cards: the most used payment type, the least used one, card share, cash share, and how many payment types were used.</p></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION B</span><h2>Ranking: largest to smallest</h2><p>Every payment type ranked by amount, with its share of the total and the change against the previous period of the same length.</p></div>
+    <div class="panel"><h3>Payment types ranked</h3><div class="rank" id="rank"></div></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION C</span><h2>Payment mix donut</h2><p>The share of each payment type as a ring, largest first. Small types are grouped as "Other" so the ring stays readable.</p></div>
+    <div class="row">
+      <div class="panel"><h3>Payment mix</h3><div class="donut-wrap"><svg id="donut" width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="Payment mix donut"></svg><div class="legend" id="legend"></div></div></div>
+      <div class="panel"><h3>Cash vs card and other</h3><div class="split" id="split"></div><p class="note">The bar shows how the total splits between cash and every other payment type.</p><div class="tiles" style="grid-template-columns:1fr 1fr;margin-top:10px" id="split-tiles"></div></div>
+    </div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION D</span><h2>Mix by plaza (heatmap)</h2><p>For each plaza, the share of each payment type. A darker cell means a bigger share, so plazas that pay very differently stand out, e.g. a plaza with much more cash.</p></div>
+    <div class="panel" style="overflow-x:auto"><h3>Share of each payment type by plaza</h3><table class="heat" id="heat"></table></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION E</span><h2>Mix over time</h2><p>How the share of each payment type moves day by day (stacked to 100%). It shows trends like card use growing.</p></div>
+    <div class="panel"><h3>Daily payment mix (share of the day's total)</h3><svg id="area" width="100%" height="200" viewBox="0 0 1000 200" preserveAspectRatio="none" role="img" aria-label="Daily payment mix"></svg><div class="legend" id="area-legend" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));display:grid;margin-top:8px"></div></div>
+  </section>
+</div>
+<script>
+// Made-up example values, only to show each idea.
+const PT = [['Visa', 41300, 6.2], ['Cash', 31220, -3.1], ['Mastercard', 28950, 4.4], ['Debit Card', 22410, 1.2], ['Amex', 4570, -0.8], ['Gift Card', 1830, 9.5], ['Discover', 640, -12.0]];
+const total = PT.reduce((s, p) => s + p[1], 0);
+const fmt = (n) => '$' + Math.round(n).toLocaleString('en-CA');
+const pct = (n) => (n * 100).toFixed(1) + '%';
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function colours() { return [css('--a1'), css('--a2'), css('--a3'), '#f472b6', '#fbbf24', '#34d399', '#94a3b8']; }
+function draw() {
+  const C = colours();
+  const cash = PT.find((p) => p[0] === 'Cash')[1];
+  document.getElementById('tiles').innerHTML = [
+    ['Most used', PT[0][0], `${fmt(PT[0][1])} · ${pct(PT[0][1] / total)}`],
+    ['Least used', PT[PT.length - 1][0], `${fmt(PT[PT.length - 1][1])} · ${pct(PT[PT.length - 1][1] / total)}`],
+    ['Card & other share', pct((total - cash) / total), fmt(total - cash)],
+    ['Cash share', pct(cash / total), fmt(cash)],
+    ['Payment types used', String(PT.length), 'in the selected days'],
+  ].map(([l, v, e]) => `<div class="panel tile"><small>${l}</small><b>${v}</b><em>${e}</em></div>`).join('');
+
+  document.getElementById('rank').innerHTML = PT.map(([n, v, d], i) => `<div><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${n}</span><span class="t"><i style="width:${(v / PT[0][1] * 100).toFixed(1)}%"></i></span><span class="num" style="text-align:right">${pct(v / total)}</span><span style="text-align:right"><span class="chip ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}%</span></span></div>`).join('');
+
+  // donut: top 5 + Other
+  const top = PT.slice(0, 5), other = PT.slice(5).reduce((s, p) => s + p[1], 0);
+  const parts = [...top.map((p) => [p[0], p[1]]), ['Other', other]];
+  let a0 = -Math.PI / 2; const R = 80, r = 52, cx = 90, cy = 90;
+  const arc = (a, rad) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];
+  document.getElementById('donut').innerHTML = parts.map(([n, v], i) => {
+    const a1 = a0 + (v / total) * Math.PI * 2 - 0.012; const large = a1 - a0 > Math.PI ? 1 : 0;
+    const [x0, y0] = arc(a0, R), [x1, y1] = arc(a1, R), [x2, y2] = arc(a1, r), [x3, y3] = arc(a0, r);
+    const d = `M${x0},${y0} A${R},${R} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${large} 0 ${x3},${y3} Z`;
+    a0 = a1 + 0.012; return `<path d="${d}" fill="${C[i]}"><title>${n}: ${pct(v / total)}</title></path>`;
+  }).join('') + `<text x="90" y="86" text-anchor="middle" font-size="11" fill="${css('--text2')}">Total</text><text x="90" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="${css('--text')}">${fmt(total)}</text>`;
+  document.getElementById('legend').innerHTML = parts.map(([n, v], i) => `<div><s style="background:${C[i]}"></s><span>${n}</span><span class="num">${fmt(v)}</span><span class="num" style="color:var(--text2)">${pct(v / total)}</span></div>`).join('');
+  document.getElementById('split').innerHTML = `<span style="width:${cash / total * 100}%;background:${C[3]}">Cash ${pct(cash / total)}</span><span style="width:${(total - cash) / total * 100}%;background:linear-gradient(90deg,${C[2]},${C[0]})">Card & other ${pct((total - cash) / total)}</span>`;
+  document.getElementById('split-tiles').innerHTML = `<div class="panel tile"><small>Cash</small><b>${fmt(cash)}</b></div><div class="panel tile"><small>Card & other</small><b>${fmt(total - cash)}</b></div>`;
+
+  // heatmap
+  const plazas = ['Barrie', 'Cambridge North', 'Innisfil', 'Napanee', 'Port Hope', 'Woodstock'];
+  const cols = ['Visa', 'Cash', 'Mastercard', 'Debit Card', 'Amex'];
+  const seed = (i, j) => { const x = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453; return x - Math.floor(x); };
+  const rows = plazas.map((p, i) => { const w = cols.map((c, j) => (5 - j) * 0.6 + seed(i, j) * 2.2); const s = w.reduce((a, b) => a + b, 0); return [p, w.map((x) => x / s)]; });
+  const max = Math.max(...rows.flatMap((r) => r[1]));
+  document.getElementById('heat').innerHTML = `<tr><th>Plaza</th>${cols.map((c) => `<th>${c}</th>`).join('')}</tr>` + rows.map(([p, v]) =>
+    `<tr><td>${p}</td>${v.map((x) => { const k = x / max; return `<td style="background:color-mix(in srgb, ${C[0]} ${Math.round(12 + k * 70)}%, transparent);color:${k > .6 ? '#fff' : css('--text')}">${pct(x)}</td>`; }).join('')}</tr>`).join('');
+
+  // stacked area 100%
+  const days = 14, series = ['Visa', 'Cash', 'Mastercard', 'Debit Card', 'Other'];
+  const vals = Array.from({ length: days }, (_, d) => { const w = series.map((s, j) => (5 - j) + Math.sin(d / 2 + j) * .6 + (j === 0 ? d * .05 : 0) - (j === 1 ? d * .05 : 0)); const t = w.reduce((a, b) => a + b, 0); return w.map((x) => x / t); });
+  let base = Array(days).fill(0); const W = 1000, H = 200;
+  document.getElementById('area').innerHTML = series.map((s, j) => {
+    const top = base.map((b, d) => b + vals[d][j]);
+    const pts = top.map((v, d) => `${d / (days - 1) * W},${H - v * H}`).join(' ');
+    const bottom = base.map((v, d) => `${d / (days - 1) * W},${H - v * H}`).reverse().join(' ');
+    base = top; return `<polygon points="${pts} ${bottom}" fill="${C[j]}" fill-opacity=".85"><title>${s}</title></polygon>`;
+  }).join('');
+  document.getElementById('area-legend').innerHTML = series.map((s, j) => `<div style="display:flex;gap:6px;align-items:center"><s style="width:10px;height:10px;border-radius:3px;display:block;background:${C[j]}"></s>${s}</div>`).join('');
+}
+document.querySelectorAll('.bar-top button').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.mode = b.dataset.m;
+  document.querySelectorAll('.bar-top button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  draw();
+}));
+const m = new URLSearchParams(location.search).get('m');
+if (m) document.querySelector(`.bar-top button[data-m="${m}"]`)?.click(); else draw();
+</script>
+</body>
+</html>
