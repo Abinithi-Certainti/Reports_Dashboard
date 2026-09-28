@@ -1,13 +1,14 @@
 -- Financial Reports (AG-82). Source of truth for the old report: extracts/financial-reports/01_model.md
--- Uses QA tables only: pos_orders, pos_order_details, pos_order_paid_outs, location_code_mappings.
+-- Runs on DEV (decision 2026-09-28): pos_orders, pos_order_details, pos_order_paid_outs, location_code_mappings,
+-- and netsuite_location_mapping for the plaza name (joined on location code = ct_location).
 -- One row per day, store and item group. Each amount column is 0 on the other groups' rows, so every measure is a sum.
 --   hst            = POS order tax
 --   gift_card      = gift card sales (department Gift Card, Retail - gift card, Tim Card, gift cards - any case, as in DAX)
 --   donations      = department Donations, or the menu item Camp Day Bracelet, by donation item (kitchen name)
 --   lottery_amount = lottery sales (Instant Tickets, Open Lottery) minus redemptions (Lottery Redemption / Lottery
 --                    Payout items, and every cash paid out, as in the old report)
--- Plaza: QA has no plaza names, only the plaza number inside location_code_mappings.description
--- ("ONRoute : TIM23 : 23 TIM HORTONS"). Plaza shows as "Plaza 23" until a plaza-name lookup is added.
+-- Plaza: the name from netsuite_location_mapping. A store with no match falls back to the plaza number inside
+-- location_code_mappings.description ("ONRoute : TIM23 : 23 TIM HORTONS" -> "Plaza 23").
 -- District Director is not in QA, so it is not offered as a filter here.
 -- location_code_mappings holds 120 rows for 115 stores, so one row per store is kept (the lowest location_code).
 -- No semicolons anywhere in this file, comments included.
@@ -15,9 +16,13 @@ WITH store AS (
     SELECT DISTINCT ON (m.store_id)
            m.store_id,
            m.location_code,
-           'Plaza ' || split_part(split_part(m.description, ' : ', 3), ' ', 1) AS plaza,
+           coalesce(n.plaza_name, 'Plaza ' || split_part(split_part(m.description, ' : ', 3), ' ', 1)) AS plaza,
            upper(trim(substr(split_part(m.description, ' : ', 3), strpos(split_part(m.description, ' : ', 3), ' ') + 1))) AS brand
     FROM master.location_code_mappings m
+    LEFT JOIN (SELECT ct_location, min(trim(location_name)) AS plaza_name
+               FROM master.netsuite_location_mapping
+               WHERE ct_location IS NOT NULL
+               GROUP BY ct_location) n ON n.ct_location = m.location_code
     ORDER BY m.store_id, m.location_code
 ), items AS (
     SELECT o.end_day::date AS day, o.store_id, CAST(NULL AS text) AS donation_item,

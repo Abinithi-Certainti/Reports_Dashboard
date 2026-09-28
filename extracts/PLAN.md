@@ -25,7 +25,16 @@ Formulas, tables, mappings and fields matter most. Matching the old numbers exac
 | 9 | Sales Report Field Team | AG-81 | extracted |
 | 10 | Financial Reports (HST, Gift Card, Donations, Lottery) | AG-82 | extracted; 2 helper queries needed |
 
-## Data rule v2 (the user, 2026-09-28, replaces v1 below)
+## Data rule v3 (the user, 2026-09-28, replaces v2 and v1 below)
+- **The reports use the DEV database** (kios_etl DEV, schema master) - decided by the user after a Power BI developer's
+  advice, and after the QA vs DEV comparison (`extracts/new-db/qa_vs_dev_2026-09-28.md`).
+- Why: DEV holds the store mapping, district directors, retail calendar, COGS and budgets that QA lacks.
+- Known gaps on DEV: labour (employee_pay_summary) and temp_dlh are empty; people_count and car_count are empty;
+  sales are thin (few orders per store per day, May-July 2026); no last-year sales.
+- Still: no mock data, no fixed dates, SELECT only. The demo is labelled "DEV data".
+- The QA-only SQL is kept (e.g. `reports/tender-report/dataset.qa.sql`) for switching back later.
+
+## Data rule v2 (superseded by v3)
 - **Remove all mock / sample data.** Every report shows only data loaded from the QA database.
 - **No fixed dates.** Each report uses whatever date range QA holds; the date filter opens on QA's available days.
 - A report whose tables are not in QA shows a clear "no QA data yet" state instead of made-up rows.

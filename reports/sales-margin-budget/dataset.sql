@@ -15,7 +15,7 @@
 WITH loc AS (
     SELECT DISTINCT store_id, ct_location, host_location_id, brand_name, location_name
     FROM master.netsuite_location_mapping
-    WHERE host_location_id IS NOT NULL AND rollout IN ('Yes', 'Suspended')
+    WHERE host_location_id IS NOT NULL AND lower(trim(rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too (King City TIM03)
 ), facts AS (
     SELECT o.end_day::date AS day, l.host_location_id, l.brand_name AS brand_raw,
            sum(o.net) AS net_sales, 0::numeric AS card_fees, 0::numeric AS deposits, count(o.order_id) AS transactions,

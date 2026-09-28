@@ -1,7 +1,6 @@
 # Tender Report - spec for the report engine.
 # Source of truth for the old report: db/seeds/001_tender_report.sql and extracts/tender-report/.
-# Data: QA only (dataset.sql). Plaza = "Plaza <number>" from location_code_mappings; District Director is empty
-# until district_directors is loaded into QA.
+# Data: DEV (dataset.sql, netsuite_location_mapping + district_directors). The QA-only version is dataset.qa.sql
 id: tender-report
 title: Tender Report
 subtitle: Tenders by payment type, store and day

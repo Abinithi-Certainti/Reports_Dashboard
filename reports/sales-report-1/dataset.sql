@@ -30,7 +30,7 @@ WITH plaza_rename (old_name, new_name) AS (
            END AS brand
     FROM master.netsuite_location_mapping m
     LEFT JOIN plaza_rename r ON r.old_name = trim(m.location_name)
-    WHERE m.host_location_id IS NOT NULL AND m.rollout IN ('Yes', 'Suspended')
+    WHERE m.host_location_id IS NOT NULL AND lower(trim(m.rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too (King City TIM03)
 ), lb AS (
     -- The old report's "LB name": plaza (Bainsville / Morrisburg without " ON S") + space + brand, upper case.
     SELECT DISTINCT host_location_id, brand, upper(plaza_base || ' ' || brand) AS lb_name FROM loc

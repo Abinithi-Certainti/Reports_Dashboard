@@ -6,7 +6,7 @@ WITH loc AS (
     -- same filter as the old WeeklyCogs query: rolled-out locations only, matched on CTLocation
     SELECT DISTINCT ct_location, location_name, brand_name, host_location_id
     FROM master.netsuite_location_mapping
-    WHERE host_location_id IS NOT NULL AND rollout IN ('Yes', 'Suspended')
+    WHERE host_location_id IS NOT NULL AND lower(trim(rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too (King City TIM03)
 )
 SELECT w.period,
        loc.location_name                                    AS plaza,
