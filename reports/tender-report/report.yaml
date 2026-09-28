@@ -51,6 +51,18 @@ visuals:
     title: Tender amount by payment type
     rows: [payment_type]
     values: [tender_amount]
+  - type: donut
+    title: Payment mix
+    rows: [payment_type]
+    values: [tender_amount]
+    limit: 5            # the 5 largest payment types, the rest added up as "Other"
+    span: 6
+  - type: split
+    title: Cash vs card and other
+    rows: [payment_type]
+    values: [tender_amount]
+    highlight: [Cash]
+    span: 6
   - type: leaderboard
     title: Top stores
     rows: [plaza, brand]

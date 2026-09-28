@@ -24,9 +24,14 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
   const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures: [measure] });
   const [hover, setHover] = useState<number | null>(null);
 
-  const items = (rows ?? []).map((r, i) => ({
-    name: String(r[dim] ?? '(Blank)'), value: Number(r[measure] ?? 0), colour: c.palette[i % c.palette.length],
-  }));
+  // Largest first. With `limit`, the smaller slices are added up as one "Other" slice so the ring stays readable.
+  const sorted = (rows ?? [])
+    .map((r) => ({ name: String(r[dim] ?? '(Blank)'), value: Number(r[measure] ?? 0) }))
+    .sort((a, b) => (visual.limit ? b.value - a.value : 0));
+  const kept = visual.limit && sorted.length > visual.limit + 1
+    ? [...sorted.slice(0, visual.limit), { name: 'Other', value: sorted.slice(visual.limit).reduce((s, x) => s + x.value, 0) }]
+    : sorted;
+  const items = kept.map((x, i) => ({ ...x, colour: c.palette[i % c.palette.length] }));
   const total = items.reduce((s, x) => s + Math.max(0, x.value), 0);
   const focus = hover !== null ? items[hover] : null;
 

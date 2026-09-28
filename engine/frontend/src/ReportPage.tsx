@@ -12,6 +12,7 @@ import BarChartVisual from './components/BarChartVisual';
 import MatrixVisual from './components/MatrixVisual';
 import LineChartVisual from './components/LineChartVisual';
 import DonutVisual from './components/DonutVisual';
+import SplitVisual from './components/SplitVisual';
 import LeaderboardVisual from './components/LeaderboardVisual';
 import Reveal from './components/Reveal';
 import { Visual } from './api';
@@ -20,9 +21,9 @@ import ReportHeader from './components/ReportHeader';
 import { alpha } from '@mui/material/styles';
 
 /** Default width of each visual on the 12-column grid (a report can override it with `span`). */
-const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12 };
+const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12, split: 6 };
 const COMPONENTS = {
-  table: SummaryTable, bar: BarChartVisual, matrix: MatrixVisual, line: LineChartVisual, donut: DonutVisual, leaderboard: LeaderboardVisual,
+  table: SummaryTable, bar: BarChartVisual, matrix: MatrixVisual, line: LineChartVisual, donut: DonutVisual, leaderboard: LeaderboardVisual, split: SplitVisual,
 } as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
