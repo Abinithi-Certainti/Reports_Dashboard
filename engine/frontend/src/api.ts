@@ -6,7 +6,7 @@ export type Dimension = { label: string; type: string | null };
 export type Measure = { label: string; format: 'currency' | 'percent' | 'number' | null };
 export type Mode = { type: string; label: string };
 export type Calculation = { label: string; of: string; format: string; modes: Record<string, Mode>; default_mode: string };
-export type Filter = { dimension: string; type: 'multi_select' | 'date_range' | 'retail_week'; default_last_days?: number };
+export type Filter = { dimension: string; type: 'multi_select' | 'date_range' | 'retail_week'; default_last_days?: number; open_on?: string };
 /** One retail week (Sunday to Saturday), from the report's retail calendar. */
 export type RetailWeek = { retail_year: number; retail_period: number; retail_week: number; week_start: string; week_end: string };
 export type KpiItem = {

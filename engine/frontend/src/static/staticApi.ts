@@ -9,28 +9,27 @@ import type { ImportCheck, ImportResult, Mapping, QueryRequest, ReportSummary, R
 import tenderYaml from '../../../../reports/tender-report/report.yaml?raw';
 import tenderSql from '../../../../reports/tender-report/dataset.sql?raw';
 import tenderMapping from '../../../../reports/tender-report/mapping.json';
-import tenderRows from '../../../../demo/static-data/tender-rows.json';
-import paidoutSql from '../../../../demo/import-example/paidout-report/dataset.sql?raw';
-import paidoutRows from '../../../../demo/static-data/paidout-rows.json';
 import wasteYaml from '../../../../reports/waste-report/report.yaml?raw';
 import wasteSql from '../../../../reports/waste-report/dataset.sql?raw';
+import marketYaml from '../../../../reports/market-category/report.yaml?raw';
+import marketSql from '../../../../reports/market-category/dataset.sql?raw';
 import salesMarginYaml from '../../../../reports/sales-margin-budget/report.yaml?raw';
 import salesMarginSql from '../../../../reports/sales-margin-budget/dataset.sql?raw';
-import salesMarginRows from '../../../../demo/static-data/sales-margin-rows.json';
 import salesReport1Yaml from '../../../../reports/sales-report-1/report.yaml?raw';
 import salesReport1Sql from '../../../../reports/sales-report-1/dataset.sql?raw';
+import budget2026Yaml from '../../../../reports/sales-budget-2026/report.yaml?raw';
+import budget2026Sql from '../../../../reports/sales-budget-2026/dataset.sql?raw';
+import fieldTeamYaml from '../../../../reports/sales-field-team/report.yaml?raw';
+import fieldTeamSql from '../../../../reports/sales-field-team/dataset.sql?raw';
 import financialYaml from '../../../../reports/financial-reports/report.yaml?raw';
 import financialSql from '../../../../reports/financial-reports/dataset.sql?raw';
-import financialSampleRows from '../../../../demo/static-data/financial-rows.json';
 
-// Real figures live in demo/private-data/ (git-ignored - the repository is public). The glob is empty when the
-// folder is absent, so a build from a fresh clone simply leaves the real-data report out.
-const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, DataRow[]>;
-const privateRows = (file: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${file}`))?.[1];
-const wasteRows = privateRows('waste-rows.json');
-const salesReport1Rows = privateRows('sales-report-1-qa-rows.json');
-// Real QA rows when the private export exists, otherwise the made-up sample (tools/make_financial_sample.sql).
-const financialQaRows = privateRows('financial-reports-qa-rows.json');
+// No made-up data: every report shows only real DEV rows from demo/private-data/<report id>.json (git-ignored - the
+// repository is public), written by tools/private_to_json.py from the user's DEV export. A report without its file is
+// left out of this copy, and its page says the data is not loaded. The glob is empty in a fresh clone.
+type PrivateFile = { exported_on: string; source: string; row_cap_hit: boolean; rows: DataRow[] };
+const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, PrivateFile>;
+const privateFile = (id: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${id}.json`))?.[1];
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
@@ -44,35 +43,36 @@ type FullSpec = Omit<Spec, 'dimensions' | 'measures' | 'sampleDataNotice'> & {
 type Report = { spec: FullSpec; rows: DataRow[]; builtIn: boolean; yaml: string; sql: string; eval: Record<string, Agg> };
 type Agg = (rows: DataRow[]) => number | null;
 
-/** Banner per report: real-data reports say so plainly; everything else is sample data. */
-const REAL_DATA_NOTICES: Record<string, { title: string; text: string }> = {
-  'waste-report': {
+/** Banner on every report: where its real rows come from, and whether the export was cut off. */
+function dataNotice(id: string): { title: string; text: string } {
+  const f = privateFile(id)!;
+  const cut = f.row_cap_hit
+    ? ' The export stopped at its row limit, so some days or plazas are missing and totals are too low.'
+    : '';
+  return {
     title: 'Real DEV data.',
-    text: 'Burger King, week ending Saturday 27 June 2026: one total per plaza from the new database (kios_etl, DEV), '
-      + 'not yet compared with Power BI. Category, item and district detail are not included in this copy.',
-  },
-  'sales-report-1': {
-    title: 'Real QA data.',
-    text: 'Store 101518 only, 6 to 21 September 2026 (the first and last day are part days), from the new database (kios_etl, QA). '
-      + 'Not yet compared with Power BI. Its plaza and brand are not known yet, so labour hours and SPLH are not loaded. '
-      + 'QA holds no 2025 data, so every PY and YOY % is empty and YOY equals this year.',
-  },
-};
-const NOTICE = 'All stores, names and amounts on this page are made up. The layout and calculations are real; the numbers are not.';
+    text: `${f.source}, exported ${f.exported_on}. Not yet compared with Power BI.${cut}`,
+  };
+}
 const STORE_KEY = 're.imported';
 
 class BadRequest extends Error {}
 
 // ---------- datasets: the SQL text decides which bundled rows an uploaded report may use ----------
 const normalise = (sql: string) => cleanSql(sql).replace(/--[^\n]*/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-const DATASETS: { sql: string; rows: DataRow[] }[] = [
-  { sql: normalise(tenderSql), rows: tenderRows as DataRow[] },
-  { sql: normalise(paidoutSql), rows: paidoutRows as DataRow[] },
-  { sql: normalise(salesMarginSql), rows: salesMarginRows as DataRow[] },
-  ...(wasteRows ? [{ sql: normalise(wasteSql), rows: wasteRows }] : []),
-  ...(salesReport1Rows ? [{ sql: normalise(salesReport1Sql), rows: salesReport1Rows }] : []),
-  { sql: normalise(financialSql), rows: (financialQaRows ?? financialSampleRows) as DataRow[] },
+const BUILT_IN: [string, string, string][] = [
+  ['tender-report', tenderYaml, tenderSql],
+  ['waste-report', wasteYaml, wasteSql],
+  ['market-category', marketYaml, marketSql],
+  ['sales-margin-budget', salesMarginYaml, salesMarginSql],
+  ['sales-report-1', salesReport1Yaml, salesReport1Sql],
+  ['sales-budget-2026', budget2026Yaml, budget2026Sql],
+  ['sales-field-team', fieldTeamYaml, fieldTeamSql],
+  ['financial-reports', financialYaml, financialSql],
 ];
+const DATASETS: { sql: string; rows: DataRow[] }[] = BUILT_IN
+  .filter(([id]) => privateFile(id))
+  .map(([id, , sql]) => ({ sql: normalise(sql), rows: privateFile(id)!.rows }));
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
 function compileMeasure(expr: string, columns: Set<string>): Agg {
@@ -274,16 +274,9 @@ function register(yaml: string, sql: string, builtIn: boolean) {
   const d = dryRun(p.spec, p.sql);
   reports.set(p.spec.id, { spec: p.spec, rows: d.rows, eval: d.eval, builtIn, yaml, sql });
 }
-register(tenderYaml, tenderSql, true);
 // A report that fails its checks is left out and logged; it must never stop the other reports from loading.
-const builtIns: [string, string, string, boolean][] = [
-  ['waste-report', wasteYaml, wasteSql, !!wasteRows],
-  ['sales-margin-budget', salesMarginYaml, salesMarginSql, true],
-  ['sales-report-1', salesReport1Yaml, salesReport1Sql, !!salesReport1Rows],
-  ['financial-reports', financialYaml, financialSql, true],
-];
-for (const [id, yaml, sql, available] of builtIns) {
-  if (!available) continue;
+for (const [id, yaml, sql] of BUILT_IN) {
+  if (!privateFile(id)) continue;
   try {
     register(yaml, sql, true);
   } catch (e) {
@@ -559,8 +552,8 @@ function publicSpec(r: Report): Spec {
   const measures: Spec['measures'] = {};
   for (const [id, m] of Object.entries(r.spec.measures)) measures[id] = { label: m.label, format: (m.format ?? null) as Spec['measures'][string]['format'] };
   const { id, title, subtitle, calculations, filters, visuals } = r.spec;
-  const real = REAL_DATA_NOTICES[id];
-  return { id, title, subtitle, sampleDataNotice: real ? real.text : NOTICE, dataNoticeTitle: real ? real.title : undefined, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
+  const notice = r.builtIn ? dataNotice(id) : { title: 'Uploaded report.', text: 'Runs on the same rows as the built-in report with this SQL.' };
+  return { id, title, subtitle, sampleDataNotice: notice.text, dataNoticeTitle: notice.title, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
 }
 
 // Answers arrive a moment later, like a real request, so loading states still show.
@@ -624,7 +617,10 @@ export const staticApi = {
     const d = dateDimension(r.spec);
     if (!d) throw new BadRequest('This report has no date dimension');
     const days = r.rows.map((x) => x[d.column]).filter((v) => v !== null).map(String).sort();
-    return { min_date: days[0], max_date: days[days.length - 1] };
+    // open_on: the latest day where that column is not 0 (as SqlBuilder.dateBounds), else the latest day.
+    const openOn = r.spec.filters.find((f) => f.open_on && f.type !== 'multi_select')?.open_on;
+    const withValue = openOn ? r.rows.filter((x) => x[d.column] !== null && Number(x[openOn] ?? 0) !== 0).map((x) => String(x[d.column])).sort() : [];
+    return { min_date: days[0], max_date: withValue[withValue.length - 1] ?? days[days.length - 1] };
   }),
   calendar: (id: string) => later<RetailWeek[]>(() => {
     if (!report(id).spec.calendar) throw new BadRequest('This report has no retail calendar');

@@ -87,11 +87,18 @@ public final class SqlBuilder {
         return new Built(sql, List.of());
     }
 
-    /** Earliest and latest date in the dataset, for the date filter. */
+    /**
+     * Earliest and latest date in the dataset, for the date filter. With {@code open_on}, the latest date is the last
+     * day where that column is not 0 (e.g. the last day with sales when the budget runs further ahead).
+     */
     public static Built dateBounds(ReportSpec spec) {
         Dimension dim = requireDate(dateDimension(spec));
-        String sql = "WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT min(d." + dim.column() + ") AS min_date, max(d."
-                + dim.column() + ") AS max_date FROM d";
+        String openOn = spec.filters() == null ? null : spec.filters().stream()
+                .filter(f -> f.openOn() != null && !"multi_select".equals(f.type())).map(ReportSpec.Filter::openOn).findFirst().orElse(null);
+        String max = openOn == null ? "max(d." + dim.column() + ")"
+                : "coalesce(max(CASE WHEN d." + openOn + " <> 0 THEN d." + dim.column() + " END), max(d." + dim.column() + "))";
+        String sql = "WITH d AS (\n" + spec.datasetSql() + "\n)\nSELECT min(d." + dim.column() + ") AS min_date, " + max
+                + " AS max_date FROM d";
         return new Built(sql, List.of());
     }
 

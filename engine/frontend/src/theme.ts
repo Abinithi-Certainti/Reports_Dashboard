@@ -118,7 +118,7 @@ export function buildTheme(t: Tokens): Theme {
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          html: { colorScheme: t.mode },
+          html: { colorScheme: t.mode, '--re-accent': t.accent },
           body: {
             backgroundColor: t.bg,
             backgroundImage: t.bgImage,

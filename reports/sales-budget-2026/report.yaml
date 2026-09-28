@@ -143,7 +143,7 @@ filters:
   - { dimension: agm,               type: multi_select }
   - { dimension: plaza,             type: multi_select }
   - { dimension: brand,             type: multi_select }
-  - { dimension: day,               type: date_range, default_last_days: 7 }
+  - { dimension: day,               type: date_range, default_last_days: 7, open_on: net_sales }   # budget runs ahead of sales: open on the last day with sales
 
 visuals:
   - type: kpi

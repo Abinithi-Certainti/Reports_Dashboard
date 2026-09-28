@@ -74,35 +74,26 @@ Reconciling against the production Power BI report needs production-like data.
 4. **Bar chart** of the same summary.
 5. **Detail grid** - Plaza > Brand > Payment Type by day, expand/collapse, sticky first column, totals.
 
-## Try the import (no code change)
-
-1. Open **Import report** in the side menu.
-2. Press **Use the example: Paid-outs Report** (or drop the two files from `demo/import-example/paidout-report/`).
-3. Press **Check it**, then **Publish**, then **Open report**.
-
-Set `REPORTS_IMPORT_DIR` to choose where uploaded reports are saved (default `./imported-reports`).
-
 ## Not in this demo yet
 
 - Microsoft sign-in (needs the company's Azure app registration)
 - Excel export
 - Per-user data restriction (waiting on decision 4)
 
-## Online demo (no server)
+## Online copy (no server) - real DEV rows from your exports
 
-One HTML file that runs the whole demo inside the browser: the Tender Report, Mapping Studio and import. Useful for
-showing people who cannot run the Java engine.
+One HTML file that runs the dashboard inside the browser: the side menu lists the 10 reports, nothing else. There is
+no made-up data: a report shows only when its DEV export is loaded; otherwise its page says why it cannot show.
 
-```bash
-cd engine/frontend
-npm ci
-npm run build:static        # writes dist-static/index.html (about 2.7 MB, everything inside)
-```
+1. Regenerate the export queries after any `dataset.sql` change: `bash tools/make_dev_exports.sh`.
+2. Run `tools/dev_export/<report>.sql` on DEV and save the **whole** result (not only the rows shown on screen) as
+   `demo/private-data/dev_<report>.csv`.
+3. Convert it: `python3 tools/private_to_json.py <report> demo/private-data/dev_<report>.csv`. It writes
+   `demo/private-data/<report>.json` and warns when the file has exactly 20,000 rows (a cut-off export).
+4. Build: `cd engine/frontend && npm ci && npm run build:static` - writes `dist-static/index.html`.
 
-- The sample rows come from `demo/static-data/*.json`, exported from the `tender_demo` database by running each
-  report's `dataset.sql`. They are made up, like `sample_data.sql`.
+- `demo/private-data/` is git-ignored: the repository is public, so real figures never go into git. The built
+  `dist-static/index.html` contains those figures too - it is git-ignored as well, share it only privately.
 - `src/static/staticApi.ts` answers the same API calls in the browser, with the same filter, sorting, % to Total
-  and import-check rules as the Java engine. Checked by comparing the page text with the real engine: identical
-  apart from the sidebar labels.
-- One difference: there is no database, so an uploaded report can only use one of the bundled datasets (the example
-  Paid-outs Report works). Uploads are kept in that browser only.
+  and date rules as the Java engine.
+- Live mode (Mode B above) needs no exports: the backend reads every report straight from DEV.

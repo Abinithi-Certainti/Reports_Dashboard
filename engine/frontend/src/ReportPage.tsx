@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, CircularProgress, Container, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Container } from '@mui/material';
 import { useTokens } from './theme';
 import { api, QueryRequest, Spec } from './api';
 import { addDays } from './format';
@@ -13,6 +13,9 @@ import DonutVisual from './components/DonutVisual';
 import LeaderboardVisual from './components/LeaderboardVisual';
 import Reveal from './components/Reveal';
 import { Visual } from './api';
+import { CatalogEntry } from './catalog';
+import ReportHeader from './components/ReportHeader';
+import { alpha } from '@mui/material/styles';
 
 /** Default width of each visual on the 12-column grid (a report can override it with `span`). */
 const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12 };
@@ -21,7 +24,7 @@ const COMPONENTS = {
 } as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */
-export default function ReportPage({ reportId }: { reportId: string }) {
+export default function ReportPage({ reportId, entry }: { reportId: string; entry: CatalogEntry }) {
   const tokens = useTokens();
   const [spec, setSpec] = useState<Spec>();
   const [filters, setFilters] = useState<FilterState>();
@@ -64,42 +67,36 @@ export default function ReportPage({ reportId }: { reportId: string }) {
 
   if (error) return <Container sx={{ py: 4 }}><Alert severity="error">{error}</Alert></Container>;
   if (!spec || !filters || !base || !defaults) {
-    return <Box sx={{ display: 'grid', placeItems: 'center', py: 10 }}><CircularProgress /></Box>;
+    return <Box sx={{ display: 'grid', placeItems: 'center', py: 12 }}><CircularProgress thickness={2.5} size={46} /></Box>;
   }
 
   return (
     <Container maxWidth={false} sx={{ py: 3, maxWidth: 1500 }}>
-      <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-        <Box>
-          <Typography
-            variant="h1"
-            sx={{
-              background: `linear-gradient(90deg, ${tokens.textPrimary} 25%, ${tokens.accent} 70%, ${tokens.accent2})`,
-              WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-            }}
-          >
-            {spec.title}
-          </Typography>
-          {spec.subtitle && <Typography sx={{ color: tokens.textSecondary }}>{spec.subtitle}</Typography>}
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
-          <Box
-            sx={{
-              width: 8, height: 8, borderRadius: '50%', bgcolor: tokens.good, boxShadow: `0 0 10px ${tokens.good}`,
-              animation: 'pulse 2s ease-in-out infinite',
-              '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
-            }}
-          />
-          {weekLabel(filters) ?? `${filters.dateFrom} → ${filters.dateTo}`}
-        </Box>
-      </Box>
+      <ReportHeader
+        entry={entry}
+        subtitle={spec.subtitle}
+        status={spec.dataNoticeTitle?.replace(/\.$/, '') ?? 'Live'}
+        statusColour={tokens.good}
+        right={(
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: tokens.textSecondary, fontSize: '0.8rem', fontFamily: tokens.mono }}>
+            <Box
+              sx={{
+                width: 8, height: 8, borderRadius: '50%', bgcolor: tokens.good, boxShadow: `0 0 10px ${tokens.good}`,
+                animation: 'pulse 2s ease-in-out infinite',
+                '@keyframes pulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
+              }}
+            />
+            {weekLabel(filters) ?? `${filters.dateFrom} → ${filters.dateTo}`}
+          </Box>
+        )}
+      />
       {spec.sampleDataNotice && (
         <Alert
-          severity="warning"
+          severity="info"
           variant="outlined"
-          sx={{ mb: 2, bgcolor: 'rgba(251,191,36,0.08)', borderColor: 'rgba(245,158,11,0.45)', color: tokens.mode === 'light' ? '#92400e' : '#fde68a' }}
+          sx={{ mb: 2, bgcolor: alpha(tokens.accent, 0.06), borderColor: alpha(tokens.accent, 0.35), color: tokens.textSecondary, '& .MuiAlert-icon': { color: tokens.accent } }}
         >
-          <strong>{spec.dataNoticeTitle ?? 'Sample data.'}</strong> {spec.sampleDataNotice}
+          <strong style={{ color: tokens.textPrimary }}>{spec.dataNoticeTitle ?? 'Data.'}</strong> {spec.sampleDataNotice}
         </Alert>
       )}
 

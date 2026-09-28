@@ -27,6 +27,15 @@ export default function Aurora() {
       <Box sx={blob(t.aurora[0], '60vmax', { left: '-18vmax', top: '-22vmax' }, 'driftA', 46)} />
       <Box sx={blob(t.aurora[1], '52vmax', { right: '-16vmax', top: '-12vmax' }, 'driftB', 58)} />
       <Box sx={blob(t.aurora[2], '48vmax', { left: '30vw', bottom: '-30vmax' }, 'driftC', 52)} />
+      {t.mode === 'dark' && (
+        <Box
+          sx={{
+            position: 'absolute', left: 0, right: 0, height: '28vh', top: '-30vh',
+            background: `linear-gradient(180deg, transparent, ${t.aurora[0]}14, transparent)`,
+            animation: 'scan 14s linear infinite', '@keyframes scan': { from: { transform: 'translateY(0)' }, to: { transform: 'translateY(160vh)' } },
+          }}
+        />
+      )}
     </Box>
   );
 }

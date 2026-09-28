@@ -60,7 +60,7 @@ filters:
   - { dimension: district_director, type: multi_select }
   - { dimension: plaza,             type: multi_select }
   - { dimension: brand,             type: multi_select }
-  - { dimension: day,               type: retail_week }
+  - { dimension: day,               type: retail_week, open_on: net_sales }   # budget runs ahead of sales: open on the last week with sales
 
 visuals:
   - type: kpi

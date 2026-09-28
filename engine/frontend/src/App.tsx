@@ -1,29 +1,26 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import {
-  Avatar, Box, ButtonBase, Chip, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
+  Avatar, Box, ButtonBase, Drawer, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from '@mui/material';
-import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
-import AccountTreeRoundedIcon from '@mui/icons-material/AccountTreeRounded';
-import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import { api, isStaticDemo, ReportSummary } from './api';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import { api, isStaticDemo } from './api';
 import { alpha } from '@mui/material/styles';
 import { ThemeName, useTokens } from './theme';
 import Aurora from './components/Aurora';
 import { useSound } from './sound';
 import { PrefsContext } from './prefs';
 import ReportPage from './ReportPage';
-import HomePage from './pages/HomePage';
-import MappingStudio from './pages/MappingStudio';
-import ImportPage from './pages/ImportPage';
+import NotReadyPage from './NotReadyPage';
+import { CATALOG, CatalogEntry } from './catalog';
 
-/** Routes: #/ home, #/r/<id> report, #/mapping[/<id>] mapping studio, #/import import. */
+/** Routes: #/r/<id> opens a report. Anything else opens the first report that can show. */
 function useHashRoute(): string[] {
   const [hash, setHash] = useState(window.location.hash);
   useEffect(() => {
@@ -33,31 +30,76 @@ function useHashRoute(): string[] {
   }, []);
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   // Old links like #/tender-report still work.
-  if (parts.length === 1 && !['mapping', 'import', 'r'].includes(parts[0])) return ['r', parts[0]];
+  if (parts.length === 1 && parts[0] !== 'r') return ['r', parts[0]];
   return parts;
 }
 
-function NavItem({ href, icon, label, active, badge }: { href: string; icon: JSX.Element; label: string; active: boolean; badge?: string }) {
+type ReportState = 'ready' | 'no-data' | 'cannot';
+const STATE_LABEL: Record<ReportState, string> = { ready: 'Real DEV data', 'no-data': 'DEV data not loaded', cannot: 'Cannot show yet' };
+
+function NavItem({ entry, state, active, onPick }: { entry: CatalogEntry; state: ReportState; active: boolean; onPick: () => void }) {
   const t = useTokens();
   const sound = useSound();
+  const dot = state === 'ready' ? t.good : state === 'no-data' ? '#f59e0b' : t.textMuted;
   return (
-    <ButtonBase
-      href={href}
-      onClick={() => sound.play('click')}
-      sx={{
-        width: '100%', justifyContent: 'flex-start', gap: 1.5, px: 1.5, py: 1.1, borderRadius: '12px', mb: 0.5,
-        color: active ? t.textPrimary : t.textSecondary, fontWeight: active ? 650 : 500, fontSize: '0.92rem',
-        background: active ? `linear-gradient(90deg, ${alpha(t.accent, t.mode === 'light' ? 0.12 : 0.16)}, ${alpha(t.accent2, 0.06)})` : 'transparent',
-        boxShadow: active ? `inset 0 0 0 1px ${alpha(t.accent, t.glow ? 0.35 : 0.18)}${t.glow ? `, 0 0 18px -6px ${t.glow}` : ''}` : 'none',
-        position: 'relative', transition: 'background .2s ease, color .2s ease',
-        '&:hover': { background: alpha(t.accent, 0.07), color: t.textPrimary, '& .nav-icon': { transform: 'scale(1.12)' } },
-        '&::before': active ? { content: '""', position: 'absolute', left: -12, top: 10, bottom: 10, width: 3, borderRadius: 3, background: t.accent } : {},
-      }}
-    >
-      <Box className="nav-icon" sx={{ display: 'grid', placeItems: 'center', color: active ? t.accent : 'inherit', transition: 'transform .2s ease' }}>{icon}</Box>
-      <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</Box>
-      {badge && <Chip size="small" label={badge} sx={{ height: 20, fontSize: '0.68rem', bgcolor: `${t.accent}22`, color: t.accent }} />}
-    </ButtonBase>
+    <Tooltip title={STATE_LABEL[state]} placement="right">
+      <ButtonBase
+        href={`#/r/${entry.id}`}
+        onClick={() => { sound.play('click'); onPick(); }}
+        sx={{
+          width: '100%', justifyContent: 'flex-start', gap: 1.25, px: 1.25, py: 1, borderRadius: '12px', mb: 0.5,
+          color: active ? t.textPrimary : t.textSecondary, fontWeight: active ? 650 : 500, fontSize: '0.88rem',
+          background: active ? `linear-gradient(90deg, ${alpha(t.accent, t.mode === 'light' ? 0.14 : 0.18)}, ${alpha(t.accent2, 0.05)})` : 'transparent',
+          boxShadow: active ? `inset 0 0 0 1px ${alpha(t.accent, t.glow ? 0.4 : 0.2)}${t.glow ? `, 0 0 22px -6px ${t.glow}` : ''}` : 'none',
+          position: 'relative', overflow: 'hidden', transition: 'background .25s ease, color .25s ease, transform .25s ease',
+          opacity: state === 'cannot' && !active ? 0.62 : 1,
+          '&:hover': { background: alpha(t.accent, 0.08), color: t.textPrimary, transform: 'translateX(3px)' },
+          // A light sweep crosses the active item now and then.
+          '&::after': active ? {
+            content: '""', position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: `linear-gradient(100deg, transparent 30%, ${alpha(t.accent, 0.18)} 50%, transparent 70%)`,
+            transform: 'translateX(-100%)', animation: 'sweep 4.5s ease-in-out infinite',
+            '@keyframes sweep': { '0%': { transform: 'translateX(-100%)' }, '35%,100%': { transform: 'translateX(100%)' } },
+          } : {},
+          '&::before': active ? { content: '""', position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 3, background: `linear-gradient(${t.accent}, ${t.accent2})`, boxShadow: `0 0 10px ${t.accent}` } : {},
+        }}
+      >
+        <Box
+          sx={{
+            fontFamily: t.mono, fontSize: '0.7rem', fontWeight: 700, minWidth: 26, height: 22, borderRadius: '7px', display: 'grid', placeItems: 'center',
+            color: active ? (t.mode === 'light' ? '#fff' : t.bg) : t.textMuted,
+            background: active ? `linear-gradient(135deg, ${t.accent}, ${t.accent2})` : alpha(t.textMuted, 0.12),
+            transition: 'background .25s ease',
+          }}
+        >
+          {String(entry.no).padStart(2, '0')}
+        </Box>
+        <Box sx={{ flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.title}</Box>
+        <Box
+          aria-label={STATE_LABEL[state]}
+          sx={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0, bgcolor: dot,
+            boxShadow: state === 'ready' ? `0 0 8px ${dot}` : 'none',
+            animation: state === 'ready' ? 'blink 2.4s ease-in-out infinite' : 'none',
+            '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.4 } },
+          }}
+        />
+      </ButtonBase>
+    </Tooltip>
+  );
+}
+
+function Clock() {
+  const t = useTokens();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <Typography sx={{ fontFamily: t.mono, fontSize: '0.78rem', color: t.textSecondary, display: { xs: 'none', md: 'block' }, fontVariantNumeric: 'tabular-nums' }}>
+      {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+    </Typography>
   );
 }
 
@@ -66,103 +108,122 @@ export default function App() {
   const sound = useSound();
   const { themeName, setThemeName } = useContext(PrefsContext);
   const route = useHashRoute();
-  const [reports, setReports] = useState<ReportSummary[]>([]);
+  const [available, setAvailable] = useState<Set<string>>();
   const [search, setSearch] = useState('');
+  const [drawer, setDrawer] = useState(false);
 
-  const refresh = useCallback(() => {
-    api.reports().then(setReports).catch(() => setReports([]));
+  useEffect(() => {
+    api.reports().then((list) => setAvailable(new Set(list.map((r) => r.id)))).catch(() => setAvailable(new Set()));
   }, []);
-  useEffect(refresh, [refresh]);
 
+  const stateOf = (e: CatalogEntry): ReportState => (available?.has(e.id) ? 'ready' : e.whyNot ? 'cannot' : 'no-data');
   const [section, id] = route;
-  const page =
-    section === 'r' && id ? <ReportPage key={id} reportId={id} />
-      : section === 'mapping' ? <MappingStudio reportId={id ?? 'tender-report'} reports={reports} />
-        : section === 'import' ? <ImportPage onPublished={refresh} />
-          : <HomePage reports={reports} search={search} />;
+  const current = CATALOG.find((e) => section === 'r' && e.id === id) ?? CATALOG.find((e) => available?.has(e.id)) ?? CATALOG[0];
+  const shown = useMemo(
+    () => CATALOG.filter((e) => `${e.no} ${e.title} ${e.jira ?? ''}`.toLowerCase().includes(search.trim().toLowerCase())),
+    [search],
+  );
+  const readyCount = available ? CATALOG.filter((e) => available.has(e.id)).length : 0;
+
+  const page = !available
+    ? null
+    : available.has(current.id)
+      ? <ReportPage key={current.id} reportId={current.id} entry={current} />
+      : <NotReadyPage key={current.id} entry={current} />;
+
+  const sidebar = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2, pl: 2.25 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 0.5, py: 1, mb: 2.5 }}>
+        <Box
+          aria-hidden
+          sx={{
+            width: 38, height: 38, borderRadius: '12px', display: 'grid', placeItems: 'center', position: 'relative',
+            background: `conic-gradient(from 200deg, ${t.accent}, ${t.accent2}, ${t.series1}, ${t.accent})`,
+            boxShadow: t.glow ? `0 0 24px ${t.glow}` : `0 6px 18px -6px ${alpha(t.accent, 0.6)}`,
+            animation: 'hue 12s linear infinite', '@keyframes hue': { to: { filter: 'hue-rotate(360deg)' } },
+            '&::after': {
+              content: '""', position: 'absolute', inset: -4, borderRadius: '15px', border: `1px solid ${alpha(t.accent, 0.5)}`,
+              animation: 'ring 2.8s ease-out infinite',
+              '@keyframes ring': { from: { opacity: 0.9, transform: 'scale(.9)' }, to: { opacity: 0, transform: 'scale(1.35)' } },
+            },
+          }}
+        >
+          <InsightsRoundedIcon sx={{ color: '#fff', fontSize: 21 }} />
+        </Box>
+        <Box>
+          <Typography sx={{ fontWeight: 800, lineHeight: 1.1, color: t.textPrimary, letterSpacing: '-0.01em' }}>Report Engine</Typography>
+          <Typography sx={{ fontSize: '0.7rem', color: t.textMuted, fontFamily: t.mono }}>Certainti · Reports 2.0</Typography>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', px: 1.25, mb: 1 }}>
+        <Typography sx={{ fontSize: '0.66rem', letterSpacing: '0.16em', color: t.textMuted, fontWeight: 700 }}>REPORTS</Typography>
+        <Typography sx={{ fontSize: '0.66rem', color: t.textMuted, fontFamily: t.mono }}>{readyCount}/{CATALOG.length} live</Typography>
+      </Box>
+      <Box sx={{ overflowY: 'auto', flex: 1, pr: 0.5 }}>
+        {shown.map((e, i) => (
+          <Box key={e.id} sx={{ animation: 'navIn .5s cubic-bezier(.2,.8,.2,1) both', animationDelay: `${i * 40}ms`, '@keyframes navIn': { from: { opacity: 0, transform: 'translateX(-10px)' }, to: { opacity: 1, transform: 'none' } } }}>
+            <NavItem entry={e} state={stateOf(e)} active={e.id === current.id} onPick={() => setDrawer(false)} />
+          </Box>
+        ))}
+        {shown.length === 0 && <Typography sx={{ px: 1.5, py: 1, fontSize: '0.82rem', color: t.textMuted }}>No report matches “{search}”.</Typography>}
+      </Box>
+
+      <Box sx={{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' }}>
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 1 }}>
+          {([['ready', t.good], ['no-data', '#f59e0b'], ['cannot', t.textMuted]] as const).map(([s, c]) => (
+            <Box key={s} sx={{ display: 'flex', alignItems: 'center', gap: 0.6, fontSize: '0.66rem', color: t.textSecondary }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: c }} />{STATE_LABEL[s]}
+            </Box>
+          ))}
+        </Box>
+        <Typography sx={{ fontSize: '0.7rem', color: t.textMuted }}>{isStaticDemo ? 'Data from' : 'Connected to'}</Typography>
+        <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary }}>{isStaticDemo ? 'DEV export · in your browser' : 'PostgreSQL DEV · read-only'}</Typography>
+      </Box>
+    </Box>
+  );
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       <Aurora />
-      {/* ---------------- sidebar ---------------- */}
       <Box
         component="nav"
         sx={{
-          width: 248, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', p: 2, pl: 2.5, display: { xs: 'none', md: 'flex' },
-          flexDirection: 'column', background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`,
-          transition: 'background .4s ease',
+          width: 272, flexShrink: 0, position: 'sticky', zIndex: 2, top: 0, height: '100vh', display: { xs: 'none', md: 'block' },
+          background: t.sidebar, backdropFilter: t.blur, borderRight: `1px solid ${t.panelBorder}`, transition: 'background .4s ease',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 0.5, py: 1, mb: 2 }}>
-          <Box
-            aria-hidden
-            sx={{
-              width: 34, height: 34, borderRadius: '11px', display: 'grid', placeItems: 'center',
-              background: `conic-gradient(from 200deg, ${t.accent}, ${t.accent2}, ${t.series1}, ${t.accent})`,
-              boxShadow: t.glow ? `0 0 20px ${t.glow}` : 'none',
-              animation: 'spin 12s linear infinite', '@keyframes spin': { to: { filter: 'hue-rotate(360deg)' } },
-            }}
-          >
-            <InsightsRoundedIcon sx={{ color: '#fff', fontSize: 20 }} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontWeight: 750, lineHeight: 1.1, color: t.textPrimary }}>Report Engine</Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Online demo' : 'Certainti · Reports 2.0'}</Typography>
-          </Box>
-        </Box>
-
-        <Typography sx={{ fontSize: '0.68rem', letterSpacing: '0.14em', color: t.textMuted, fontWeight: 650, px: 1.5, mb: 1 }}>MAIN MENU</Typography>
-        <NavItem href="#/" icon={<DashboardRoundedIcon fontSize="small" />} label="Overview" active={!section} />
-        <NavItem href="#/mapping" icon={<AccountTreeRoundedIcon fontSize="small" />} label="Mapping Studio" active={section === 'mapping'} />
-        <NavItem href="#/import" icon={<CloudUploadRoundedIcon fontSize="small" />} label="Import report" active={section === 'import'} />
-
-        <Typography sx={{ fontSize: '0.68rem', letterSpacing: '0.14em', color: t.textMuted, fontWeight: 650, px: 1.5, mt: 2.5, mb: 1 }}>
-          REPORTS · {reports.length}
-        </Typography>
-        <Box sx={{ overflowY: 'auto', flex: 1, pr: 0.5 }}>
-          {reports.map((r) => (
-            <NavItem
-              key={r.id}
-              href={`#/r/${r.id}`}
-              icon={<InsightsRoundedIcon fontSize="small" />}
-              label={r.title}
-              active={section === 'r' && id === r.id}
-              badge={r.imported ? 'new' : undefined}
-            />
-          ))}
-        </Box>
-
-        <Box sx={{ ...{ p: 1.5, borderRadius: '14px', border: `1px solid ${t.panelBorder}`, background: t.mode === 'light' ? '#f8fafc' : 'rgba(148,163,184,0.05)' } }}>
-          <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>{isStaticDemo ? 'Runs in' : 'Connected to'}</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: t.good, boxShadow: `0 0 8px ${t.good}` }} />
-            <Typography sx={{ fontSize: '0.74rem', fontFamily: t.mono, color: t.textPrimary, whiteSpace: 'nowrap' }}>{isStaticDemo ? 'your browser · no server' : 'PostgreSQL · read-only'}</Typography>
-          </Box>
-        </Box>
+        {sidebar}
       </Box>
+      <Drawer open={drawer} onClose={() => setDrawer(false)} PaperProps={{ sx: { width: 280, background: t.panelSolid, borderRadius: 0 } }}>
+        {sidebar}
+      </Drawer>
 
-      {/* ---------------- main ---------------- */}
       <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
         <Box
           component="header"
           sx={{
             position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: 1.5, px: { xs: 2, md: 3 }, py: 1.5,
-            background: t.headerBar, backdropFilter: 'blur(14px) saturate(140%)',
-            borderBottom: `1px solid ${t.panelBorder}`,
+            background: t.headerBar, backdropFilter: 'blur(14px) saturate(140%)', borderBottom: `1px solid ${t.panelBorder}`,
+            '&::after': {
+              content: '""', position: 'absolute', left: 0, right: 0, bottom: -1, height: '1px',
+              background: `linear-gradient(90deg, transparent, ${t.accent}, ${t.accent2}, transparent)`, backgroundSize: '200% 100%',
+              animation: 'line 6s linear infinite', '@keyframes line': { from: { backgroundPosition: '200% 0' }, to: { backgroundPosition: '-200% 0' } },
+              opacity: 0.7,
+            },
           }}
         >
+          <IconButton aria-label="Open the report list" onClick={() => setDrawer(true)} sx={{ display: { md: 'none' } }}><MenuRoundedIcon /></IconButton>
           <TextField
             size="small"
-            placeholder="Search reports…"
+            placeholder="Find a report…"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              if (section) window.location.hash = '#/';
-            }}
-            sx={{ width: { xs: 180, sm: 320 } }}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: { sm: 240, md: 300 }, display: { xs: 'none', sm: 'inline-flex' } }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" /></InputAdornment> }}
           />
           <Box sx={{ flex: 1 }} />
+          <Clock />
           <ToggleButtonGroup
             size="small"
             exclusive
@@ -185,14 +246,17 @@ export default function App() {
             </IconButton>
           </Tooltip>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 1 }}>
-            <Avatar sx={{ width: 34, height: 34, fontSize: '0.85rem', fontWeight: 700, bgcolor: t.accent, color: t.mode === 'light' ? '#fff' : t.bg }}>AG</Avatar>
+            <Avatar sx={{ width: 34, height: 34, fontSize: '0.85rem', fontWeight: 700, background: `linear-gradient(135deg, ${t.accent}, ${t.accent2})`, color: t.mode === 'light' ? '#fff' : t.bg }}>AG</Avatar>
             <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
               <Typography sx={{ fontSize: '0.85rem', fontWeight: 650, lineHeight: 1.1, color: t.textPrimary }}>Abinithi</Typography>
               <Typography sx={{ fontSize: '0.72rem', color: t.textMuted }}>Full stack developer</Typography>
             </Box>
           </Box>
         </Box>
-        <Box key={route.join('/')} sx={{ animation: 'pageIn .45s ease both', '@keyframes pageIn': { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'none' } } }}>
+        <Box
+          key={current.id}
+          sx={{ animation: 'pageIn .55s cubic-bezier(.2,.8,.2,1) both', '@keyframes pageIn': { from: { opacity: 0, transform: 'translateY(10px)', filter: 'blur(4px)' }, to: { opacity: 1, transform: 'none', filter: 'none' } } }}
+        >
           {page}
         </Box>
       </Box>

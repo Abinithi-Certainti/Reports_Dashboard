@@ -190,6 +190,7 @@ public class ReportRegistry {
                         "filter type must be one of " + String.join(", ", new java.util.TreeSet<>(FILTER_TYPES)) + " (found " + f.type() + ")");
                 ReportSpec.Dimension d = spec.dimensions().get(f.dimension());
                 require(d != null, file, "filter uses unknown dimension " + f.dimension());
+                require(f.openOn() == null || IDENTIFIER.matcher(f.openOn()).matches(), file, "bad open_on on filter " + f.dimension());
                 if (!"multi_select".equals(f.type())) {
                     require(d.isDate(), file, "a " + f.type() + " filter needs a date dimension (" + f.dimension() + " is not)");
                 }

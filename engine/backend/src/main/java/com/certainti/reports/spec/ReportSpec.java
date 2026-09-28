@@ -73,7 +73,9 @@ public record ReportSpec(
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Filter(String dimension, String type, @JsonProperty("default_last_days") Integer defaultLastDays) {
+    /** {@code open_on}: a date filter opens on the latest day where this dataset column is not 0 (default: the latest day). */
+    public record Filter(String dimension, String type, @JsonProperty("default_last_days") Integer defaultLastDays,
+                         @JsonProperty("open_on") String openOn) {
     }
 
     /**
