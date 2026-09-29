@@ -51,16 +51,16 @@ visuals:
       - { label: Waste % of COGS,    measure: waste_pct,    good_direction: down, icon: count }
       - { label: Variance,           measure: variance,     good_direction: down, icon: cash }
       - { label: Variance % of COGS, measure: variance_pct, good_direction: down, icon: store }
-  - type: waterfall
+  - type: flow
     title: From stock to cost of goods
     values: [begin_value, purchase_value, transfer_out, end_value]
     signs:  ['+', '+', '-', '-']
     total: cogs          # any gap between the steps and COGS is shown as "Other adjustments", not hidden
     span: 6
-  - type: stack
-    title: COGS by plaza - expected cost, waste and variance
+  - type: bubble
+    title: Which plazas lose the most - variance % of COGS
     rows: [plaza]
-    values: [theo_cost, waste, variance]
+    values: [cogs, variance_pct, waste]   # across, up, bubble size
     span: 6
   - type: heatmap
     title: Waste % of COGS - plaza by category

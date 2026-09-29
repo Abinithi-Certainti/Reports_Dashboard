@@ -34,7 +34,7 @@ public class ReportRegistry {
     private static final Pattern STARTS_WITH_SELECT = Pattern.compile("^\\s*(--[^\\n]*\\n\\s*|/\\*.*?\\*/\\s*)*(select|with)\\b",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     static final java.util.Set<String> VISUAL_TYPES = java.util.Set.of("kpi", "line", "table", "bar", "matrix", "donut", "leaderboard", "split",
-            "waterfall", "stack", "heatmap", "bullet");
+            "waterfall", "stack", "heatmap", "bullet", "flow", "bubble");
     static final java.util.Set<String> FILTER_TYPES = java.util.Set.of("multi_select", "date_range", "retail_week");
     static final java.util.Set<String> WINDOWS = java.util.Set.of("wtd", "ptd", "mtd", "ytd", "py", "yoy", "yoy_pct", "py_fin", "yoy_fin", "yoy_fin_pct");
     static final java.util.Set<String> KPI_ICONS = java.util.Set.of("total", "cash", "card", "paidout", "count", "store", "trend");
