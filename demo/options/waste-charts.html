@@ -1,0 +1,152 @@
+<title>Waste Chart Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: each option is one row with the same mock shown in the dashboard's dark and light look side by side. Made-up numbers. */
+:root {
+  --page: #f3f5f9; --ink: #0f172a; --ink2: #475569; --rule: #dbe1ea;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace; --font: Inter, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #0b0f17; --ink: #e5e9f0; --ink2: #94a3b8; --rule: #1f2937; color-scheme: dark } }
+:root[data-theme="dark"] { --page: #0b0f17; --ink: #e5e9f0; --ink2: #94a3b8; --rule: #1f2937; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 14px/1.5 var(--font); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; display: grid; gap: 28px; }
+h1 { font-size: 26px; margin: 0; }
+h2 { font-size: 19px; margin: 0; }
+.lede { color: var(--ink2); margin: 4px 0 0; max-width: 75ch; }
+.opt { display: grid; gap: 10px; margin-bottom: 18px; }
+.opt-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.tag { font: 700 12px var(--mono); background: var(--ink); color: var(--page); padding: 3px 8px; border-radius: 6px; }
+.opt-head p { margin: 0; color: var(--ink2); flex-basis: 100%; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+
+/* The two dashboard looks, scoped to their panels so both show at once. */
+.th { border-radius: 14px; padding: 14px; min-width: 0; font-size: 13px;
+  --bg: #eef2f8; --panel: #ffffff; --line: #e2e7f0; --text: #0b1324; --text2: #4e5a70; --muted: #8390a5; --track: #e8edf5;
+  --a1: #2563eb; --a2: #7c3aed; --a3: #0891b2; --good: #0f8a4f; --bad: #c93434; --warn: #d97706;
+  background: var(--bg); color: var(--text); }
+.th.dark { --bg: #070b14; --panel: #0f1626; --line: rgba(148,163,184,.16); --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --track: rgba(148,163,184,.12);
+  --a1: #3b82f6; --a2: #a78bfa; --a3: #22d3ee; --good: #34d399; --bad: #f87171; --warn: #fbbf24; }
+.th .lbl { font: 600 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.card-t { font-weight: 700; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--text2); margin-bottom: 10px; }
+.num { font-family: var(--mono); font-weight: 700; }
+.mut { color: var(--muted); }
+
+/* L1 strip */
+.strip { display: grid; grid-template-columns: repeat(9, auto); align-items: center; gap: 6px; overflow-x: auto; }
+.strip .t { background: color-mix(in srgb, var(--c) 10%, transparent); border: 1px solid color-mix(in srgb, var(--c) 25%, transparent); border-radius: 10px; padding: 8px 10px; min-width: 88px; }
+.strip .t b { display: block; font: 700 15px var(--mono); }
+.strip .t span { font-size: 11px; color: var(--text2); }
+.strip .op { font: 700 18px var(--mono); color: var(--muted); }
+/* L2 one bar */
+.onebar { display: flex; height: 30px; border-radius: 8px; overflow: hidden; }
+.onebar div { display: flex; align-items: center; padding-left: 8px; color: #fff; font: 700 11px var(--mono); white-space: nowrap; overflow: hidden; }
+.leg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+/* L3 donut */
+.donut-row { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 14px; align-items: center; }
+.donut { width: 130px; height: 130px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--a2) 0 36.6%, var(--muted) 36.6% 99.8%, var(--bad) 99.8% 100%); }
+.donut div { width: 86px; height: 86px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; text-align: center; font-size: 10px; color: var(--text2); }
+.donut b { display: block; font: 700 15px var(--mono); color: var(--text); }
+/* R1 table */
+table { width: 100%; border-collapse: collapse; font-size: 12px; color: inherit; }
+th { text-align: right; font: 600 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 5px 6px; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+td { padding: 6px; border-bottom: 1px solid var(--line); text-align: right; font-family: var(--mono); }
+td:first-child { font-family: var(--font); }
+.chip { display: inline-block; padding: 2px 7px; border-radius: 999px; font: 700 11px var(--mono); }
+.chip.bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.chip.good { background: color-mix(in srgb, var(--good) 15%, transparent); color: var(--good); }
+.mini { display: inline-block; height: 6px; border-radius: 3px; background: var(--a1); vertical-align: middle; }
+/* R2 columns */
+.cols { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; align-items: end; height: 170px; padding-top: 18px; border-bottom: 1px solid var(--line); }
+.cols div { position: relative; border-radius: 6px 6px 0 0; background: var(--bad); }
+.cols div.g { background: var(--good); }
+.cols div span { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font: 700 10px var(--mono); color: var(--text); white-space: nowrap; }
+.cols-names { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin-top: 6px; font-size: 10.5px; color: var(--text2); text-align: center; }
+/* R3 tiles */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tile { border-radius: 10px; padding: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--c) calc(var(--k) * 1%), var(--panel)); }
+.tile b { display: block; font-size: 12.5px; }
+.tile .v { font: 700 16px var(--mono); color: var(--c); }
+.tile .s { font-size: 11px; color: var(--text2); }
+@media (max-width: 600px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .donut-row { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Waste report · pick the two charts</h1>
+    <p class="lede">Each option shows the dashboard's dark and light look side by side. The numbers are made up; only the look matters here. Pick one for the left (L1-L3) and one for the right (R1-R3), or mix parts.</p>
+  </header>
+
+  <h2>Left chart · from stock to cost of goods</h2>
+  <div id="left"></div>
+  <h2>Right chart · plazas</h2>
+  <div id="right"></div>
+</div>
+
+<script>
+const plazas = [
+  ['Port Hope', 180.1, 21.5, 11.9], ['Cambridge North', 124.8, 17.1, 13.7], ['Innisfil', 95.5, 8.7, 9.1], ['Woodstock', 104.6, 8.5, 8.1],
+  ['Napanee', 84.0, 8.1, 9.7], ['Barrie', 96.1, 5.2, 5.4], ['King City', 116.7, 2.9, 2.5], ['Newcastle', 57.2, -1.8, -3.2],
+];
+const money = (k) => (Math.abs(k) >= 1000 ? `$${(k / 1000).toFixed(1)}M` : `$${k.toFixed(1)}K`);
+const signed = (k) => `${k > 0 ? '+' : '−'}${money(Math.abs(k))}`;
+
+const L = {
+  L1: {
+    title: 'One-line sum', why: 'The five numbers in one short row, like a sum written across the page. Takes very little height, so the right chart gets the space.',
+    html: () => `<div class="card"><div class="card-t">From stock to cost of goods</div><div class="strip">
+      <div class="t" style="--c:var(--a1)"><span>Begin</span><b>$2.9M</b></div><div class="op">+</div>
+      <div class="t" style="--c:var(--a3)"><span>Purchase</span><b>$1.7M</b></div><div class="op">−</div>
+      <div class="t" style="--c:var(--bad)"><span>Transfers out</span><b>$7.5K</b></div><div class="op">−</div>
+      <div class="t" style="--c:var(--muted)"><span>End</span><b>$2.9M</b></div><div class="op">=</div>
+      <div class="t" style="--c:var(--a2)"><span>COGS</span><b>$1.7M</b></div></div></div>`,
+  },
+  L2: {
+    title: 'One bar: where the stock went', why: 'All the stock you had ($4.5M) as one bar, split into used, left on the shelf and transferred. One glance answers "how much did we use?"',
+    html: () => `<div class="card"><div class="card-t">Where the stock went · $4.5M available</div>
+      <div class="onebar"><div style="width:36.6%;background:var(--a2)">Used $1.7M · 37%</div><div style="width:63.2%;background:var(--muted)">Left on shelf $2.9M · 63%</div><div style="width:.4%;background:var(--bad)"></div></div>
+      <div class="leg"><span><i style="background:var(--a2)"></i>Used = COGS</span><span><i style="background:var(--muted)"></i>Left on shelf = End</span><span><i style="background:var(--bad)"></i>Transferred out $7.5K</span></div></div>`,
+  },
+  L3: {
+    title: 'Donut with COGS in the middle', why: 'The same split as L2 as a ring, with COGS big in the centre. Familiar and friendly, but takes more room.',
+    html: () => `<div class="card"><div class="card-t">Where the stock went</div><div class="donut-row">
+      <div class="donut"><div><span>COGS<b>$1.7M</b>37% used</span></div></div>
+      <div class="leg" style="flex-direction:column;margin:0"><span><i style="background:var(--a2)"></i>Used (COGS) <b class="num">$1.7M</b> · 36.6%</span>
+      <span><i style="background:var(--muted)"></i>Left on shelf (End) <b class="num">$2.9M</b> · 63.2%</span><span><i style="background:var(--bad)"></i>Transferred out <b class="num">$7.5K</b> · 0.2%</span>
+      <span class="mut">Stock available = Begin $2.9M + Purchase $1.7M</span></div></div></div>`,
+  },
+};
+const R = {
+  R1: {
+    title: 'Plaza table with colour chips', why: 'A plain table: COGS, waste and variance per plaza, worst first. Variance % sits in a red or green chip. Easy to read out loud in a meeting.',
+    html: () => `<div class="card"><div class="card-t">Plazas · worst variance first</div><table>
+      <thead><tr><th>Plaza</th><th>COGS</th><th>Variance</th><th>% of COGS</th></tr></thead><tbody>
+      ${plazas.map(([n, c, v, p]) => `<tr><td>${n}</td><td><span class="mini" style="width:${c / 4}px"></span> ${money(c)}</td><td style="color:var(--${v > 0 ? 'bad' : 'good'})">${signed(v)}</td><td><span class="chip ${v > 0 ? 'bad' : 'good'}">${p.toFixed(1)}%</span></td></tr>`).join('')}
+      </tbody></table></div>`,
+  },
+  R2: {
+    title: 'Column chart', why: 'Standing columns for variance per plaza, worst on the left, value on top. The classic Power BI look people already know.',
+    html: () => `<div class="card"><div class="card-t">Variance by plaza</div>
+      <div class="cols">${plazas.map(([, , v]) => `<div class="${v < 0 ? 'g' : ''}" style="height:${Math.max(4, Math.abs(v) / 21.5 * 100)}%"><span>${signed(v)}</span></div>`).join('')}</div>
+      <div class="cols-names">${plazas.map(([n]) => `<span>${n.split(' ')[0]}</span>`).join('')}</div></div>`,
+  },
+  R3: {
+    title: 'Plaza tiles', why: 'One small card per plaza with its variance and % of COGS; the redder the card, the worse. Good for spotting the problem plazas at a glance.',
+    html: () => `<div class="card"><div class="card-t">Plazas · variance against expected cost</div><div class="tiles">
+      ${plazas.map(([n, c, v, p]) => `<div class="tile" style="--c:var(--${v > 0 ? 'bad' : 'good'});--k:${Math.round(Math.min(1, Math.abs(p) / 14) * 22)}"><b>${n}</b><span class="v">${signed(v)}</span><div class="s">${p.toFixed(1)}% of ${money(c)} COGS</div></div>`).join('')}
+      </div></div>`,
+  },
+};
+function draw(el, set) {
+  document.getElementById(el).innerHTML = Object.entries(set).map(([k, o]) => `<section class="opt">
+    <div class="opt-head"><span class="tag">${k}</span><h2>${o.title}</h2><p>${o.why}</p></div>
+    <div class="pair"><div class="th dark"><span class="lbl">Dark</span>${o.html()}</div><div class="th"><span class="lbl">Light</span>${o.html()}</div></div></section>`).join('');
+}
+draw('left', L);
+draw('right', R);
+</script>
