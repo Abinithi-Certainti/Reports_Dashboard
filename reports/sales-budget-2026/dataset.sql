@@ -66,7 +66,7 @@ WITH plaza_rename (old_name, new_name) AS (
     -- Checked on DEV 2026-09-29: about 4.27 million rows, 44,044 day / location / brand keys, 14 loads. Inside ONE load a
     -- key has up to 24 rows with different values and nothing else different (location, region, dates, year all the
     -- same) - most likely one row per opening hour, with no hour column. So the rows of the latest load are ADDED UP
-    -- (keeping only one would drop real budget hours). Summing per load first also keeps this fast.
+    -- (keeping only one would lose real budget hours). Summing per load first also keeps this fast.
     -- OPEN (tech lead): confirm the rows are hourly and that summing them is right.
     SELECT DISTINCT ON ("TimePeriod_Date", "HostLocationID", "Brand") "TimePeriod_Date", "HostLocationID", "Brand", value
     FROM (SELECT "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp, sum(value) AS value
