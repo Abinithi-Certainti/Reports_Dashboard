@@ -53,7 +53,7 @@ export default function BulletVisual({ reportId, spec, visual, base }: { reportI
                       />
                       {x.b > 0 && <Box sx={{ position: 'absolute', top: -3, bottom: -3, left: w(x.b), width: 3, ml: '-1.5px', borderRadius: 2, bgcolor: t.textPrimary }} />}
                     </Box>
-                    <Box sx={{ fontFamily: t.mono, textAlign: 'right', color: t.textSecondary }}>{formatCompactCurrency(x.a)}</Box>
+                    <Box sx={{ fontFamily: t.mono, textAlign: 'right', color: t.textSecondary }}>{format === 'currency' ? formatCompactCurrency(x.a) : formatValue(x.a, format)}</Box>
                     <Box sx={{ fontFamily: t.mono, textAlign: 'right', fontWeight: 700, color: tone(share) }}>{share === null ? '–' : percent.format(share)}</Box>
                   </Box>
                 </Tooltip>

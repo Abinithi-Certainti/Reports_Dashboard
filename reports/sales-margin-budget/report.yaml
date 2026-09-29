@@ -85,6 +85,17 @@ visuals:
     rows: [plaza]
     values: [wtd_sales_var]
     span: 5
+  # Added 2026-09-29 for analysis (the old tables below are unchanged).
+  - type: bullet
+    title: Period to date - sales against budget
+    rows: [plaza]
+    values: [ptd_sales, ptd_budget_sales]
+    span: 7
+  - type: bar
+    title: GP % by plaza - week to date
+    rows: [plaza]
+    values: [wtd_gp_pct]
+    span: 5
   - type: table
     title: GP by location - Week to date
     rows: [plaza]

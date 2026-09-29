@@ -156,6 +156,28 @@ visuals:
 
   # Page 1 "Plaza Total Summary - Retail Calendar" (also page 8 "Future"): one row per weekday, the total row is the
   # selected days' total. The old page shows weekdays as columns, here they are rows.
+  # Added 2026-09-29 for analysis (the old tables below are unchanged): actual against budget at a glance.
+  - type: line
+    title: Daily sales against budget
+    rows: [day]
+    values: [sales, budget_sales]
+    span: 8
+  - type: donut
+    title: Sales by brand
+    rows: [brand]
+    values: [sales]
+    limit: 6
+    span: 4
+  - type: bullet
+    title: Week to date - sales against budget
+    rows: [plaza]
+    values: [wtd_sales, wtd_budget_sales]
+    span: 6
+  - type: bullet
+    title: Week to date - transactions against budget
+    rows: [plaza]
+    values: [wtd_transactions, wtd_budget_transactions]
+    span: 6
   - type: table
     title: Sales - by weekday
     rows: [weekday]

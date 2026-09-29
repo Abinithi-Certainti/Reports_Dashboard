@@ -57,6 +57,25 @@ visuals:
       - { label: Week to date COGS,  measure: wtd_cogs,   icon: trend }
       - { label: Week to date GP,    measure: wtd_gp,     icon: cash }
       - { label: GP % (week to date), measure: wtd_gp_pct, icon: count }
+  # Added 2026-09-29 for analysis (the old tables below are unchanged): where the cost and the waste sit.
+  - type: donut
+    title: COGS by category
+    rows: [category]
+    values: [cogs]
+    limit: 6
+    span: 4
+  - type: leaderboard
+    title: Plazas with the highest waste
+    rows: [plaza]
+    values: [waste, cogs]
+    limit: 8
+    span: 8
+  - type: heatmap
+    title: Waste $ - plaza by category
+    rows: [plaza]
+    columns: [category]
+    values: [waste]
+    span: 12
   - type: table
     title: Market by plaza - stock, waste, sales and GP
     rows: [plaza]

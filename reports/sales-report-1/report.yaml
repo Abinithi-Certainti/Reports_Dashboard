@@ -53,6 +53,29 @@ visuals:
       - { label: Transactions,       measure: transactions,   icon: count }
       - { label: Labour hours direct, measure: labour,        icon: store }
       - { label: SPLH,               measure: splh,           icon: cash }
+  # Added 2026-09-29 for analysis (the old tables below are unchanged): trend against last year, mix and ranking.
+  - type: line
+    title: Daily sales - this year against last year
+    rows: [day]
+    values: [sales, sales_py]
+    span: 8
+  - type: donut
+    title: Sales by brand
+    rows: [brand]
+    values: [sales]
+    limit: 6
+    span: 4
+  - type: leaderboard
+    title: Top plazas by sales
+    rows: [plaza]
+    values: [sales, transactions]
+    limit: 8
+    span: 6
+  - type: bar
+    title: Average check by plaza
+    rows: [plaza]
+    values: [avg_check]
+    span: 6
   - type: table
     title: Daily Sales - Total Road (by weekday)
     rows: [weekday]

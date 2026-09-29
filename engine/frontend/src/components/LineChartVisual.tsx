@@ -7,28 +7,41 @@ import { chartTheme, useTokens } from '../theme';
 
 type Base = Omit<QueryRequest, 'measures'>;
 
-/** One measure over the date dimension: 2px line, light area wash, crosshair tooltip. */
+/**
+ * One measure over the date dimension: 2px line, light area wash, crosshair tooltip. An optional second value
+ * (e.g. last year or the budget) is drawn as a dashed comparison line, and the tooltip shows the gap between them.
+ */
 export default function LineChartVisual({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   const t = useTokens();
   const c = chartTheme(t);
   const dim = visual.rows?.[0] ?? '';
   const measure = visual.values?.[0] ?? '';
+  const compare = visual.values?.[1];
   const format = spec.measures[measure]?.format;
-  const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures: [measure] });
+  const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures: compare ? [measure, compare] : [measure] });
+  const label = (m: string) => spec.measures[m]?.label ?? m;
+  const isDate = spec.dimensions[dim]?.type === 'date';
+  const dayText = (v: string) => (isDate ? formatDay(v) : v);
 
   const option = rows && {
-    grid: { left: 8, right: 16, top: 16, bottom: 4, containLabel: true },
+    grid: { left: 8, right: 16, top: compare ? 30 : 16, bottom: 4, containLabel: true },
+    ...(compare ? { legend: { top: 0, textStyle: { color: c.axisText }, data: [label(measure), label(compare)] } } : {}),
     tooltip: {
       trigger: 'axis',
       ...c.tooltip,
       axisPointer: { type: 'line', lineStyle: { color: t.textMuted, width: 1 } },
-      formatter: (p: { name: string; value: number }[]) => `${formatDay(p[0].name)}<br/><b>${formatValue(p[0].value, format)}</b>`,
+      formatter: (p: { name: string; value: number | null }[]) => {
+        const a = p[0]?.value ?? null;
+        const b = compare ? p[1]?.value ?? null : null;
+        const gap = compare && a !== null && b !== null && b !== 0 ? ` (${a >= b ? '+' : ''}${(((a - b) / Math.abs(b)) * 100).toFixed(1)}%)` : '';
+        return `${dayText(p[0].name)}<br/>${label(measure)}: <b>${formatValue(a, format)}</b>${compare ? `<br/>${label(compare)}: ${formatValue(b, format)}${gap}` : ''}`;
+      },
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: rows.map((r) => String(r[dim])),
-      axisLabel: { color: c.axisText, formatter: (v: string) => formatDay(v).replace(/^\w+, /, '') },
+      axisLabel: { color: c.axisText, formatter: (v: string) => dayText(v).replace(/^\w+, /, '') },
       axisLine: { lineStyle: { color: c.grid } },
       axisTick: { show: false },
     },
@@ -40,6 +53,7 @@ export default function LineChartVisual({ reportId, spec, visual, base }: { repo
     series: [
       {
         type: 'line',
+        name: label(measure),
         data: rows.map((r) => Number(r[measure] ?? 0)),
         smooth: 0.35,
         showSymbol: false,
@@ -66,6 +80,13 @@ export default function LineChartVisual({ reportId, spec, visual, base }: { repo
         animationDuration: 1600,
         animationEasing: 'cubicOut',
       },
+      ...(compare ? [{
+        type: 'line', name: label(compare), smooth: 0.35, showSymbol: false, z: 1,
+        data: rows.map((r) => (r[compare] == null ? null : Number(r[compare]))),
+        lineStyle: { width: 2, type: 'dashed', color: t.textMuted },
+        itemStyle: { color: t.textMuted },
+        animationDuration: 1600,
+      }] : []),
     ],
   };
 

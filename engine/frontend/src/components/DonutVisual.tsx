@@ -29,8 +29,10 @@ export default function DonutVisual({ reportId, spec, visual, base }: { reportId
   const openSlice = (name: string) => { if (clickable && name !== 'Other' && name !== '(Blank)') openPlaza!(name); };
 
   // Largest first. With `limit`, the smaller slices are added up as one "Other" slice so the ring stays readable.
+  // Groups at 0 are left out: they add a legend row and no slice.
   const sorted = (rows ?? [])
     .map((r) => ({ name: String(r[dim] ?? '(Blank)'), value: Number(r[measure] ?? 0) }))
+    .filter((x) => x.value !== 0)
     .sort((a, b) => (visual.limit ? b.value - a.value : 0));
   const kept = visual.limit && sorted.length > visual.limit + 1
     ? [...sorted.slice(0, visual.limit), { name: 'Other', value: sorted.slice(visual.limit).reduce((s, x) => s + x.value, 0) }]

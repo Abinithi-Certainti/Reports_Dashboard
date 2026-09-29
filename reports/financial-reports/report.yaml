@@ -30,6 +30,29 @@ visuals:
       - { label: Gift cards,    measure: gift_card, icon: cash }
       - { label: Donations,     measure: donations, icon: count }
       - { label: Lottery (net), measure: lottery,   icon: trend }
+  # Added 2026-09-29 for analysis (the old tables below are unchanged): trend, mix and ranking.
+  - type: line
+    title: Daily HST collected
+    rows: [day]
+    values: [hst]
+    span: 8
+  - type: donut
+    title: HST by brand
+    rows: [brand]
+    values: [hst]
+    limit: 6
+    span: 4
+  - type: leaderboard
+    title: Plazas by HST and gift cards
+    rows: [plaza]
+    values: [hst, gift_card]
+    limit: 8
+    span: 6
+  - type: bar
+    title: Lottery by category
+    rows: [lottery_category]
+    values: [lottery]
+    span: 6
   - type: matrix
     title: HST by Plaza and Brand
     rows: [plaza, brand]
