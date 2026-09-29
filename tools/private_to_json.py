@@ -3,7 +3,7 @@
 Usage:  python3 tools/private_to_json.py <report id> <export file> [--cap 20000]
 
 The output stays in demo/private-data/ (git-ignored - the repository is public). Numbers become numbers, empty cells
-become null. When the export has exactly --cap rows, the SQL tool most likely stopped at its row limit, so the file is
+become null (also "NULL" and DBeaver's "(null)"). When the export has exactly --cap rows, the SQL tool most likely stopped at its row limit, so the file is
 marked row_cap_hit and the dashboard says the totals are incomplete.
 """
 import csv
@@ -19,7 +19,7 @@ REPORTS = ["tender-report", "waste-report", "market-category", "sales-margin-bud
 
 def value(cell: str):
     cell = cell.strip()
-    if cell == "" or cell.upper() == "NULL":
+    if cell == "" or cell.upper() in ("NULL", "(NULL)"):  # DBeaver writes an empty cell as (null)
         return None
     try:
         return int(cell) if cell.lstrip("-").isdigit() and not (len(cell) > 1 and cell.lstrip("-").startswith("0")) else float(cell)
