@@ -392,7 +392,7 @@ Paid Out 13, anything else 11`,
     nc:"pos_order_payments.end_day, pos_order_paid_outs.end_day",
     sql:`end_day::date
 from 1 January two years back to today;
-the filter opens on the last 18 days`,
+the filter opens on all loaded days (decided 2026-09-29)`,
     plain:"The business day of the payment.",t:["pos_order_payments"]},
    {n:"Plaza",k:"filter",oc:"'LOCATION&BRAND'[Plaza] ← NetSuiteLocation_Mapping.LocationName",
     dax:`LocationName, key = HostLocationID & "-" & BrandName`,
@@ -656,6 +656,10 @@ dated on period (week-ending Saturday)`,plain:"Cost of goods sold.",t:["weekly_c
     plain:"How far gross profit is above or below plan.",t:["pos_orders","pos_order_details","weekly_cogs","vena_gross_margin","netsuite_location_mapping"]},
    {n:"Bud %",k:"measure",oc:"WTD Bud %",dax:`1 − (Budget − GM budget) ÷ Budget  (= GM budget ÷ Budget)`,nc:"vena_sales, vena_gross_margin",
     sql:`sum(budget_gp) / nullif(sum(budget_sales), 0)`,plain:"Planned gross margin %.",t:["vena_sales","vena_gross_margin"]},
+   {n:"% of Budget (new KPI)",k:"new measure",oc:"(none - new card)",dax:`not in the old report`,
+    nc:"pos_orders.net, vena_sales.value",sql:`sum(sales) / nullif(sum(budget_sales), 0)
+-- also week to date: wtd_pct_of_budget`,
+    plain:"How much of the sales budget has been reached. Shown as a card and, per plaza, in the bullet chart (green at 100% or more, amber from 95%, red below).",t:["pos_orders","vena_sales","netsuite_location_mapping"]},
    {n:"GP% Variance",k:"measure",oc:"WTD GP% Variance",dax:`WTD GP % − WTD Bud %`,nc:"all of the above",
     sql:`(sum(sales) - sum(cogs)) / nullif(sum(sales), 0)
  - sum(budget_gp) / nullif(sum(budget_sales), 0)`,plain:"Actual margin % minus planned margin %.",t:["pos_orders","pos_order_details","weekly_cogs","vena_sales","vena_gross_margin","netsuite_location_mapping"]},

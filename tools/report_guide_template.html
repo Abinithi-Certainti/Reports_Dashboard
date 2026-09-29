@@ -1,0 +1,235 @@
+<title>BI Analytics Report Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a sticky report list on the left, one report at a time on the right; the list becomes a chip row on phones. */
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --ink: #18202b; --muted: #5b6676; --line: #dde2ea; --code: #eef1f6;
+  --accent: #2f5fd0; --accent-soft: #e4ebfb;
+  --ok: #1d8a5a; --warn: #b7791f; --bad: #c2413a; --open: #7c4dcc; --gone: #7a8494;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf2; --muted: #95a1b3; --line: #273142; --code: #1d2633;
+  --accent: #7ea2ff; --accent-soft: #1d2a47;
+  --ok: #4cc38a; --warn: #e2b04a; --bad: #f07a72; --open: #b596f5; --gone: #8a95a6; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf2; --muted: #95a1b3; --line: #273142; --code: #1d2633;
+  --accent: #7ea2ff; --accent-soft: #1d2a47;
+  --ok: #4cc38a; --warn: #e2b04a; --bad: #f07a72; --open: #b596f5; --gone: #8a95a6; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+header.top { display: grid; gap: 6px; margin-bottom: 22px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 700 clamp(28px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
+h2 { font: 700 26px/1.15 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 600 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+.lede { color: var(--muted); max-width: 70ch; margin: 0; }
+
+.engine { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 22px; }
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; counter-reset: step; }
+.flow div { background: var(--code); border-radius: 8px; padding: 12px; min-width: 0; font-size: 13.5px; }
+.flow b { display: block; font-family: var(--display); font-size: 15px; margin-bottom: 4px; }
+.flow code { font-size: 12px; }
+.modes { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; align-items: start; }
+nav.list { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: grid; gap: 4px; }
+nav.list button { all: unset; cursor: pointer; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  padding: 9px 10px; border-radius: 8px; font-size: 14px; }
+nav.list button:hover { background: var(--panel); }
+nav.list button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+nav.list button[aria-current="true"] { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+nav.list .n { font: 500 12px var(--mono); color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.export { background: var(--ok); } .dot.sample { background: var(--warn); } .dot.none { background: var(--gone); }
+
+main { display: grid; gap: 18px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; }
+.rhead { display: grid; gap: 10px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); padding: 5px 9px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.export { color: var(--ok); border-color: currentColor; } .pill.sample { color: var(--warn); border-color: currentColor; }
+.pill.none { color: var(--gone); border-color: currentColor; }
+.pill.found { color: var(--ok); } .pill.empty { color: var(--warn); } .pill.missing { color: var(--bad); }
+.pill.open { color: var(--open); } .pill.removed { color: var(--gone); }
+.about { font-size: 17px; max-width: 72ch; margin: 0; }
+
+ol.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; counter-reset: s; }
+ol.steps > li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; counter-increment: s; }
+ol.steps > li::before { content: counter(s); font: 600 13px/30px var(--mono); text-align: center; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); }
+ol.steps b { display: block; margin-bottom: 4px; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12.5px/1 var(--mono); background: var(--code); border-radius: 6px; padding: 6px 8px; }
+
+.tscroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td code, .f code { font: 12.5px/1.5 var(--mono); }
+
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.tools input { flex: 1 1 220px; min-width: 0; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 12px; }
+.tools input:focus-visible { outline: 2px solid var(--accent); border-color: transparent; }
+.kbtn { all: unset; cursor: pointer; font: 500 12.5px/1 var(--mono); padding: 7px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.kbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+.kbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.fields { display: grid; gap: 12px; }
+.f { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.fhead { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fhead strong { font-size: 15.5px; margin-right: 4px; }
+.kind { font: 500 11.5px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.fplain { margin: 0; max-width: 80ch; }
+.fcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.side { min-width: 0; display: grid; gap: 6px; align-content: start; }
+.side .lbl { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.side .src { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--code); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.55 var(--mono); white-space: pre; }
+.why { font-size: 13.5px; color: var(--muted); margin: 0; }
+.why b { color: var(--ink); }
+.empty-note { color: var(--muted); margin: 0; }
+
+@media (max-width: 900px) {
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  nav.list { position: static; display: flex; overflow-x: auto; padding-bottom: 4px; }
+  nav.list button { grid-template-columns: auto auto auto; white-space: nowrap; background: var(--panel); border: 1px solid var(--line); }
+}
+@media (max-width: 620px) { .fcols, .flow { grid-template-columns: minmax(0, 1fr); } .wrap { padding-inline: 16px; } }
+@media (prefers-reduced-motion: no-preference) { main .card { animation: in .25s ease both; } @keyframes in { from { opacity: .4; transform: translateY(4px); } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">kios_etl · schema master · 10 Power BI reports</span>
+    <h1>BI Analytics Report Guide</h1>
+    <p class="lede">What each report is for, how it is built, which tables and fields it reads, and the formula behind every number, next to the old Power BI formula it replaces.</p>
+  </header>
+
+  <section class="engine" aria-labelledby="eng">
+    <h3 id="eng">How every report works</h3>
+    <div class="flow">
+      <div><b>1 · Tables</b>The report reads read-only from the new PostgreSQL database, <code>kios_etl</code>, schema <code>master</code>.</div>
+      <div><b>2 · dataset.sql</b>One SELECT per report joins the tables and applies the business rules (renames, latest budget load, paid-outs). It never writes.</div>
+      <div><b>3 · report.yaml</b>Names the fields (dimensions), the formulas (measures), the filters and the charts. There is no code, only settings.</div>
+      <div><b>4 · Java engine</b>Wraps the dataset with your filters and groups it for each chart. Week, period and year-to-date windows run as extra queries on the retail calendar.</div>
+      <div><b>5 · React page</b>Draws the number cards, charts and tables. Click a plaza name to see its details.</div>
+    </div>
+    <div class="modes">
+      <span><span class="pill export">● DEV export</span> real DEV rows saved from DBeaver</span>
+      <span><span class="pill sample">● Sample data</span> made-up rows; the layout and formulas are real</span>
+      <span><span class="pill none">● Not built</span> its tables are empty on DEV</span>
+    </div>
+  </section>
+
+  <div class="layout">
+    <nav class="list" id="list" aria-label="Reports"></nav>
+    <main id="main" aria-live="polite"></main>
+  </div>
+</div>
+
+<script>
+const D = /*DATA*/null;
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DATA_LABEL = { export: 'DEV export', sample: 'Sample data', none: 'Not built' };
+const ST = { found: 'Found on DEV', empty: 'Empty on DEV', none: 'Missing in new DB', open: 'Open', removed: 'Removed' };
+const RANK = { found: 0, empty: 1, none: 2 };
+const VIS = { kpi: 'Number cards', line: 'Line chart', bar: 'Bar chart', table: 'Table', matrix: 'Matrix (rows × columns)', donut: 'Donut',
+  leaderboard: 'Top list', split: 'Split bar', waterfall: 'Waterfall', stack: 'Stacked bar', heatmap: 'Heat map', bullet: 'Bullet chart' };
+const tstat = (n) => D.tables[n]?.dev ?? 'none';
+function fstat(f) { if (f.s) return f.s; let s = 'found'; (f.t || []).forEach((n) => { const x = tstat(n); if (RANK[x] > RANK[s]) s = x; }); return s; }
+const pillCls = (s) => (s === 'none' ? 'missing' : s);
+
+function filterText(f) {
+  if (f.type === 'multi_select') return 'pick one or more';
+  if (f.type === 'retail_week') return f.open_on ? 'one retail week; opens on the last week that has sales' : 'one retail week; opens on the latest week with data';
+  if (f.days >= 3650) return 'date range; opens on all loaded days';
+  const on = f.open_on ? ', counted back from the last day that has sales' : '';
+  return `date range; opens on the last ${f.days ?? 30} days${on}`;
+}
+
+let cur = 'tender-report', kind = 'all', q = '';
+try { const v = localStorage.getItem('guide-report'); if (v && D.reports.some((r) => r.id === v)) cur = v; } catch (e) { /* not stored */ }
+if (location.hash && D.reports.some((r) => r.id === location.hash.slice(1))) cur = location.hash.slice(1);
+
+function renderList() {
+  document.getElementById('list').innerHTML = D.reports.map((r) => `<button type="button" data-id="${r.id}" aria-current="${r.id === cur}">
+    <span class="n">${String(r.no).padStart(2, '0')}</span><span>${esc(r.name)}</span><span class="dot ${r.data}" title="${DATA_LABEL[r.data]}"></span></button>`).join('');
+  document.querySelectorAll('#list button').forEach((b) => b.addEventListener('click', () => {
+    cur = b.dataset.id; kind = 'all'; q = '';
+    try { localStorage.setItem('guide-report', cur); } catch (e) { /* not stored */ }
+    renderList(); renderMain(); window.scrollTo({ top: document.querySelector('.layout').offsetTop - 12 });
+  }));
+}
+
+function fieldCard(f) {
+  const s = fstat(f);
+  const why = f.why ? `<p class="why"><b>Why:</b> ${esc(f.why)}</p>` : '';
+  const note = f.note ? `<p class="why"><b>Note:</b> ${esc(f.note)}</p>` : '';
+  return `<article class="f">
+    <div class="fhead"><strong>${esc(f.n)}</strong><span class="kind">${esc(f.k)}</span><span class="pill ${pillCls(s)}">${ST[s]}</span></div>
+    <p class="fplain">${esc(f.plain)}</p>
+    <div class="fcols">
+      <div class="side"><span class="lbl">Old · Power BI</span><span class="src">${esc(f.oc)}</span><pre>${esc(f.dax)}</pre></div>
+      <div class="side"><span class="lbl">New · PostgreSQL</span><span class="src">${esc(f.nc)}</span><pre>${esc(f.sql)}</pre></div>
+    </div>${why}${note}
+  </article>`;
+}
+
+function renderMain() {
+  const r = D.reports.find((x) => x.id === cur);
+  const s = r.spec;
+  const kinds = ['all', ...new Set(r.fields.map((f) => f.k))];
+  const rules = (r.notes || []).map((n) => `<li>${esc(n)}</li>`).join('');
+  const steps = [
+    `<li><div><b>Reads these tables</b><div class="chips">${r.tables.map((t) => `<span class="chip">master.${esc(t)}</span>`).join('') || '<span class="empty-note">none yet</span>'}</div></div></li>`,
+    `<li><div><b>Applies these rules in dataset.sql</b><ul class="plain">${rules}</ul></div></li>`,
+    s ? `<li><div><b>Lets you filter by</b><ul class="plain">${s.filters.map((f) => `<li><b style="display:inline">${esc(f.label)}</b>: ${filterText(f)}</li>`).join('')}</ul></div></li>` : '',
+    s ? `<li><div><b>Shows, top to bottom</b><ul class="plain">${s.visuals.map((v) => `<li>${VIS[v.type] ?? esc(v.type)}: ${esc(v.title)}</li>`).join('')}</ul></div></li>` : '',
+  ].join('');
+  const tables = r.tables.map((t) => { const x = D.tables[t] || {}; const st = x.dev ?? 'none';
+    return `<tr><td><code>master.${esc(t)}</code></td><td><code>${esc(x.old ?? '(new)')}</code></td><td><span class="pill ${pillCls(st)}">${ST[st]}</span></td><td>${esc(x.note ?? '')}</td></tr>`; }).join('');
+  const open = (r.open || []).map((o) => `<li>${esc(o)}</li>`).join('');
+
+  document.getElementById('main').innerHTML = `
+    <section class="card rhead">
+      <span class="eyebrow">Report ${String(r.no).padStart(2, '0')} / 10</span>
+      <h2>${esc(r.name)}</h2>
+      <div class="meta">${r.jira ? `<span class="pill">Jira ${esc(r.jira)}</span>` : ''}<span class="pill">${esc(r.state)}</span><span class="pill ${r.data}">● ${DATA_LABEL[r.data]} on the dashboard</span><span class="pill">${r.fields.length} fields mapped</span></div>
+      <p class="about">${esc(r.about)}</p>
+    </section>
+    <section class="card"><h3>How it works</h3><ol class="steps">${steps}</ol></section>
+    <section class="card"><h3>Tables · old → new</h3><div class="tscroll"><table>
+      <thead><tr><th>New table</th><th>Old (SQL Server)</th><th>On DEV</th><th>Note</th></tr></thead><tbody>${tables}</tbody></table></div></section>
+    <section class="card"><h3>Fields and formulas</h3>
+      <div class="tools"><input id="q" type="search" placeholder="Search fields, columns, formulas" value="${esc(q)}" aria-label="Search fields">
+        ${kinds.map((k) => `<button type="button" class="kbtn" data-k="${esc(k)}" aria-pressed="${k === kind}">${esc(k)}</button>`).join('')}</div>
+      <div class="fields" id="fields"></div></section>
+    <section class="card"><h3>Open questions for this report</h3><ul class="plain">${open || '<li>None.</li>'}</ul></section>
+    <section class="card"><h3>Open questions for every report (tech lead)</h3><ul class="plain">${D.global_q.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></section>`;
+
+  const drawFields = () => {
+    const needle = q.trim().toLowerCase();
+    const rows = r.fields.filter((f) => (kind === 'all' || f.k === kind) && (!needle || JSON.stringify(f).toLowerCase().includes(needle)));
+    document.getElementById('fields').innerHTML = rows.length ? rows.map(fieldCard).join('') : '<p class="empty-note">No field matches. Clear the search or pick "all".</p>';
+  };
+  drawFields();
+  document.getElementById('q').addEventListener('input', (e) => { q = e.target.value; drawFields(); });
+  document.querySelectorAll('.kbtn').forEach((b) => b.addEventListener('click', () => {
+    kind = b.dataset.k; document.querySelectorAll('.kbtn').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); drawFields();
+  }));
+}
+
+renderList();
+renderMain();
+</script>

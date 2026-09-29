@@ -23,7 +23,7 @@ filters:
   - { dimension: district_director, type: multi_select }
   - { dimension: brand,             type: multi_select }
   - { dimension: payment_type,      type: multi_select }
-  - { dimension: end_day,           type: date_range, default_last_days: 18 }
+  - { dimension: end_day,           type: date_range, default_last_days: 36500 }   # opens on all loaded days (decided 2026-09-29); the range stops at the first loaded day
 
 visuals:
   - type: kpi

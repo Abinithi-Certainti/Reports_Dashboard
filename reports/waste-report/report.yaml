@@ -58,7 +58,7 @@ visuals:
     total: cogs          # any gap between the steps and COGS is shown as "Other adjustments", not hidden
     span: 6
   - type: stack
-    title: What COGS is made of, by plaza
+    title: COGS by plaza - expected cost, waste and variance
     rows: [plaza]
     values: [theo_cost, waste, variance]
     span: 6
