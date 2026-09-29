@@ -57,10 +57,10 @@ visuals:
     signs:  ['+', '+', '-', '-']
     total: cogs          # any gap between the steps and COGS is shown as "Other adjustments", not hidden
     span: 6
-  - type: bubble
-    title: Which plazas lose the most - variance % of COGS
+  - type: rank
+    title: Variance by plaza - money lost against expected cost
     rows: [plaza]
-    values: [cogs, variance_pct, waste]   # across, up, bubble size
+    values: [variance, variance_pct]   # the bar, then its % of COGS
     span: 6
   - type: heatmap
     title: Waste % of COGS - plaza by category

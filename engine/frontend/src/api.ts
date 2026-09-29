@@ -16,7 +16,7 @@ export type KpiItem = {
   icon?: 'total' | 'cash' | 'card' | 'paidout' | 'count' | 'store' | 'trend' | null;
 };
 export type Visual = {
-  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard' | 'split' | 'waterfall' | 'stack' | 'heatmap' | 'bullet' | 'flow' | 'bubble';
+  type: 'kpi' | 'table' | 'bar' | 'matrix' | 'line' | 'donut' | 'leaderboard' | 'split' | 'waterfall' | 'stack' | 'heatmap' | 'bullet' | 'flow' | 'rank';
   title?: string;
   rows?: string[];
   columns?: string[];

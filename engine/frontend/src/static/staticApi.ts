@@ -201,7 +201,7 @@ const round = (n: number) => Math.round(n * 100) / 100;
 // ---------- validation (same rules and messages as ReportRegistry.validate) ----------
 const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
 const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
-const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard', 'split', 'waterfall', 'stack', 'heatmap', 'bullet', 'flow', 'bubble'];
+const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard', 'split', 'waterfall', 'stack', 'heatmap', 'bullet', 'flow', 'rank'];
 const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
 const FILTER_TYPES: string[] = ['multi_select', 'date_range', 'retail_week'];
 const WINDOWS: string[] = ['wtd', 'ptd', 'mtd', 'ytd', 'py', 'yoy', 'yoy_pct', 'py_fin', 'yoy_fin', 'yoy_fin_pct'];
