@@ -3,19 +3,6 @@
 -- screen) as demo/private-data/dev_sales-report-1.csv, then run: python3 tools/private_to_json.py sales-report-1 demo/private-data/dev_sales-report-1.csv
 -- The result holds real figures: it goes to demo/private-data/, never into git. Never paste a password.
 SELECT * FROM (
-    -- Sales Report 1 (AG-79). Source of truth for the old report: extracts/sales-report-1/01_model.md
-    -- One row per day, location and brand, per source (POS, card fees, deposits, labour, temp labour). Amount columns
-    -- are 0 on the other sources' rows, so every measure is a plain sum.
-    --
-    -- Sales        = POS net (not Cash Drop) - Market "Card Fee" (from 2022-04-01) - "Alcohol Deposit - Beer"
-    -- Transactions = number of POS orders (not Cash Drop)
-    -- Labour hours = employee_pay_summary (crew jobs, Reg / OT1.5 / Hol1.5, not HR) + temp_dlh.
-    --                The old report also added vending / Market Express hours from TimeCardDetail, which has no table in
-    --                the new DB (open question on AG-79), so those hours are missing here.
-    -- Maple Tim Hortons drive-thru orders count as brand TIM HORTONS DT, as in the old report.
-    -- Brands are NOT merged the way the Sales and Margin report merges them: STARBUCKS DT stays its own brand.
-    -- Labour joins to a location on the text "PLAZA BRAND" (the old report's "LB name"), after the old text clean-up.
-    -- Weekday and week ending come from master.date_table. No semicolons anywhere in this file, comments included.
     WITH plaza_rename (old_name, new_name) AS (
         VALUES ('New Castle TO S', 'Newcastle'), ('S. Tilbury ON S', 'Tilbury South'), ('N. Tilbury ON S', 'Tilbury North'),
                ('Dutton ON S', 'Dutton'), ('W. Lorne ON S', 'West Lorne'), ('N. Trenton ON S', 'Trenton North'),
@@ -37,7 +24,6 @@ SELECT * FROM (
         LEFT JOIN plaza_rename r ON r.old_name = trim(m.location_name)
         WHERE m.host_location_id IS NOT NULL AND lower(trim(m.rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too (King City TIM03)
     ), lb AS (
-        -- The old report's "LB name": plaza (Bainsville / Morrisburg without " ON S") + space + brand, upper case.
         SELECT DISTINCT host_location_id, brand, upper(plaza_base || ' ' || brand) AS lb_name FROM loc
     ), facts AS (
         SELECT o.end_day::date AS day, l.host_location_id,
@@ -81,7 +67,6 @@ SELECT * FROM (
         JOIN lb ON lb.lb_name = upper(trim(t.plaza) || ' ' || trim(t.brand))
         GROUP BY 1, 2, 3
     ), plaza AS (
-        -- One plaza per host location. 4606 (Maple) and 3640 (Newcastle) are the old report's two hard-coded rows.
         SELECT host_location_id, min(plaza_base) AS plaza_base
         FROM (SELECT host_location_id, plaza_base FROM loc UNION ALL VALUES (4606, 'Maple'), (3640, 'Newcastle')) x
         GROUP BY host_location_id

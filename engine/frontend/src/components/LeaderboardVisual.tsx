@@ -4,6 +4,7 @@ import { QueryRequest, Spec, Visual } from '../api';
 import { formatValue } from '../format';
 import { useQuery } from '../useQuery';
 import { useTokens } from '../theme';
+import { PLAZA_DIM, usePlazaOpener } from './PlazaDetail';
 
 type Base = Omit<QueryRequest, 'measures'>;
 const percent = new Intl.NumberFormat('en-CA', { style: 'percent', maximumFractionDigits: 1 });
@@ -23,15 +24,17 @@ export default function LeaderboardVisual({ reportId, spec, visual, base }: { re
   const format = spec.measures[measure]?.format;
 
   const ranked = (rows ?? [])
-    .map((r) => ({ name: dims.map((d) => String(r[d] ?? '(Blank)')).join(' · '), value: Number(r[measure] ?? 0), second: second ? r[second] : null }))
+    .map((r) => ({ plaza: dims[0] === PLAZA_DIM && r[PLAZA_DIM] != null ? String(r[PLAZA_DIM]) : null, name: dims.map((d) => String(r[d] ?? '(Blank)')).join(' · '), value: Number(r[measure] ?? 0), second: second ? r[second] : null }))
     .sort((a, b) => b.value - a.value);
   const total = ranked.reduce((s, x) => s + Math.max(0, x.value), 0);
   const top = ranked.slice(0, visual.limit ?? 8);
   const max = Math.max(1, ...top.map((x) => x.value));
+  // A leaderboard of plazas (plaza first) opens the plaza popup from any row.
+  const openPlaza = usePlazaOpener();
 
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+    <Paper sx={{ p: 1.5, height: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 1, flexWrap: 'wrap' }}>
         <Typography variant="h2">{visual.title}</Typography>
         {rows && (
           <Typography sx={{ fontSize: '0.75rem', color: t.textMuted }}>
@@ -43,12 +46,19 @@ export default function LeaderboardVisual({ reportId, spec, visual, base }: { re
       {!rows ? (
         <Skeleton variant="rectangular" height={220} />
       ) : (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', columnGap: 3, rowGap: 1.25 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', columnGap: 3, rowGap: 0.5 }}>
           {top.map((x, i) => (
             <Box
               key={x.name}
+              {...(openPlaza && x.plaza ? {
+                role: 'button', tabIndex: 0, 'aria-label': `Open plaza ${x.plaza}`, onClick: () => openPlaza(x.plaza!),
+                onKeyDown: (e: { key: string; preventDefault: () => void }) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlaza(x.plaza!); } },
+              } : {})}
               sx={{
-                display: 'grid', gridTemplateColumns: '30px 1fr auto', alignItems: 'center', columnGap: 1.25, px: 1, py: 0.75, borderRadius: '12px',
+                cursor: openPlaza && x.plaza ? 'pointer' : 'default',
+                '&:hover .lb-name': openPlaza && x.plaza ? { color: t.accent, textDecoration: 'underline', textUnderlineOffset: '3px' } : {},
+                '&:focus-visible': { outline: `2px solid ${t.accent}`, outlineOffset: 1 },
+                display: 'grid', gridTemplateColumns: '30px 1fr auto', alignItems: 'center', columnGap: 1.25, px: 1, py: 0.5, borderRadius: '12px',
                 transition: 'background .2s ease, transform .2s ease',
                 '&:hover': { bgcolor: alpha(t.accent, 0.07), transform: 'translateX(3px)' },
               }}
@@ -63,7 +73,7 @@ export default function LeaderboardVisual({ reportId, spec, visual, base }: { re
                 {i + 1}
               </Box>
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: t.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Typography className="lb-name" sx={{ fontSize: '0.86rem', fontWeight: 600, color: t.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {x.name}
                 </Typography>
                 <Box sx={{ height: 6, borderRadius: 3, bgcolor: alpha(t.textMuted, 0.12), mt: 0.5, overflow: 'hidden' }}>

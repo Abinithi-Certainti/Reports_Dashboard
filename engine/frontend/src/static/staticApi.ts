@@ -1,11 +1,13 @@
-// Online demo mode (VITE_STATIC_DEMO=1): the same API as the Java engine, answered inside the browser from
-// bundled sample rows, so the page works with no server. The rules match the backend:
+// The in-browser engine: the same API as the Java engine, answered inside the browser, so the page works with no
+// server. api.ts uses it when the backend or its database cannot be reached (and always in `npm run build:static`).
+// The rules match the backend:
 //   filters/exclude/dates  -> engine/backend/.../query/SqlBuilder.java
 //   % to Total modes       -> engine/backend/.../query/Calculations.java
 //   import checks          -> engine/backend/.../spec/ReportRegistry.java + web/ImportController.java
 // Only the database dry run differs: there is no database here, so an upload can only use a bundled dataset.
 import { parse as parseYaml } from 'yaml';
-import type { ImportCheck, ImportResult, Mapping, QueryRequest, ReportSummary, RetailWeek, Row, Spec } from '../api';
+import type { DataSource, ImportCheck, ImportResult, Mapping, QueryRequest, ReportSummary, RetailWeek, Row, Spec } from '../api';
+import { sampleRows } from './sampleData';
 import tenderYaml from '../../../../reports/tender-report/report.yaml?raw';
 import tenderSql from '../../../../reports/tender-report/dataset.sql?raw';
 import tenderMapping from '../../../../reports/tender-report/mapping.json';
@@ -24,12 +26,33 @@ import fieldTeamSql from '../../../../reports/sales-field-team/dataset.sql?raw';
 import financialYaml from '../../../../reports/financial-reports/report.yaml?raw';
 import financialSql from '../../../../reports/financial-reports/dataset.sql?raw';
 
-// No made-up data: every report shows only real DEV rows from demo/private-data/<report id>.json (git-ignored - the
-// repository is public), written by tools/private_to_json.py from the user's DEV export. A report without its file is
-// left out of this copy, and its page says the data is not loaded. The glob is empty in a fresh clone.
+// Rows per report: the DEV export in demo/private-data/<report id>.json when there is one (git-ignored - the repository
+// is public; written by tools/private_to_json.py), else made-up sample rows from sampleData.ts. The glob is empty in a
+// fresh clone, so every report then runs on sample rows, and its page says so.
+// The file holds either plain rows, or (tools/private_to_json.py, smaller) column names, one list of distinct text
+// values per text column, and each row as a list where a text value is its position in that column's list.
+type PackedFile = { columns: string[]; dicts: Record<string, string[]>; data: (string | number | null)[][] };
+type RawFile = { exported_on: string; source: string; row_cap_hit: boolean; rows?: DataRow[] } & Partial<PackedFile>;
 type PrivateFile = { exported_on: string; source: string; row_cap_hit: boolean; rows: DataRow[] };
-const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, PrivateFile>;
-const privateFile = (id: string) => Object.entries(privateData).find(([path]) => path.endsWith(`/${id}.json`))?.[1];
+const privateData = import.meta.glob('../../../../demo/private-data/*.json', { eager: true, import: 'default' }) as Record<string, RawFile>;
+const unpacked = new Map<string, PrivateFile>();
+function privateFile(id: string): PrivateFile | undefined {
+  if (unpacked.has(id)) return unpacked.get(id);
+  const raw = Object.entries(privateData).find(([path]) => path.endsWith(`/${id}.json`))?.[1];
+  if (!raw) return undefined;
+  let rows = raw.rows;
+  if (!rows && raw.columns && raw.data) {
+    const { columns, dicts = {}, data } = raw;
+    rows = data.map((r) => {
+      const row: DataRow = {};
+      columns.forEach((c, i) => { const v = r[i]; row[c] = dicts[c] && typeof v === 'number' ? dicts[c][v] : v; });
+      return row;
+    });
+  }
+  const file = { exported_on: raw.exported_on, source: raw.source, row_cap_hit: raw.row_cap_hit, rows: rows ?? [] };
+  unpacked.set(id, file);
+  return file;
+}
 
 type DataRow = Record<string, string | number | null>;
 type FullDimension = { label: string; column: string; type?: string | null; sort_by?: string | null };
@@ -40,18 +63,21 @@ type FullSpec = Omit<Spec, 'dimensions' | 'measures' | 'sampleDataNotice'> & {
   dimensions: Record<string, FullDimension>;
   measures: Record<string, FullMeasure>;
 };
-type Report = { spec: FullSpec; rows: DataRow[]; builtIn: boolean; yaml: string; sql: string; eval: Record<string, Agg> };
+type Report = { spec: FullSpec; rows: DataRow[]; source: DataSource; builtIn: boolean; yaml: string; sql: string; eval: Record<string, Agg> };
 type Agg = (rows: DataRow[]) => number | null;
 
-/** Banner on every report: where its real rows come from, and whether the export was cut off. */
-function dataNotice(id: string): { title: string; text: string } {
-  const f = privateFile(id)!;
-  const cut = f.row_cap_hit
-    ? ' The export stopped at its row limit, so some days or plazas are missing and totals are too low.'
-    : '';
+/** Banner on every report: where its rows come from - a DEV export (and whether it was cut off), or made-up rows. */
+function dataNotice(id: string, source: DataSource): { title: string; text: string } {
+  const f = privateFile(id);
+  if (source === 'export' && f) {
+    const cut = f.row_cap_hit
+      ? ' The export stopped at its row limit, so some days or plazas are missing and totals are too low.'
+      : '';
+    return { title: 'DEV export.', text: `${f.source}, exported ${f.exported_on}. Not yet compared with Power BI.${cut}` };
+  }
   return {
-    title: 'Real DEV data.',
-    text: `${f.source}, exported ${f.exported_on}. Not yet compared with Power BI.${cut}`,
+    title: 'Sample data - made up.',
+    text: 'No DEV connection and no DEV export for this report, so these rows are generated. The layout and formulas are real; the numbers are not.',
   };
 }
 const STORE_KEY = 're.imported';
@@ -70,9 +96,17 @@ const BUILT_IN: [string, string, string][] = [
   ['sales-field-team', fieldTeamYaml, fieldTeamSql],
   ['financial-reports', financialYaml, financialSql],
 ];
-const DATASETS: { sql: string; rows: DataRow[] }[] = BUILT_IN
-  .filter(([id]) => privateFile(id))
-  .map(([id, , sql]) => ({ sql: normalise(sql), rows: privateFile(id)!.rows }));
+/** A built report's rows and where they come from: its DEV export if loaded, else made-up sample rows. */
+function builtInRows(id: string): { rows: DataRow[]; source: DataSource } | undefined {
+  const f = privateFile(id);
+  if (f) return { rows: f.rows, source: 'export' };
+  const rows = sampleRows(id);
+  return rows && { rows, source: 'sample' };
+}
+const DATASETS: { sql: string; rows: DataRow[]; source: DataSource }[] = BUILT_IN.flatMap(([id, , sql]) => {
+  const d = builtInRows(id);
+  return d ? [{ sql: normalise(sql), ...d }] : [];
+});
 
 // ---------- measures: sum(x), count(*), min/max/avg(x), numbers, + - * / and brackets ----------
 function compileMeasure(expr: string, columns: Set<string>): Agg {
@@ -167,7 +201,7 @@ const round = (n: number) => Math.round(n * 100) / 100;
 // ---------- validation (same rules and messages as ReportRegistry.validate) ----------
 const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
 const REPORT_ID = /^[a-z0-9][a-z0-9-]{1,60}$/;
-const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard'];
+const VISUAL_TYPES: string[] = ['kpi', 'line', 'table', 'bar', 'matrix', 'donut', 'leaderboard', 'split', 'waterfall', 'stack', 'heatmap'];
 const KPI_ICONS: string[] = ['total', 'cash', 'card', 'paidout', 'count', 'store', 'trend'];
 const FILTER_TYPES: string[] = ['multi_select', 'date_range', 'retail_week'];
 const WINDOWS: string[] = ['wtd', 'ptd', 'mtd', 'ytd', 'py', 'yoy', 'yoy_pct', 'py_fin', 'yoy_fin', 'yoy_fin_pct'];
@@ -248,7 +282,7 @@ function parseSpec(yaml: string, sql: string): { spec: FullSpec; sql: string } {
 }
 
 /** The dry run: with no database, the SQL must be one of the bundled datasets, and every field must exist in it. */
-function dryRun(spec: FullSpec, sql: string): { rows: DataRow[]; eval: Record<string, Agg> } {
+function dryRun(spec: FullSpec, sql: string): { rows: DataRow[]; source: DataSource; eval: Record<string, Agg> } {
   const ds = DATASETS.find((d) => d.sql === normalise(sql));
   if (!ds) {
     throw new BadRequest(
@@ -264,7 +298,7 @@ function dryRun(spec: FullSpec, sql: string): { rows: DataRow[]; eval: Record<st
   for (const [id, m] of Object.entries(spec.measures)) if (m.window == null) ev[id] = compileMeasure(m.sql!, columns);
   // A windowed measure is its base measure; the window only changes the dates (see runQuery).
   for (const [id, m] of Object.entries(spec.measures)) if (m.window != null) ev[id] = ev[m.of!];
-  return { rows: ds.rows, eval: ev };
+  return { rows: ds.rows, source: ds.source, eval: ev };
 }
 
 // ---------- the registry ----------
@@ -272,11 +306,10 @@ const reports = new Map<string, Report>();
 function register(yaml: string, sql: string, builtIn: boolean) {
   const p = parseSpec(yaml, sql);
   const d = dryRun(p.spec, p.sql);
-  reports.set(p.spec.id, { spec: p.spec, rows: d.rows, eval: d.eval, builtIn, yaml, sql });
+  reports.set(p.spec.id, { spec: p.spec, rows: d.rows, source: d.source, eval: d.eval, builtIn, yaml, sql });
 }
 // A report that fails its checks is left out and logged; it must never stop the other reports from loading.
 for (const [id, yaml, sql] of BUILT_IN) {
-  if (!privateFile(id)) continue;
   try {
     register(yaml, sql, true);
   } catch (e) {
@@ -552,8 +585,10 @@ function publicSpec(r: Report): Spec {
   const measures: Spec['measures'] = {};
   for (const [id, m] of Object.entries(r.spec.measures)) measures[id] = { label: m.label, format: (m.format ?? null) as Spec['measures'][string]['format'] };
   const { id, title, subtitle, calculations, filters, visuals } = r.spec;
-  const notice = r.builtIn ? dataNotice(id) : { title: 'Uploaded report.', text: 'Runs on the same rows as the built-in report with this SQL.' };
-  return { id, title, subtitle, sampleDataNotice: notice.text, dataNoticeTitle: notice.title, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
+  const notice = r.builtIn
+    ? dataNotice(id, r.source)
+    : { title: 'Uploaded report.', text: `Runs on the same rows as the built-in report with this SQL (${r.source === 'export' ? 'its DEV export' : 'made-up sample rows'}).` };
+  return { id, title, subtitle, sampleDataNotice: notice.text, dataNoticeTitle: notice.title, dataSource: r.source, dimensions, measures, calculations: calculations ?? {}, filters, visuals };
 }
 
 // Answers arrive a moment later, like a real request, so loading states still show.
@@ -587,7 +622,7 @@ function importReport(yaml: string, sql: string, publish: boolean): ImportResult
   checks.push({ name: 'Report id is free', ok: true, detail: existing ? 'replaces the earlier upload' : spec.id });
   try {
     dryRun(spec, parsed.sql);
-    checks.push({ name: 'Runs on the database', ok: true, detail: 'every field and measure checked against the sample data (online demo)' });
+    checks.push({ name: 'Runs on the database', ok: true, detail: 'every field and measure checked against the rows in this browser (offline copy)' });
   } catch (e) {
     checks.push({ name: 'Runs on the database', ok: false, detail: (e as Error).message });
     return { ok: false, id: spec.id, title: spec.title, checks };
@@ -603,7 +638,7 @@ function importReport(yaml: string, sql: string, publish: boolean): ImportResult
 export const staticApi = {
   reports: () => later<ReportSummary[]>(() => [...reports.values()]
     .sort((a, b) => a.spec.id.localeCompare(b.spec.id))
-    .map((r) => ({ id: r.spec.id, title: r.spec.title, subtitle: r.spec.subtitle, imported: !r.builtIn, visuals: r.spec.visuals.length }))),
+    .map((r) => ({ id: r.spec.id, title: r.spec.title, subtitle: r.spec.subtitle, imported: !r.builtIn, visuals: r.spec.visuals.length, dataSource: r.source }))),
   spec: (id: string) => later(() => publicSpec(report(id))),
   values: (id: string, dim: string) => later(() => {
     const r = report(id);

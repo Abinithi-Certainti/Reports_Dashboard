@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filter Style Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #04060d; --panel: rgba(12,18,32,.78); --panel-solid: #0c1220; --border: rgba(148,163,184,.16);
+    --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --accent: #22d3ee; --accent2: #a78bfa;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 60px; background: var(--bg); color: var(--text);
+    font: 14px/1.5 Inter, "Segoe UI", system-ui, sans-serif;
+    background-image: linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .lead { color: var(--text2); margin: 4px 0 0; max-width: 65ch; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px 18px 22px; position: relative; }
+  .tag { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; color: var(--accent); font-weight: 700; }
+  .card h2 { margin: 4px 0 2px; font-size: 1.1rem; }
+  .card p { margin: 0 0 14px; color: var(--text2); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .result { margin-top: 14px; font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+  .result b { color: var(--text); font-weight: 500; }
+
+  /* A: search + checkbox dropdown */
+  .dd { position: relative; }
+  .dd-btn { background: rgba(15,23,42,.7); border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px; display: flex; gap: 8px; align-items: center; min-width: 170px; justify-content: space-between; }
+  .dd-btn .k { color: var(--muted); font-size: .8rem; }
+  .dd-btn.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,.12); }
+  .count { background: var(--accent); color: var(--bg); border-radius: 6px; padding: 0 6px; font-size: .72rem; font-weight: 700; }
+  .menu { position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; width: 250px; background: var(--panel-solid); border: 1px solid var(--border); border-radius: 12px; padding: 8px; box-shadow: 0 20px 40px -12px rgba(0,0,0,.8); animation: pop .18s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
+  .menu input[type=search] { width: 100%; background: rgba(15,23,42,.8); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; color: var(--text); font: inherit; }
+  .menu .acts { display: flex; justify-content: space-between; padding: 6px 4px; font-size: .78rem; }
+  .menu .acts button { background: none; border: 0; color: var(--accent); padding: 0; }
+  .menu .list { max-height: 200px; overflow: auto; }
+  .opt { display: flex; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 7px; cursor: pointer; }
+  .opt:hover { background: rgba(34,211,238,.08); }
+  .opt input { accent-color: var(--accent); }
+
+  /* B: drawer */
+  .drawer-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: var(--bg); border: 0; border-radius: 10px; padding: 7px 14px; font-weight: 700; }
+  .chip { display: inline-flex; gap: 6px; align-items: center; background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.35); color: var(--text); border-radius: 999px; padding: 3px 6px 3px 10px; font-size: .8rem; animation: pop .18s ease; }
+  .chip button { background: none; border: 0; color: var(--text2); padding: 0 2px; }
+  .stage { position: relative; overflow: hidden; border-radius: 12px; min-height: 360px; border: 1px dashed var(--border); padding: 14px; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(300px, 90%); background: var(--panel-solid); border-left: 1px solid var(--border); padding: 14px; transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); overflow: auto; }
+  .drawer.open { transform: none; box-shadow: -20px 0 40px -20px rgba(0,0,0,.9); }
+  .drawer h3 { margin: 12px 0 4px; font-size: .7rem; letter-spacing: .14em; color: var(--muted); }
+  .drawer .foot { display: flex; gap: 8px; margin-top: 14px; }
+  .drawer .foot button { flex: 1; border-radius: 8px; padding: 6px; border: 1px solid var(--border); background: none; }
+  .drawer .foot .apply { background: var(--accent); color: var(--bg); border: 0; font-weight: 700; }
+
+  /* C: pills */
+  .pill-label { width: 110px; color: var(--muted); font-size: .8rem; }
+  .pill { border: 1px solid var(--border); background: rgba(15,23,42,.6); border-radius: 999px; padding: 4px 12px; font-size: .82rem; color: var(--text2); transition: all .15s ease; }
+  .pill:hover { border-color: var(--accent); color: var(--text); }
+  .pill.on { background: rgba(34,211,238,.16); border-color: var(--accent); color: var(--text); box-shadow: 0 0 14px -4px var(--accent); }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Filter styles: try all three</h1>
+    <p class="lead">Click around in each box. Plaza, brand and payment type names are the real ones from the reports, and there are no figures here. Then tell me A, B or C, or a mix like "C for brand, A for plaza".</p>
+  </div>
+
+  <section class="card">
+    <div class="tag">OPTION A</div>
+    <h2>Search + checkbox list</h2>
+    <p>Each filter is a small button. Click it and a list opens with a search box and "Select all / Clear".</p>
+    <div class="row" id="a-row"></div>
+    <div class="result" id="a-res"></div>
+  </section>
+
+  <section class="card">
+    <div class="tag">OPTION B</div>
+    <h2>Side filter drawer</h2>
+    <p>One "Filters" button opens a panel from the right with every filter in it. What you pick shows as small chips you can remove with ✕.</p>
+    <div class="stage">
+      <div class="row"><button class="drawer-btn" id="b-open">⧩ Filters <span id="b-n"></span></button><div class="row" id="b-chips"></div></div>
+      <div class="drawer" id="b-drawer"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="tag">OPTION C</div>
+    <h2>Pill buttons</h2>
+    <p>Short lists (Brand, Payment Type) show every value as a pill: click to switch it on or off. Long lists (Plaza, District Director) use Option A's list.</p>
+    <div id="c-box"></div>
+    <div class="result" id="c-res"></div>
+  </section>
+</div>
+<script>
+const FILTERS = {
+  Plaza: ['Bainsville ON S','Barrie','Cambridge North','Cambridge South','Dutton','Ingersoll','Ingleside','Innisfil','King City','Mallorytown North','Mallorytown South','Maple','Morrisburg ON S','Napanee','Newcastle','Odessa','Port Hope','Tilbury North','Tilbury South','Trenton North','Trenton South','West Lorne','Woodstock'],
+  'District Director': ['GTA Central','Ontario East','Ontario West'],
+  Brand: ['Tim Hortons','Market','Starbucks','Wendys','Burger King','New York Fries'],
+  'Payment Type': ['Cash','Visa','Mastercard','Debit','Amex','Gift Card'],
+};
+const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); Object.assign(e, attrs); kids.forEach(k => e.append(k)); return e; };
+const summary = (sel) => Object.entries(sel).map(([k, v]) => `<b>${k}</b>: ${v.size ? [...v].join(', ') : 'All'}`).join(' · ');
+
+// ---------- A ----------
+function dropdown(name, values, set, onChange) {
+  const box = el('div', { className: 'dd' });
+  const btn = el('button', { className: 'dd-btn', type: 'button' });
+  const paint = () => {
+    btn.innerHTML = `<span><span class="k">${name}:</span> ${set.size ? '' : 'All'}</span>${set.size ? `<span class="count">${set.size}</span>` : ''}<span>▾</span>`;
+    btn.classList.toggle('on', set.size > 0);
+  };
+  let menu = null;
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.menu').forEach(m => m.remove());
+    if (menu) { menu = null; return; }
+    menu = el('div', { className: 'menu' });
+    const search = el('input', { type: 'search', placeholder: `Search ${name.toLowerCase()}…`, id: `s-${name}` });
+    const list = el('div', { className: 'list' });
+    const draw = () => {
+      list.innerHTML = '';
+      values.filter(v => v.toLowerCase().includes(search.value.toLowerCase())).forEach(v => {
+        const cb = el('input', { type: 'checkbox', checked: set.has(v) });
+        cb.onchange = () => { cb.checked ? set.add(v) : set.delete(v); paint(); onChange(); };
+        list.append(el('label', { className: 'opt' }, cb, v));
+      });
+    };
+    const all = el('button', { type: 'button', textContent: 'Select all', onclick: () => { values.forEach(v => set.add(v)); draw(); paint(); onChange(); } });
+    const clr = el('button', { type: 'button', textContent: 'Clear', onclick: () => { set.clear(); draw(); paint(); onChange(); } });
+    search.oninput = draw;
+    menu.onclick = (ev) => ev.stopPropagation();
+    menu.append(search, el('div', { className: 'acts' }, all, clr), list);
+    box.append(menu); draw(); search.focus();
+  };
+  document.addEventListener('click', () => { if (menu) { menu.remove(); menu = null; } });
+  paint(); box.append(btn); return box;
+}
+const aSel = Object.fromEntries(Object.keys(FILTERS).map(k => [k, new Set()]));
+const aRes = () => document.getElementById('a-res').innerHTML = summary(aSel);
+Object.entries(FILTERS).forEach(([k, v]) => document.getElementById('a-row').append(dropdown(k, v, aSel[k], aRes)));
+aRes();
+
+// ---------- B ----------
+const bSel = Object.fromEntries(Object.keys(FILTERS).map(k => [k, new Set()]));
+let bDraft = null;
+const drawer = document.getElementById('b-drawer');
+function drawChips() {
+  const box = document.getElementById('b-chips'); box.innerHTML = '';
+  let n = 0;
+  Object.entries(bSel).forEach(([k, s]) => s.forEach(v => {
+    n++;
+    const x = el('button', { type: 'button', textContent: '✕', ariaLabel: `Remove ${v}`, onclick: () => { s.delete(v); drawChips(); } });
+    box.append(el('span', { className: 'chip', title: k }, v, x));
+  }));
+  document.getElementById('b-n').textContent = n ? `(${n})` : '';
+}
+function drawDrawer() {
+  drawer.innerHTML = '';
+  Object.entries(FILTERS).forEach(([k, vals]) => {
+    drawer.append(el('h3', { textContent: k.toUpperCase() }));
+    vals.forEach(v => {
+      const cb = el('input', { type: 'checkbox', checked: bDraft[k].has(v) });
+      cb.onchange = () => cb.checked ? bDraft[k].add(v) : bDraft[k].delete(v);
+      drawer.append(el('label', { className: 'opt' }, cb, v));
+    });
+  });
+  const reset = el('button', { type: 'button', textContent: 'Reset', onclick: () => { Object.values(bDraft).forEach(s => s.clear()); drawDrawer(); } });
+  const apply = el('button', { type: 'button', className: 'apply', textContent: 'Apply', onclick: () => {
+    Object.keys(bSel).forEach(k => bSel[k] = new Set(bDraft[k])); drawer.classList.remove('open'); drawChips();
+  } });
+  drawer.append(el('div', { className: 'foot' }, reset, apply));
+}
+document.getElementById('b-open').onclick = () => {
+  bDraft = Object.fromEntries(Object.entries(bSel).map(([k, s]) => [k, new Set(s)]));
+  drawDrawer(); drawer.classList.toggle('open');
+};
+drawChips();
+
+// ---------- C ----------
+const cSel = Object.fromEntries(Object.keys(FILTERS).map(k => [k, new Set()]));
+const cRes = () => document.getElementById('c-res').innerHTML = summary(cSel);
+const cBox = document.getElementById('c-box');
+Object.entries(FILTERS).forEach(([k, vals]) => {
+  const row = el('div', { className: 'pill-row' }, el('span', { className: 'pill-label', textContent: k }));
+  if (vals.length > 8 || k === 'District Director') row.append(dropdown(k, vals, cSel[k], cRes));
+  else vals.forEach(v => {
+    const p = el('button', { type: 'button', className: 'pill', textContent: v });
+    p.setAttribute('aria-pressed', 'false');
+    p.onclick = () => { cSel[k].has(v) ? cSel[k].delete(v) : cSel[k].add(v); p.classList.toggle('on'); p.setAttribute('aria-pressed', String(cSel[k].has(v))); cRes(); };
+    row.append(p);
+  });
+  cBox.append(row);
+});
+cRes();
+</script>
+</body>
+</html>

@@ -38,17 +38,31 @@ def main() -> None:
         sys.exit(f"usage: python3 tools/private_to_json.py <{'|'.join(REPORTS)}> <export file> [--cap N]")
     report_id, src = args[0], Path(args[1])
     text = src.read_text(encoding="utf-8-sig")
+    # A character lost before the file reached us (shown as U+FFFD) becomes "?" and is reported, not guessed.
+    lost = text.count("\ufffd")
+    if lost:
+        print(f"WARNING: {lost} unreadable character(s) in the export, shown as '?'")
+        text = text.replace("\ufffd", "?")
     dialect = "excel-tab" if "\t" in text.splitlines()[0] else "excel"
     reader = csv.reader(text.splitlines(), dialect)
     header = [h.strip() for h in next(reader)]
     rows = [{h: value(c) for h, c in zip(header, line)} for line in reader if any(c.strip() for c in line)]
+    # Packed to keep the one-file online copy small: text columns hold positions in a list of distinct values
+    # (read back by engine/frontend/src/static/staticApi.ts).
+    text_cols = [h for h in header if any(isinstance(r.get(h), str) for r in rows)]
+    # A text column keeps every value as text (a "23" in it stays "23"), so each non-empty cell is a position.
+    dicts = {h: sorted({str(r[h]) for r in rows if r.get(h) is not None}) for h in text_cols}
+    pos = {h: {v: i for i, v in enumerate(d)} for h, d in dicts.items()}
+    data = [[(pos[h][str(r[h])] if r.get(h) is not None else None) if h in pos else r.get(h) for h in header] for r in rows]
     out = ROOT / "demo" / "private-data" / f"{report_id}.json"
     out.write_text(json.dumps({
         "exported_on": date.fromtimestamp(src.stat().st_mtime).isoformat(),
         "source": "DEV database (kios_etl, schema master)",
         "row_cap_hit": len(rows) == cap,
-        "rows": rows,
-    }), encoding="utf-8")
+        "columns": header,
+        "dicts": dicts,
+        "data": data,
+    }, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {out.relative_to(ROOT)}: {len(rows)} rows, {len(header)} columns"
           + (" - WARNING: exactly the row limit, the export is probably cut off" if len(rows) == cap else ""))
 

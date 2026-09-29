@@ -3,12 +3,7 @@
 -- screen) as demo/private-data/dev_waste-report.csv, then run: python3 tools/private_to_json.py waste-report demo/private-data/dev_waste-report.csv
 -- The result holds real figures: it goes to demo/private-data/, never into git. Never paste a password.
 SELECT * FROM (
-    -- Detailed Waste Report dataset: one row per plaza / brand / product / week, from master.weekly_cogs (AG-74).
-    -- Verified on DEV 2026-09-25 (tools/waste_source_check.sql): week 2026-06-27 gives the same rows and totals as the
-    -- staging table the first prototype read (28,778 rows, COGS 1,659,260.49, theo cost 1,529,415.32).
-    -- Single statement, no semicolons: the engine wraps it as WITH d AS (...).
     WITH loc AS (
-        -- same filter as the old WeeklyCogs query: rolled-out locations only, matched on CTLocation
         SELECT DISTINCT ct_location, location_name, brand_name, host_location_id
         FROM master.netsuite_location_mapping
         WHERE host_location_id IS NOT NULL AND lower(trim(rollout)) IN ('yes', 'suspended')  -- any case: DEV holds 'yes' too (King City TIM03)
@@ -29,7 +24,6 @@ SELECT * FROM (
            w.cogs,
            w.theo_cost,
            w.waste_value,
-           -- old rule: inventory adjustments count as waste only from the week starting 2023-05-28
            CASE WHEN coalesce(w.start_date, w.period) < date '2023-05-28' THEN 0 ELSE w.inv_adj_value END AS waste_adj_value
     FROM master.weekly_cogs w
     JOIN loc ON loc.ct_location = w.loc_code

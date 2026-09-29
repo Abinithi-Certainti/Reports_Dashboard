@@ -1,7 +1,11 @@
 import { createContext, useContext } from 'react';
 import { alpha, createTheme, Theme } from '@mui/material/styles';
 import '@fontsource-variable/inter';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/ibm-plex-sans';
 import '@fontsource-variable/jetbrains-mono';
+import { ACCENTS, FONTS, Look, SIZES } from './prefs';
 
 export type ThemeName = 'light' | 'midnight' | 'neon';
 
@@ -34,10 +38,12 @@ export type Tokens = {
   good: string;
   bad: string;
   mono: string;
+  font: string;         // body font family
   blur: string;
 };
 
 const mono = '"JetBrains Mono Variable", ui-monospace, monospace';
+const bodyFont = '"Inter Variable", "Segoe UI", system-ui, sans-serif';
 const gridLines = (c: string) => [`linear-gradient(${c} 1px, transparent 1px)`, `linear-gradient(90deg, ${c} 1px, transparent 1px)`].join(',');
 
 // Light: bright glass on a cool wash. Midnight: deep navy wallboard with a soft aurora.
@@ -52,7 +58,7 @@ export const themes: Record<ThemeName, Tokens> = {
     accent: '#2563eb', accent2: '#7c3aed', series1: '#2563eb', series1Light: '#60a5fa',
     palette: ['#2563eb', '#7c3aed', '#0891b2', '#db2777', '#d97706', '#059669'],
     aurora: ['#93c5fd', '#c4b5fd', '#99f6e4'], auroraOpacity: 0.45, glow: '',
-    grid: '#e8ecf3', headerCell: '#f5f7fb', good: '#0f8a4f', bad: '#c93434', mono, blur: 'blur(12px) saturate(160%)',
+    grid: '#e8ecf3', headerCell: '#f5f7fb', good: '#0f8a4f', bad: '#c93434', mono, font: bodyFont, blur: 'blur(12px) saturate(160%)',
   },
   midnight: {
     name: 'midnight', label: 'Midnight', mode: 'dark',
@@ -64,7 +70,7 @@ export const themes: Record<ThemeName, Tokens> = {
     accent: '#60a5fa', accent2: '#a78bfa', series1: '#3b82f6', series1Light: '#60a5fa',
     palette: ['#60a5fa', '#a78bfa', '#22d3ee', '#f472b6', '#fbbf24', '#34d399'],
     aurora: ['#1d4ed8', '#6d28d9', '#0e7490'], auroraOpacity: 0.28, glow: '',
-    grid: 'rgba(148,163,184,0.10)', headerCell: '#121a2b', good: '#34d399', bad: '#f87171', mono, blur: 'blur(10px) saturate(130%)',
+    grid: 'rgba(148,163,184,0.10)', headerCell: '#121a2b', good: '#34d399', bad: '#f87171', mono, font: bodyFont, blur: 'blur(10px) saturate(130%)',
   },
   neon: {
     name: 'neon', label: 'Neon', mode: 'dark',
@@ -77,9 +83,26 @@ export const themes: Record<ThemeName, Tokens> = {
     accent: '#22d3ee', accent2: '#a78bfa', series1: '#3b82f6', series1Light: '#22d3ee',
     palette: ['#22d3ee', '#a78bfa', '#f472b6', '#60a5fa', '#facc15', '#4ade80'],
     aurora: ['#0891b2', '#7c3aed', '#db2777'], auroraOpacity: 0.34, glow: 'rgba(34,211,238,0.35)',
-    grid: 'rgba(148,163,184,0.10)', headerCell: '#0a1020', good: '#34d399', bad: '#f87171', mono, blur: 'blur(16px) saturate(150%)',
+    grid: 'rgba(148,163,184,0.10)', headerCell: '#0a1020', good: '#34d399', bad: '#f87171', mono, font: bodyFont, blur: 'blur(16px) saturate(150%)',
   },
 };
+
+/** The theme with the viewer's accent colour, font and number style applied. */
+export function lookTokens(look: Look): Tokens {
+  const base = themes[look.theme] ?? themes.neon;
+  const [accent, accent2, series1, series1Light] = ACCENTS[look.accent]?.[base.mode] ?? ACCENTS.cyan[base.mode];
+  const font = `${(FONTS[look.font] ?? FONTS.inter).family}, "Segoe UI", system-ui, sans-serif`;
+  return {
+    ...base,
+    accent, accent2, series1, series1Light,
+    palette: [accent, accent2, ...base.palette.filter((c) => c !== accent && c !== accent2)].slice(0, 6),
+    aurora: [series1, accent2, accent],
+    glow: base.glow ? `${accent}59` : '',
+    panelBorderHover: `${accent}8c`,
+    font,
+    mono: look.numbers === 'same' ? font : mono,
+  };
+}
 
 export const TokensContext = createContext<Tokens>(themes.neon);
 export const useTokens = () => useContext(TokensContext);
@@ -98,7 +121,8 @@ export function panelSx(t: Tokens) {
   } as const;
 }
 
-export function buildTheme(t: Tokens): Theme {
+export function buildTheme(t: Tokens, look?: Look): Theme {
+  const size = SIZES[look?.size ?? 'big'] ?? SIZES.big;
   return createTheme({
     palette: {
       mode: t.mode,
@@ -110,15 +134,16 @@ export function buildTheme(t: Tokens): Theme {
       error: { main: t.bad },
     },
     shape: { borderRadius: 12 },
+    spacing: size.spacing,
     typography: {
-      fontFamily: '"Inter Variable", "Segoe UI", system-ui, sans-serif',
-      h1: { fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em' },
+      fontFamily: t.font,
+      h1: { fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 },
       h2: { fontSize: '0.78rem', fontWeight: 650, letterSpacing: '0.10em', textTransform: 'uppercase', color: t.textSecondary },
     },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          html: { colorScheme: t.mode, '--re-accent': t.accent },
+          html: { colorScheme: t.mode, '--re-accent': t.accent, fontSize: `${size.rootPx}px` },
           body: {
             backgroundColor: t.bg,
             backgroundImage: t.bgImage,

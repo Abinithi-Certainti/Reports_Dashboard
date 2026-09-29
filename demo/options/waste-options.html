@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waste Report Redesign</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --a1: #0891b2; --a2: #7c3aed; --a3: #2563eb; --good: #0f8a4f; --bad: #c93434; --warn: #d97706;
+    --bg: #eef2f8; --panel: rgba(255,255,255,.9); --line: #e2e7f0; --text: #0b1324; --text2: #4e5a70; --muted: #8390a5; --track: #e8edf5;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  html[data-mode="dark"] {
+    color-scheme: dark;
+    --a1: #22d3ee; --a2: #a78bfa; --a3: #3b82f6; --good: #34d399; --bad: #f87171; --warn: #fbbf24;
+    --bg: #04060d; --panel: rgba(12,18,32,.66); --line: rgba(148,163,184,.15); --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --track: rgba(148,163,184,.12);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 56px; background: var(--bg); color: var(--text); font: 13px/1.45 Inter, "Segoe UI", system-ui, sans-serif;
+         background-image: radial-gradient(700px 300px at 10% 0, color-mix(in srgb, var(--a1) 18%, transparent), transparent 70%), radial-gradient(600px 300px at 95% 0, color-mix(in srgb, var(--a2) 16%, transparent), transparent 70%); background-repeat: no-repeat; }
+  .top { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
+  .top b { font-size: .7rem; letter-spacing: .12em; color: var(--muted); }
+  .top button { border: 1px solid var(--line); background: var(--panel); color: var(--text2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .top button[aria-pressed="true"] { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; border-color: transparent; font-weight: 600; }
+  .top span { color: var(--muted); font-size: .75rem; }
+  button:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 26px; }
+  h1 { margin: 6px 0 0; font-size: 1.45rem; letter-spacing: -.02em; }
+  .lead { margin: 2px 0 0; color: var(--text2); max-width: 78ch; }
+  .opt { display: grid; gap: 10px; }
+  .opt-h { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .opt-h .tag { font: 700 .74rem var(--mono); letter-spacing: .14em; color: var(--a1); }
+  .opt-h h2 { margin: 0; font-size: 1.1rem; }
+  .opt-h p { margin: 0; color: var(--text2); flex-basis: 100%; max-width: 90ch; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; backdrop-filter: blur(14px); min-width: 0; }
+  h3 { margin: 0 0 10px; font-size: .68rem; letter-spacing: .12em; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .g { display: grid; gap: 10px; }
+  .c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .c2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .c75 { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .k small { display: block; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text2); font-weight: 600; }
+  .k b { display: block; font: 700 1.3rem var(--mono); margin-top: 2px; }
+  .k em { font-style: normal; font-size: .72rem; color: var(--muted); }
+  .up { color: var(--good); } .down { color: var(--bad); } .warn { color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 5px 7px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 600; font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; }
+  td { border-top: 1px solid var(--line); }
+  .scroll { overflow-x: auto; }
+  svg text { font-family: Inter, sans-serif; }
+  .chip { font-size: .66rem; padding: 1px 6px; border-radius: 6px; font-weight: 700; }
+  .chip.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+  .chip.ok { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .chip.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--text2); margin-top: 8px; }
+  .legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .stack { display: grid; gap: 8px; }
+  .stack > div { display: grid; grid-template-columns: 120px minmax(0, 1fr) 70px; gap: 8px; align-items: center; }
+  .bar { display: flex; height: 14px; border-radius: 5px; overflow: hidden; background: var(--track); }
+  .bar i { display: block; height: 100%; }
+  .heat { width: 100%; border-collapse: separate; border-spacing: 3px; }
+  .heat td { border: 0; text-align: center; border-radius: 6px; padding: 6px 2px; font: 600 .74rem var(--mono); }
+  .heat td:first-child { text-align: left; font: 500 .78rem Inter, sans-serif; background: none !important; }
+  .heat th { text-align: center; }
+  .tiles { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .tile { display: grid; gap: 3px; position: relative; overflow: hidden; }
+  .tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .tile.bad::before { background: var(--bad); } .tile.warn::before { background: var(--warn); } .tile.ok::before { background: var(--good); }
+  .tile strong { font-size: .88rem; }
+  .tile .v { font: 700 1.05rem var(--mono); }
+  .tile small { color: var(--muted); }
+  .flag { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+  .flag:first-of-type { border-top: 0; }
+  .flag .n { font: 700 .7rem var(--mono); width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); }
+  .flag small { display: block; color: var(--muted); }
+  .note { color: var(--muted); font-size: .72rem; }
+  @media (max-width: 820px) {
+    .c4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .c2, .c75 { grid-template-columns: 1fr; }
+    .stack > div { grid-template-columns: 90px minmax(0, 1fr) 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top" role="group" aria-label="Mode">
+    <b>MODE</b>
+    <button type="button" data-m="dark" aria-pressed="true">☾ Dark</button>
+    <button type="button" data-m="light" aria-pressed="false">☀ Light</button>
+    <span>Made-up example numbers, only to show each design.</span>
+  </div>
+  <div>
+    <h1>Detailed Waste Report: 3 redesign options</h1>
+    <p class="lead">Same data and formulas as today (Begin $, Purchases, Transfers out, End $, COGS, Theoretical cost, Waste, Variance, by plaza, brand, category and item). Only the way it is shown changes. Every option keeps a full detail table at the bottom, and clicking a plaza opens its detail pop-up. Reply A, B or C, or a mix.</p>
+  </div>
+
+  <!-- ================= A ================= -->
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION A</span><h2>Cost story: where the money went</h2>
+      <p>Tells the week as a story. First a flow from opening stock to cost of goods (Begin + Purchases − Transfers − End = COGS). Then COGS split into what it should have cost (theoretical), waste and unexplained variance, per plaza. Best for a manager who asks "why is our cost high?".</p></div>
+    <div class="g c4" id="aK"></div>
+    <div class="g c2">
+      <div class="panel"><h3>From stock to cost of goods (week)</h3><svg id="aFlow" width="100%" height="220" viewBox="0 0 560 220" role="img" aria-label="Cost flow"></svg></div>
+      <div class="panel"><h3>What COGS is made of, by plaza</h3><div class="stack" id="aStack"></div>
+        <div class="legend"><span><i style="background:var(--a3)"></i>Theoretical cost</span><span><i style="background:var(--warn)"></i>Waste</span><span><i style="background:var(--bad)"></i>Unexplained variance</span></div></div>
+    </div>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION B</span><h2>Plaza scorecards + category heatmap</h2>
+      <p>One tile per plaza with its waste as a % of COGS and a red / amber / green edge, then a heatmap of waste % by plaza × category, so the problem spots (e.g. Bakery at one plaza) stand out at once. Best for a district director walking through all plazas.</p></div>
+    <div class="tiles" id="bTiles"></div>
+    <div class="panel scroll"><h3>Waste as % of COGS · plaza × category</h3><table class="heat" id="bHeat"></table>
+      <div class="legend"><span>Darker = higher waste %. Target under 3%.</span></div></div>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section class="opt">
+    <div class="opt-h"><span class="tag">OPTION C</span><h2>Exceptions first</h2>
+      <p>Shows only what needs action: the items and plazas with the biggest waste or variance, flagged, and a chart that places every plaza by waste % and variance % so the outliers sit in the top-right corner. Best for a quick daily check.</p></div>
+    <div class="g c75">
+      <div class="panel"><h3>Plazas by waste % and variance % of COGS</h3><svg id="cScatter" width="100%" height="260" viewBox="0 0 560 260" role="img" aria-label="Waste vs variance by plaza"></svg></div>
+      <div class="panel"><h3>Top items to act on</h3><div id="cFlags"></div></div>
+    </div>
+  </section>
+
+  <p class="note">Detail table (all options): the same 11 columns as today, but grouped (Stock · Cost · Result), with a height limit, a sticky header and in-cell bars for Waste and Variance.</p>
+</div>
+<script>
+// Made-up example values, only to show each design.
+const P = [
+  ['Barrie', 71200, 68100, 1830, 1270], ['Cambridge North', 124800, 118300, 2210, 4290], ['Cambridge South', 98300, 95100, 1690, 1510],
+  ['Innisfil', 64400, 60100, 2380, 1920], ['Napanee', 84000, 80400, 2210, 1390], ['Port Hope', 180100, 170200, 2790, 7110], ['Woodstock', 104600, 99700, 2080, 2820],
+]; // plaza, cogs, theo, waste, variance
+const CAT = ['Bakery', 'Beverage', 'Dairy', 'Meat', 'Produce', 'Paper'];
+const fmt = (n) => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-CA');
+const pct = (n) => (n * 100).toFixed(1) + '%';
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const T = P.reduce((a, p) => [a[0] + p[1], a[1] + p[2], a[2] + p[3], a[3] + p[4]], [0, 0, 0, 0]);
+const seed = (i, j) => { const x = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453; return x - Math.floor(x); };
+
+function draw() {
+  // A: KPIs
+  document.getElementById('aK').innerHTML = [['COGS', fmt(T[0]), 'cost of goods used'], ['Theoretical cost', fmt(T[1]), pct(T[1] / T[0]) + ' of COGS'], ['Waste', fmt(T[2]), pct(T[2] / T[0]) + ' of COGS'], ['Unexplained variance', fmt(T[3]), pct(T[3] / T[0]) + ' of COGS']]
+    .map(([l, v, e], i) => `<div class="panel k"><small>${l}</small><b class="${i === 3 ? 'down' : i === 2 ? 'warn' : ''}">${v}</b><em>${e}</em></div>`).join('');
+  // A: waterfall
+  const steps = [['Begin stock', 412000, 'base'], ['+ Purchases', 790000, 'up'], ['− Transfers out', -18600, 'down'], ['− End stock', -455900, 'down'], ['= COGS', T[0], 'total']];
+  let run = 0; const max = 412000 + 790000; const W = 560, H = 220, top = 14, bot = 30, bw = 80, gap = (W - 5 * bw) / 6; const y = (v) => top + (1 - v / max) * (H - top - bot);
+  let svg = '';
+  steps.forEach(([l, v, k], i) => {
+    const x = gap + i * (bw + gap); let a, b;
+    if (k === 'base' || k === 'total') { a = 0; b = v; run = v; } else { a = run; b = run + v; run = b; }
+    const y1 = y(Math.max(a, b)), y2 = y(Math.min(a, b));
+    const col = k === 'total' ? css('--a2') : k === 'up' ? css('--a1') : k === 'down' ? css('--bad') : css('--a3');
+    svg += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(2, y2 - y1)}" rx="5" fill="${col}"/>`;
+    svg += `<text x="${x + bw / 2}" y="${y1 - 4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${css('--text')}" font-family="JetBrains Mono, monospace">${fmt(Math.abs(v)).replace('$', '$')}</text>`;
+    svg += `<text x="${x + bw / 2}" y="${H - 10}" text-anchor="middle" font-size="10.5" fill="${css('--text2')}">${l}</text>`;
+  });
+  document.getElementById('aFlow').innerHTML = svg;
+  // A: stacked composition
+  const cmax = Math.max(...P.map((p) => p[1]));
+  document.getElementById('aStack').innerHTML = P.map(([n, c, th, w, v]) => `<div><span>${n}</span><span class="bar" style="width:${(c / cmax * 100).toFixed(1)}%"><i style="width:${th / c * 100}%;background:${css('--a3')}"></i><i style="width:${w / c * 100}%;background:${css('--warn')}"></i><i style="width:${v / c * 100}%;background:${css('--bad')}"></i></span><span class="num" style="text-align:right">${fmt(c)}</span></div>`).join('');
+
+  // B: tiles
+  document.getElementById('bTiles').innerHTML = P.map(([n, c, th, w, v]) => { const r = w / c; const cls = r > 0.03 ? 'bad' : r > 0.022 ? 'warn' : 'ok';
+    return `<div class="panel tile ${cls}"><strong>${n}</strong><span class="v">${pct(r)} <span class="chip ${cls}">waste</span></span><small>Waste ${fmt(w)} of ${fmt(c)} COGS</small><small>Variance <span class="${v / c > 0.03 ? 'down' : ''}">${fmt(v)} (${pct(v / c)})</span></small></div>`; }).join('');
+  // B: heatmap
+  const cells = P.map((p, i) => CAT.map((c, j) => 0.005 + seed(i, j) * 0.05 * (j === 0 ? 1.4 : 1)));
+  const hmax = Math.max(...cells.flat());
+  document.getElementById('bHeat').innerHTML = `<tr><th style="text-align:left">Plaza</th>${CAT.map((c) => `<th>${c}</th>`).join('')}</tr>` + P.map((p, i) => `<tr><td>${p[0]}</td>${cells[i].map((x) => { const k = x / hmax;
+    return `<td style="background:color-mix(in srgb, ${css('--bad')} ${Math.round(8 + k * 70)}%, transparent);color:${k > .6 ? '#fff' : css('--text')}">${pct(x)}</td>`; }).join('')}</tr>`).join('');
+
+  // C: scatter
+  const S = { W: 560, H: 260, l: 46, r: 16, t: 14, b: 36 };
+  const xs = P.map((p) => p[3] / p[1]), ys = P.map((p) => p[4] / p[1]);
+  const xmax = 0.045, ymax = 0.045;
+  const X = (v) => S.l + v / xmax * (S.W - S.l - S.r), Y = (v) => S.t + (1 - v / ymax) * (S.H - S.t - S.b);
+  let s = '';
+  [0, 0.01, 0.02, 0.03, 0.04].forEach((v) => { s += `<line x1="${X(v)}" y1="${S.t}" x2="${X(v)}" y2="${S.H - S.b}" stroke="${css('--line')}"/><text x="${X(v)}" y="${S.H - S.b + 14}" text-anchor="middle" font-size="10" fill="${css('--muted')}">${pct(v)}</text>`; });
+  [0, 0.01, 0.02, 0.03, 0.04].forEach((v) => { s += `<line x1="${S.l}" y1="${Y(v)}" x2="${S.W - S.r}" y2="${Y(v)}" stroke="${css('--line')}"/><text x="${S.l - 6}" y="${Y(v) + 3}" text-anchor="end" font-size="10" fill="${css('--muted')}">${pct(v)}</text>`; });
+  s += `<rect x="${X(0.03)}" y="${S.t}" width="${X(xmax) - X(0.03)}" height="${Y(0.03) - S.t}" fill="${css('--bad')}" fill-opacity=".08"/>`;
+  s += `<text x="${X(xmax) - 6}" y="${S.t + 12}" text-anchor="end" font-size="10" fill="${css('--bad')}">act here</text>`;
+  s += `<text x="${(S.l + S.W - S.r) / 2}" y="${S.H - 4}" text-anchor="middle" font-size="10.5" fill="${css('--text2')}">Waste % of COGS →</text>`;
+  s += `<text x="12" y="${(S.t + S.H - S.b) / 2}" transform="rotate(-90 12 ${(S.t + S.H - S.b) / 2})" text-anchor="middle" font-size="10.5" fill="${css('--text2')}">Variance % of COGS →</text>`;
+  P.forEach((p, i) => { const bad = xs[i] > 0.03 || ys[i] > 0.03;
+    s += `<circle cx="${X(xs[i])}" cy="${Y(ys[i])}" r="${6 + p[1] / 40000}" fill="${bad ? css('--bad') : css('--a1')}" fill-opacity=".75"><title>${p[0]}</title></circle>`;
+    // Alternate labels above / below so close dots do not overlap.
+    s += `<text x="${X(xs[i]) + 10}" y="${Y(ys[i]) + (i % 2 ? 14 : -6)}" font-size="10.5" fill="${css('--text')}">${p[0]}</text>`; });
+  document.getElementById('cScatter').innerHTML = s;
+  // C: flags
+  const F = [['Port Hope', 'Bakery · Muffins', 1180, 'waste 6.2% of item cost'], ['Cambridge North', 'Dairy · Milk 2%', 940, 'variance, count not matching'], ['Innisfil', 'Produce · Lettuce', 610, 'waste 4.8%'], ['Port Hope', 'Meat · Bacon', 580, 'variance'], ['Woodstock', 'Bakery · Donuts', 520, 'waste 3.9%']];
+  document.getElementById('cFlags').innerHTML = F.map(([p, it, v, why], i) => `<div class="flag"><span class="n">${i + 1}</span><span><strong>${it}</strong><small>${p} · ${why}</small></span><span class="num down">${fmt(v)}</span></div>`).join('');
+}
+document.querySelectorAll('.top button').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.mode = b.dataset.m;
+  document.querySelectorAll('.top button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  draw();
+}));
+const m = new URLSearchParams(location.search).get('m');
+if (m) document.querySelector(`.top button[data-m="${m}"]`)?.click(); else draw();
+</script>
+</body>
+</html>

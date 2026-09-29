@@ -10,6 +10,23 @@ It runs the real translated SQL, the real business rules and both versions of "%
 | A. Sample data | Made-up stores and amounts, clearly labelled | Any laptop, no database access needed |
 | B. Real DEV data | The new PostgreSQL DEV database, read-only | A laptop that can reach DEV (company network / VPN) |
 
+## Where the numbers come from - picked automatically
+
+The dashboard decides at start-up, then per report, and says which on every page (sidebar dot, status chip, banner):
+
+| Order | Source | Used when | Shown as |
+|---|---|---|---|
+| 1 | **Live DEV** - the Java backend (`/api/...`) | `GET /api/health` answers `{"database":"up"}` within 3 s (the backend runs **and** its `SELECT 1` works) | green "Live DEV data" |
+| 2 | **DEV export** - `demo/private-data/<report id>.json` in the browser | no live DEV, and that report's export file exists | blue "DEV export" + export date / row-limit warning |
+| 3 | **Sample** - rows generated in the browser (`src/static/sampleData.ts`) | no live DEV and no export for that report | orange "Sample data - made up" banner |
+
+- The health check fails over on any error, an HTTP 503 `{"database":"down"}`, or no answer within 3 s. It runs once
+  per page load; reload the page after starting the backend.
+- Offline, every report is answered by `src/static/staticApi.ts` (same filters, windows and % to Total as the engine).
+- Sample rows use the last ~60 days up to today (plus the same days a year earlier for the PY columns), the repo's
+  plaza / brand / payment type names, and "District A/B/C" as district directors. The numbers mean nothing.
+- Reports 4 and 5 (People Count, Radar Car Count) stay "Cannot show yet": there is no data for them anywhere.
+
 ## What you need installed
 
 - Java 21 and Maven 3.9 (`java -version`, `mvn -v`)
@@ -80,10 +97,10 @@ Reconciling against the production Power BI report needs production-like data.
 - Excel export
 - Per-user data restriction (waiting on decision 4)
 
-## Online copy (no server) - real DEV rows from your exports
+## Online copy (no server) - DEV exports, else sample rows
 
-One HTML file that runs the dashboard inside the browser: the side menu lists the 10 reports, nothing else. There is
-no made-up data: a report shows only when its DEV export is loaded; otherwise its page says why it cannot show.
+One HTML file that runs the dashboard inside the browser: `npm run build:static` skips the health check and starts in
+modes 2 / 3 above straight away. A report with a DEV export shows it; the others show clearly labelled sample rows.
 
 1. Regenerate the export queries after any `dataset.sql` change: `bash tools/make_dev_exports.sh`.
 2. Run `tools/dev_export/<report>.sql` on DEV and save the **whole** result (not only the rows shown on screen) as
@@ -92,8 +109,6 @@ no made-up data: a report shows only when its DEV export is loaded; otherwise it
    `demo/private-data/<report>.json` and warns when the file has exactly 20,000 rows (a cut-off export).
 4. Build: `cd engine/frontend && npm ci && npm run build:static` - writes `dist-static/index.html`.
 
-- `demo/private-data/` is git-ignored: the repository is public, so real figures never go into git. The built
-  `dist-static/index.html` contains those figures too - it is git-ignored as well, share it only privately.
-- `src/static/staticApi.ts` answers the same API calls in the browser, with the same filter, sorting, % to Total
-  and date rules as the Java engine.
+- `demo/private-data/` is git-ignored: the repository is public, so real figures never go into git. Both builds
+  (`dist/` and `dist-static/index.html`) contain the exports too - both are git-ignored; share them only privately.
 - Live mode (Mode B above) needs no exports: the backend reads every report straight from DEV.

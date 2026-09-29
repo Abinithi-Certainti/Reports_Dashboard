@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Style Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Sora:wght@500;600;700&display=swap">
+<style>
+  :root { color-scheme: dark; --mono: "JetBrains Mono", ui-monospace, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 13px/1.45 Inter, "Segoe UI", system-ui, sans-serif; transition: background .4s ease, color .4s ease; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- the style switch ---------- */
+  .switch { position: sticky; top: 0; z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 16px;
+            background: rgba(0,0,0,.72); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.1); color: #e2e8f0; }
+  .switch b { font-size: .8rem; letter-spacing: .08em; }
+  .switch button { border: 1px solid rgba(255,255,255,.2); background: transparent; border-radius: 999px; padding: 5px 14px; font-weight: 600; }
+  .switch button[aria-pressed="true"] { background: #22d3ee; color: #04060d; border-color: #22d3ee; }
+  .switch span { color: #94a3b8; font-size: .78rem; }
+
+  /* ---------- shared layout ---------- */
+  .app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100vh - 46px); }
+  .side { padding: 14px 12px; border-right: 1px solid var(--line); background: var(--side); }
+  .logo { display: flex; gap: 8px; align-items: center; font-weight: 800; margin-bottom: 16px; }
+  .logo i { width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--logo); display: block; }
+  .nav-h { font-size: .64rem; letter-spacing: .14em; color: var(--muted); margin: 0 6px 6px; font-weight: 700; }
+  .nav { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: var(--r-sm); color: var(--text2); margin-bottom: 2px; }
+  .nav em { font: 700 .64rem var(--mono); font-style: normal; min-width: 22px; text-align: center; padding: 2px 0; border-radius: 6px; background: var(--chip); color: var(--muted); }
+  .nav.on { background: var(--nav-on); color: var(--text); box-shadow: var(--nav-on-shadow); }
+  .nav.on em { background: var(--accent); color: var(--on-accent); }
+  .nav .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--dot); }
+  .main { padding: 14px 18px 28px; min-width: 0; }
+  .eyebrow { font: 700 .66rem var(--mono); letter-spacing: .14em; color: var(--accent); }
+  h1 { margin: 2px 0 10px; font: var(--h1); letter-spacing: -.01em; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 10px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); }
+  .fbtn { display: flex; gap: 6px; align-items: center; padding: 5px 10px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--input); }
+  .fbtn small { color: var(--muted); }
+  .fbtn .count { background: var(--accent); color: var(--on-accent); border-radius: 5px; padding: 0 5px; font-size: .68rem; font-weight: 700; }
+  .kpis { display: grid; gap: var(--gap); grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--gap); }
+  .k { padding: 10px 12px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease; }
+  .k:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .k small { display: block; color: var(--k-label); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .k b { display: block; font: var(--k-num); margin-top: 2px; }
+  .k em { font-style: normal; font-size: .68rem; color: var(--good); }
+  .row2 { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); margin-bottom: var(--gap); align-items: stretch; }
+  .p { padding: 10px 12px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .p h3 { margin: 0 0 8px; font-size: .68rem; letter-spacing: .1em; color: var(--text2); font-weight: 700; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 4px 6px; text-align: left; }
+  th:last-child, td:last-child { text-align: right; }
+  th { color: var(--muted); font-weight: 600; font-size: .7rem; }
+  td { border-top: 1px solid var(--line); }
+  tr.total td { font-weight: 700; }
+  .bars { display: grid; gap: 8px; flex: 1; align-content: space-between; }
+  .bar { display: grid; grid-template-columns: 84px minmax(0, 1fr) 70px; gap: 8px; align-items: center; }
+  .track { height: 9px; border-radius: var(--bar-r); background: var(--track); overflow: hidden; }
+  .track i { display: block; height: 100%; border-radius: var(--bar-r); background: var(--bar); box-shadow: var(--bar-glow); width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .detail .lvl1 td:first-child { font-weight: 650; }
+  .detail .lvl2 td:first-child { padding-left: 22px; color: var(--text2); }
+  .note { color: var(--muted); font-size: .7rem; margin-top: 10px; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; } .side { display: none; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .row2 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ---------- A: Glass Neon ---------- */
+  body.A {
+    --bg: #04060d; --side: rgba(4,6,13,.7); --panel: rgba(12,18,32,.58); --input: rgba(15,23,42,.6); --line: rgba(148,163,184,.15);
+    --text: #f1f5f9; --text2: #94a3b8; --muted: #64748b; --k-label: #94a3b8; --accent: #22d3ee; --on-accent: #04060d; --good: #34d399;
+    --chip: rgba(100,116,139,.15); --dot: #34d399; --nav-on: linear-gradient(90deg, rgba(34,211,238,.18), rgba(167,139,250,.05));
+    --nav-on-shadow: inset 0 0 0 1px rgba(34,211,238,.4), 0 0 22px -6px rgba(34,211,238,.35);
+    --logo: conic-gradient(from 200deg, #22d3ee, #a78bfa, #3b82f6, #22d3ee);
+    --r: 14px; --r-sm: 10px; --gap: 10px; --h1: 700 1.45rem Inter, sans-serif; --k-num: 700 1.2rem var(--mono);
+    --track: rgba(148,163,184,.1); --bar: linear-gradient(90deg, #3b82f6, #22d3ee); --bar-glow: 0 0 10px rgba(34,211,238,.55); --bar-r: 5px;
+    background: #04060d radial-gradient(700px 300px at 15% -5%, rgba(8,145,178,.28), transparent 70%) no-repeat,
+                radial-gradient(600px 300px at 95% 0%, rgba(124,58,237,.25), transparent 70%) no-repeat;
+    background-color: #04060d; color: var(--text);
+  }
+  body.A .k::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, #22d3ee, #a78bfa); }
+  body.A .k, body.A .p, body.A .filters { backdrop-filter: blur(14px); }
+
+  /* ---------- B: Clean Pro ---------- */
+  body.B {
+    --bg: #0d1117; --side: #010409; --panel: #0f141b; --input: #0d1117; --line: #21262d;
+    --text: #e6edf3; --text2: #adbac7; --muted: #7d8590; --k-label: #7d8590; --accent: #4c8dff; --on-accent: #fff; --good: #3fb950;
+    --chip: #21262d; --dot: #3fb950; --nav-on: #161b22; --nav-on-shadow: inset 2px 0 0 #4c8dff;
+    --logo: #4c8dff;
+    --r: 6px; --r-sm: 6px; --gap: 8px; --h1: 650 1.3rem Inter, sans-serif; --k-num: 650 1.15rem Inter, sans-serif;
+    --track: #21262d; --bar: #4c8dff; --bar-glow: none; --bar-r: 2px;
+    background: #0d1117; color: var(--text);
+  }
+  body.B tbody tr:nth-child(even) td { background: #121821; }
+
+  /* ---------- C: Bento Colour ---------- */
+  body.C {
+    --bg: #0b0b14; --side: #0b0b14; --panel: #151525; --input: #1c1c30; --line: #24243c;
+    --text: #f5f5ff; --text2: #b4b4d0; --muted: #8a8aa8; --k-label: rgba(11,11,20,.7); --accent: #a78bfa; --on-accent: #0b0b14; --good: #0b0b14;
+    --chip: #1c1c30; --dot: #34d399; --nav-on: #1f1f36; --nav-on-shadow: none;
+    --logo: linear-gradient(135deg, #67e8f9, #a78bfa, #fb7185);
+    --r: 20px; --r-sm: 14px; --gap: 10px; --h1: 700 1.5rem Sora, Inter, sans-serif; --k-num: 700 1.3rem Sora, Inter, sans-serif;
+    --track: #24243c; --bar: linear-gradient(90deg, #a78bfa, #fb7185); --bar-glow: none; --bar-r: 999px;
+    background: #0b0b14; color: var(--text); font-family: Sora, Inter, sans-serif;
+  }
+  body.C .k { border: 0; color: #0b0b14; }
+  body.C .k:nth-child(1) { background: linear-gradient(135deg, #67e8f9, #22d3ee); }
+  body.C .k:nth-child(2) { background: linear-gradient(135deg, #c4b5fd, #a78bfa); }
+  body.C .k:nth-child(3) { background: linear-gradient(135deg, #fda4af, #fb7185); }
+  body.C .k:nth-child(4) { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+  body.C .k:hover { border: 0; }
+
+  /* ---------- light versions ---------- */
+  html[data-mode="light"] { color-scheme: light; }
+  html[data-mode="light"] .switch { background: rgba(255,255,255,.85); color: #0f172a; border-bottom-color: #e2e8f0; }
+  html[data-mode="light"] .switch button { border-color: #cbd5e1; }
+  html[data-mode="light"] .switch span { color: #64748b; }
+  html[data-mode="light"] body.A {
+    --side: rgba(255,255,255,.7); --panel: rgba(255,255,255,.72); --input: rgba(248,250,252,.9); --line: rgba(148,163,184,.3);
+    --text: #0b1324; --text2: #475569; --muted: #64748b; --k-label: #475569; --accent: #0891b2; --on-accent: #fff; --good: #059669;
+    --chip: rgba(100,116,139,.12); --dot: #059669; --nav-on: linear-gradient(90deg, rgba(8,145,178,.14), rgba(124,58,237,.06));
+    --nav-on-shadow: inset 0 0 0 1px rgba(8,145,178,.35), 0 8px 20px -10px rgba(8,145,178,.5);
+    --track: rgba(148,163,184,.2); --bar: linear-gradient(90deg, #2563eb, #06b6d4); --bar-glow: 0 2px 8px rgba(6,182,212,.35);
+    background: #eef3fa radial-gradient(700px 300px at 15% -5%, rgba(34,211,238,.35), transparent 70%) no-repeat,
+                radial-gradient(600px 300px at 95% 0%, rgba(167,139,250,.35), transparent 70%) no-repeat;
+    background-color: #eef3fa;
+  }
+  html[data-mode="light"] body.A .k, html[data-mode="light"] body.A .p, html[data-mode="light"] body.A .filters { box-shadow: 0 10px 30px -18px rgba(30,64,175,.35); }
+  html[data-mode="light"] body.B {
+    --bg: #ffffff; --side: #f6f8fa; --panel: #ffffff; --input: #f6f8fa; --line: #d0d7de;
+    --text: #1f2328; --text2: #424a53; --muted: #656d76; --k-label: #656d76; --accent: #0969da; --on-accent: #fff; --good: #1a7f37;
+    --chip: #eaeef2; --dot: #1a7f37; --nav-on: #eaeef2; --nav-on-shadow: inset 2px 0 0 #0969da; --logo: #0969da;
+    --track: #eaeef2; --bar: #0969da; background: #ffffff;
+  }
+  html[data-mode="light"] body.B tbody tr:nth-child(even) td { background: #f6f8fa; }
+  html[data-mode="light"] body.C {
+    --bg: #faf9ff; --side: #f3f1ff; --panel: #ffffff; --input: #f3f1ff; --line: #e7e3fb;
+    --text: #1a1333; --text2: #4c4470; --muted: #7a73a0; --accent: #7c3aed; --on-accent: #fff;
+    --chip: #ede9fe; --dot: #059669; --nav-on: #ede9fe; --track: #ede9fe; --bar: linear-gradient(90deg, #7c3aed, #e11d48);
+    background: #faf9ff;
+  }
+  html[data-mode="light"] body.C .p { box-shadow: 0 10px 30px -20px rgba(76,29,149,.35); }
+</style>
+</head>
+<body class="A">
+<div class="switch" role="group" aria-label="Choose a style">
+  <b>STYLE</b>
+  <button type="button" data-s="A" aria-pressed="true">A · Glass Neon</button>
+  <button type="button" data-s="B" aria-pressed="false">B · Clean Pro</button>
+  <button type="button" data-s="C" aria-pressed="false">C · Bento Colour</button>
+  <b style="margin-left:8px">MODE</b>
+  <button type="button" data-m="dark" aria-pressed="true">☾ Dark</button>
+  <button type="button" data-m="light" aria-pressed="false">☀ Light</button>
+  <span>Made-up example numbers, only to show the look.</span>
+</div>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i>Report Engine</div>
+    <div class="nav-h">REPORTS</div>
+    <div id="nav"></div>
+  </aside>
+  <main class="main">
+    <div class="eyebrow">REPORT 01 / 10</div>
+    <h1>Tender Report</h1>
+    <div class="filters">
+      <span class="fbtn"><small>Plaza:</small><span class="count">3</span> ▾</span>
+      <span class="fbtn"><small>District:</small> All ▾</span>
+      <span class="fbtn"><small>Brand:</small><span class="count">2</span> ▾</span>
+      <span class="fbtn"><small>Payment type:</small> All ▾</span>
+      <span class="fbtn"><small>Dates:</small> 13 May → 19 May ▾</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="row2">
+      <section class="p"><h3>Selected locations - summary</h3><table><thead><tr><th>Payment type</th><th>Tender</th></tr></thead><tbody id="sum"></tbody></table></section>
+      <section class="p"><h3>Tender amount by payment type</h3><div class="bars" id="bars"></div></section>
+    </div>
+    <section class="p detail"><h3>All locations - detail</h3>
+      <table><thead><tr><th>Plaza / Brand</th><th>13 May</th><th>14 May</th><th>15 May</th><th>Total</th></tr></thead><tbody id="det"></tbody></table>
+    </section>
+    <div class="note">Example numbers only.</div>
+  </main>
+</div>
+<script>
+// Made-up example values, only to show each style.
+const NAV = ['Tender Report', 'Detailed Waste Report', 'Market Category', 'People Count', 'Radar Car Count', 'Sales and Margin', 'Sales Report', 'Budget 2026', 'Field Team', 'Financial Reports'];
+document.getElementById('nav').innerHTML = NAV.map((n, i) => `<div class="nav${i === 0 ? ' on' : ''}"><em>${String(i + 1).padStart(2, '0')}</em>${n}<span class="dot"></span></div>`).join('');
+const K = [['Total tender', '$128,450', '4.2'], ['Cash after paid-outs', '$31,220', '1.1'], ['Card and other', '$97,230', '5.0'], ['Paid-outs', '$1,140', '0.3']];
+document.getElementById('kpis').innerHTML = K.map(([l, v, d]) => `<div class="k"><small>${l}</small><b class="num">${v}</b><em>▲ ${d}% vs last week</em></div>`).join('');
+const ROWS = [['Visa', 41300], ['Cash', 31220], ['Mastercard', 28950], ['Debit', 22410], ['Amex', 4570]];
+const fmt = (n) => '$' + n.toLocaleString('en-CA');
+document.getElementById('sum').innerHTML = ROWS.map(([p, v]) => `<tr><td>${p}</td><td class="num">${fmt(v)}</td></tr>`).join('')
+  + `<tr class="total"><td>Total</td><td class="num">${fmt(ROWS.reduce((s, r) => s + r[1], 0))}</td></tr>`;
+document.getElementById('bars').innerHTML = ROWS.map(([p, v]) => `<div class="bar"><span>${p}</span><span class="track"><i data-w="${Math.round(v / 41300 * 100)}"></i></span><span class="num" style="text-align:right">${fmt(v)}</span></div>`).join('');
+const DET = [['Barrie', [5120, 4880, 5310]], ['  Tim Hortons', [3400, 3150, 3520]], ['  Market', [1720, 1730, 1790]], ['Innisfil', [4210, 4390, 4050]], ['  Tim Hortons', [2900, 3010, 2780]], ['  Market', [1310, 1380, 1270]]];
+document.getElementById('det').innerHTML = DET.map(([n, v]) => `<tr class="${n.startsWith('  ') ? 'lvl2' : 'lvl1'}"><td>${n.startsWith('  ') ? '' : '▾ '}${n.trim()}</td>${v.map((x) => `<td class="num">${fmt(x)}</td>`).join('')}<td class="num">${fmt(v.reduce((a, b) => a + b, 0))}</td></tr>`).join('');
+const grow = () => document.querySelectorAll('.track i').forEach((i) => { i.style.width = '0'; requestAnimationFrame(() => requestAnimationFrame(() => { i.style.width = i.dataset.w + '%'; })); });
+document.querySelectorAll('.switch button[data-s]').forEach((b) => b.addEventListener('click', () => {
+  document.body.className = b.dataset.s;
+  document.querySelectorAll('.switch button[data-s]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  grow();
+}));
+document.querySelectorAll('.switch button[data-m]').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.mode = b.dataset.m;
+  document.querySelectorAll('.switch button[data-m]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+}));
+const q = new URLSearchParams(location.search);
+if (q.get('m')) document.querySelector(`.switch button[data-m="${q.get('m')}"]`)?.click();
+if (q.get('s')) document.querySelector(`.switch button[data-s="${q.get('s')}"]`)?.click(); else grow();
+</script>
+</body>
+</html>

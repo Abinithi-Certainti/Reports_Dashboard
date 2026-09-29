@@ -3,22 +3,6 @@
 -- screen) as demo/private-data/dev_sales-margin-budget.csv, then run: python3 tools/private_to_json.py sales-margin-budget demo/private-data/dev_sales-margin-budget.csv
 -- The result holds real figures: it goes to demo/private-data/, never into git. Never paste a password.
 SELECT * FROM (
-    -- Sales and Margin report with Budget (AG-76). Source of truth for the old report: extracts/sales-margin-budget/01_model.md
-    -- One row per day, location and brand, per source. Every amount column is 0 on rows from the other sources, so the
-    -- measures are plain sums.
-    --
-    -- Sales $ = POS net (not Cash Drop) - Market "Card Fee" - "Alcohol Deposit - Beer", as the old report does from
-    -- 2021-08-13 on. Its older sources (GuestCheckHist, POS Order and Ref, the SharePoint lottery file) are not needed.
-    -- COGS $  = weekly_cogs.cogs, dated on the week-ending Saturday (period), like the old model.
-    -- Budget  = vena_sales and vena_gross_margin. Probe 15 on DEV (2026-09-28): both loaded, "Sales" and "Gross Margin"
-    --           are empty. Both tables hold the same budget loaded 6 times, and 400 day, location and brand groups
-    --           a 7th time (all rows differ only in id and timestamps, checked on both tables 2026-09-28), so only the
-    --           latest load per day, location and brand is kept.
-    --
-    -- Brand names are matched after the old report's renames (NYF, MIC, ONCARE, STARBUCKS KIOSK / DT, TIM HORTONS DT,
-    -- WENDY'S, BURGERKING). The old report replaced text inside names. Here only whole names are replaced, on purpose.
-    -- Plaza names follow Revenue_Append: its fixed renames, then " ON S" dropped, except Bainsville and Morrisburg.
-    -- Checked only against the table structure so far. No semicolons anywhere in this file, comments included.
     WITH loc AS (
         SELECT DISTINCT store_id, ct_location, host_location_id, brand_name, location_name
         FROM master.netsuite_location_mapping
@@ -74,7 +58,6 @@ SELECT * FROM (
                ('King City ON S', 'King City'), ('Maple TO S', 'Maple'), ('N. Cambridge ON S', 'Cambridge North'),
                ('S. Cambridge ON S', 'Cambridge South'), ('Barrie ON S', 'Barrie'), ('Innisfil ON S', 'Innisfil')
     ), plaza AS (
-        -- One plaza name per host location. 4606 (Maple) and 3640 (Newcastle) are the old report's two hard-coded rows.
         SELECT host_location_id, min(location_name) AS location_name
         FROM (SELECT host_location_id, trim(location_name) AS location_name FROM loc
               UNION ALL VALUES (4606, 'Maple'), (3640, 'Newcastle')) x

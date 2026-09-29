@@ -5,6 +5,10 @@ import { formatDay, formatValue } from '../format';
 import { useQuery } from '../useQuery';
 import { useSound } from '../sound';
 import { useTokens } from '../theme';
+import { PLAZA_DIM, PlazaLink } from './PlazaDetail';
+
+/** Height limit for full-width tables and matrices; taller content scrolls inside the panel. */
+export const FULL_WIDTH_MAX_HEIGHT = 560;
 
 type Base = Omit<QueryRequest, 'measures'>;
 
@@ -12,7 +16,9 @@ type Base = Omit<QueryRequest, 'measures'>;
 type Node = { key: string; label: string; depth: number; cells: Map<string, number>; total: number; children: Node[] };
 
 function buildTree(rows: Row[], rowDims: string[], colDim: string, measure: string): { roots: Node[]; columns: string[]; grand: Node } {
-  const columns = Array.from(new Set(rows.map((r) => String(r[colDim])))).sort();
+  // Numbers (e.g. retail period 9, 10) sort as numbers; dates and text as text.
+  const columns = Array.from(new Set(rows.map((r) => String(r[colDim])))).sort((a, b) =>
+    (/^-?\d+(\.\d+)?$/.test(a) && /^-?\d+(\.\d+)?$/.test(b) ? Number(a) - Number(b) : a < b ? -1 : a > b ? 1 : 0));
   const grand: Node = { key: '', label: 'Total', depth: -1, cells: new Map(), total: 0, children: [] };
   for (const r of rows) {
     const col = String(r[colDim]);
@@ -42,15 +48,12 @@ function heatColour(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
 }
 
-function allKeys(nodes: Node[], out: string[] = []): string[] {
-  nodes.forEach((n) => {
-    if (n.children.length) {
-      out.push(n.key);
-      allKeys(n.children, out);
-    }
-  });
-  return out;
-}
+/**
+ * Which rows are open. "Expand all" opens every level except the one above the last, so the last level (for example
+ * payment types under plaza > brand) stays folded until its parent row is clicked; with only two levels it opens both.
+ * "Collapse all" folds everything. A click flips one row against that baseline, so it survives filter changes.
+ */
+type Fold = { mode: 'expand' | 'collapse'; flipped: Set<string> };
 
 export default function MatrixVisual({ reportId, spec, visual, base }: { reportId: string; spec: Spec; visual: Visual; base: Base }) {
   const tokens = useTokens();
@@ -62,14 +65,22 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   const { rows, error } = useQuery(reportId, { ...base, groupBy: [...rowDims, colDim], measures: [measure] });
 
   const tree = useMemo(() => (rows ? buildTree(rows, rowDims, colDim, measure) : undefined), [rows, rowDims, colDim, measure]);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [fold, setFold] = useState<Fold>({ mode: 'expand', flipped: new Set() });
+  // With N row levels, "expand all" shows levels 1..N-1: nodes above depth N-2 open, the ones at N-2 stay closed.
+  const openDepth = rowDims.length > 2 ? rowDims.length - 2 : rowDims.length;
+  const baseOpen = (n: Node) => fold.mode === 'expand' && n.depth < openDepth;
+  const isOpenNode = (n: Node) => baseOpen(n) !== fold.flipped.has(n.key);
   const toggle = (key: string) => {
     sound.play('click');
-    setCollapsed((s) => {
-      const next = new Set(s);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
+    setFold((f) => {
+      const flipped = new Set(f.flipped);
+      flipped.has(key) ? flipped.delete(key) : flipped.add(key);
+      return { ...f, flipped };
     });
+  };
+  const setAll = (mode: Fold['mode']) => {
+    sound.play('click');
+    setFold({ mode, flipped: new Set() });
   };
 
   const cell = (n: number | undefined) => (n === undefined ? '' : formatValue(n, format));
@@ -79,7 +90,7 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   const heat = (v: number | undefined) => (v === undefined || v <= 0 ? 'transparent' : heatColour(tokens.series1Light, 0.04 + 0.30 * Math.min(1, v / leafMax)));
 
   const renderNode = (n: Node): JSX.Element => {
-    const isOpen = !collapsed.has(n.key);
+    const isOpen = isOpenNode(n);
     const hasChildren = n.children.length > 0;
     const weight = n.depth < rowDims.length - 1 ? 650 : 400;
     return (
@@ -93,7 +104,8 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
             ) : (
               <Box component="span" sx={{ display: 'inline-block', width: 26 }} />
             )}
-            {n.label}
+            {/* The chevron expands the row; a plaza name opens the plaza popup. */}
+            {rowDims[n.depth] === PLAZA_DIM ? <PlazaLink name={n.label} /> : n.label}
           </TableCell>
           {tree!.columns.map((c) => (
             <TableCell
@@ -118,13 +130,13 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
   };
 
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
+    <Paper sx={{ p: 1.5, height: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Typography variant="h2">{visual.title}</Typography>
         {tree && (
           <Box>
-            <Button size="small" onClick={() => setCollapsed(new Set())}>Expand all</Button>
-            <Button size="small" onClick={() => setCollapsed(new Set(allKeys(tree.roots)))}>Collapse all</Button>
+            <Button size="small" onClick={() => setAll('expand')}>Expand all</Button>
+            <Button size="small" onClick={() => setAll('collapse')}>Collapse all</Button>
           </Box>
         )}
       </Box>
@@ -132,13 +144,15 @@ export default function MatrixVisual({ reportId, spec, visual, base }: { reportI
       {!tree ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <Box sx={{ overflow: 'auto', maxHeight: 620 }}>
-          <Table size="small" stickyHeader>
+        // Full-width detail: at most about 15 rows high, then it scrolls inside with the header kept in view
+        // (the user's choice). Many date columns may also scroll sideways.
+        <Box sx={{ overflow: 'auto', maxHeight: FULL_WIDTH_MAX_HEIGHT }}>
+          <Table size="small" stickyHeader sx={{ '& th, & td': { px: 1 } }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ ...firstColSx, zIndex: 3 }}>{rowDims.map((d) => spec.dimensions[d].label).join(' › ')}</TableCell>
                 {tree.columns.map((c) => (
-                  <TableCell key={c} align="right" sx={{ whiteSpace: 'nowrap' }}>{formatDay(c)}</TableCell>
+                  <TableCell key={c} align="right" sx={{ whiteSpace: 'nowrap' }}>{spec.dimensions[colDim]?.type === 'date' ? formatDay(c) : c}</TableCell>
                 ))}
                 <TableCell align="right">Total</TableCell>
               </TableRow>
