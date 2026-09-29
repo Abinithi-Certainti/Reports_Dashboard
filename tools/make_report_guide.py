@@ -13,7 +13,7 @@ MAP = os.path.join(ROOT, 'docs', 'mapping-dashboard.html')
 # Where each report's rows come from on the online dashboard today (no figures, only the kind of source).
 DATA = {'tender-report': 'export', 'waste-report': 'export', 'market-category': 'sample', 'people-count': 'none',
         'radar-car-count': 'none', 'sales-margin-budget': 'export', 'sales-report-1': 'export',
-        'sales-budget-2026': 'export', 'sales-field-team': 'sample', 'financial-reports': 'sample'}
+        'sales-budget-2026': 'export', 'sales-field-team': 'export', 'financial-reports': 'sample'}
 
 
 def mapping():
