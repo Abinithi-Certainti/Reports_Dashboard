@@ -17,6 +17,7 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
   const { rows, error } = useQuery(reportId, { ...base, groupBy: [dim], measures });
   const format = spec.measures[measures[0]]?.format;
   const many = measures.length > 1;
+  const signed = !many && (rows ?? []).some((r) => Number(r[measures[0]] ?? 0) < 0);
   // Bars (and their labels) of a plaza chart open the plaza popup.
   const openPlaza = usePlazaOpener();
   const clickable = dim === PLAZA_DIM && !!openPlaza;
@@ -53,7 +54,11 @@ export default function BarChartVisual({ reportId, spec, visual, base }: { repor
     series: measures.map((measure, i) => ({
         type: 'bar',
         name: spec.measures[measure]?.label ?? measure,
-        data: rows.map((r) => Number(r[measure] ?? 0)),
+        // One value that goes below zero (e.g. a variance): green above zero, red below, so it reads as above / below.
+        data: rows.map((r) => {
+          const v = Number(r[measure] ?? 0);
+          return signed ? { value: v, itemStyle: { color: v >= 0 ? tokens.good : tokens.bad, borderRadius: 9 } } : v;
+        }),
         barMaxWidth: 18,
         cursor: clickable ? 'pointer' : 'default',
         showBackground: true,

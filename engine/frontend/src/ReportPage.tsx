@@ -16,6 +16,7 @@ import SplitVisual from './components/SplitVisual';
 import WaterfallVisual from './components/WaterfallVisual';
 import StackVisual from './components/StackVisual';
 import HeatmapVisual from './components/HeatmapVisual';
+import BulletVisual from './components/BulletVisual';
 import LeaderboardVisual from './components/LeaderboardVisual';
 import Reveal from './components/Reveal';
 import { Visual } from './api';
@@ -26,10 +27,10 @@ import { formatRange } from './components/CalendarPopover';
 import { alpha } from '@mui/material/styles';
 
 /** Default width of each visual on the 12-column grid (a report can override it with `span`). */
-const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12, split: 6, waterfall: 6, stack: 6, heatmap: 12 };
+const DEFAULT_SPAN: Record<Visual['type'], number> = { kpi: 12, line: 12, table: 5, bar: 7, matrix: 12, donut: 4, leaderboard: 12, split: 6, waterfall: 6, stack: 6, heatmap: 12, bullet: 7 };
 const COMPONENTS = {
   table: SummaryTable, bar: BarChartVisual, matrix: MatrixVisual, line: LineChartVisual, donut: DonutVisual, leaderboard: LeaderboardVisual, split: SplitVisual,
-  waterfall: WaterfallVisual, stack: StackVisual, heatmap: HeatmapVisual,
+  waterfall: WaterfallVisual, stack: StackVisual, heatmap: HeatmapVisual, bullet: BulletVisual,
 } as const;
 
 /** Draws any report from its spec: the filter bar on top, then each visual in order. */

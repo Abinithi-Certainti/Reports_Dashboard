@@ -27,6 +27,7 @@ measures:
   gp_var:         { label: GP$ Var, sql: "sum(sales) - sum(cogs) - sum(budget_gp)", format: currency }
   gp_pct:         { label: GP %, sql: "(sum(sales) - sum(cogs)) / nullif(sum(sales), 0)", format: percent }
   bud_pct:        { label: Bud %, sql: "sum(budget_gp) / nullif(sum(budget_sales), 0)", format: percent }
+  pct_of_budget:  { label: "% of Budget", sql: "sum(sales) / nullif(sum(budget_sales), 0)", format: percent }
   gp_pct_var:     { label: GP% Variance, sql: "(sum(sales) - sum(cogs)) / nullif(sum(sales), 0) - sum(budget_gp) / nullif(sum(budget_sales), 0)", format: percent }
   wtd_sales:          { label: WTD Sales $, of: sales, window: wtd, format: currency }
   wtd_budget_sales:   { label: WTD Budget Sales, of: budget_sales, window: wtd, format: currency }
@@ -37,6 +38,7 @@ measures:
   wtd_gp_pct:         { label: WTD GP %, of: gp_pct, window: wtd, format: percent }
   wtd_bud_pct:        { label: WTD Bud %, of: bud_pct, window: wtd, format: percent }
   wtd_gp_pct_var:     { label: WTD GP% Variance, of: gp_pct_var, window: wtd, format: percent }
+  wtd_pct_of_budget:  { label: WTD % of Budget, of: pct_of_budget, window: wtd, format: percent }
   ptd_sales:          { label: MTD Sales $, of: sales, window: ptd, format: currency }
   ptd_budget_sales:   { label: MTD Budget Sales, of: budget_sales, window: ptd, format: currency }
   ptd_sales_var:      { label: MTD Sales Variance, of: sales_var, window: ptd, format: currency }
@@ -62,23 +64,26 @@ filters:
   - { dimension: brand,             type: multi_select }
   - { dimension: day,               type: retail_week, open_on: net_sales }   # budget runs ahead of sales: open on the last week with sales
 
+# Layout (2026-09-29, for the demo): cards, sales against budget as bullet bars, above / below budget, then the
+# week / period / year to date tables. Formulas unchanged.
 visuals:
   - type: kpi
     items:
-      - { label: Week to date sales,   measure: wtd_sales,     icon: total }
-      - { label: Sales vs budget,      measure: wtd_sales_var, icon: trend }
-      - { label: Week to date GP,      measure: wtd_gp,        icon: cash }
-      - { label: GP % (week to date),  measure: wtd_gp_pct,    icon: count }
-  - type: bar
+      - { label: Week to date sales,   measure: wtd_sales,         icon: total }
+      - { label: Budget (week to date), measure: wtd_budget_sales, icon: store }
+      - { label: Sales vs budget,      measure: wtd_sales_var,     icon: trend }
+      - { label: "% of budget reached",  measure: wtd_pct_of_budget, icon: count }
+      - { label: Week to date GP,      measure: wtd_gp,            icon: cash }
+      - { label: GP % (week to date),  measure: wtd_gp_pct,        icon: card }
+  - type: bullet
     title: Week to date - sales against budget
     rows: [plaza]
     values: [wtd_sales, wtd_budget_sales]
     span: 7
-  - type: leaderboard
-    title: GP$ above budget - week to date
+  - type: bar
+    title: Above / below budget - week to date
     rows: [plaza]
-    values: [wtd_gp_var, wtd_gp_pct_var]
-    limit: 8
+    values: [wtd_sales_var]
     span: 5
   - type: table
     title: GP by location - Week to date
