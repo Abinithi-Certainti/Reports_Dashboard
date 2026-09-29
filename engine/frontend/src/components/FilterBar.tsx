@@ -6,6 +6,8 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import CalendarPopover, { formatRange } from './CalendarPopover';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { api, RetailWeek, Spec } from '../api';
 import { useSound } from '../sound';
 import { useTokens } from '../theme';
@@ -140,7 +142,6 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
   );
 }
 
-const mmdd = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
 
 /** The field look shared by the date button and the calendar button (same height and border as the other fields). */
 function fieldButtonSx(t: ReturnType<typeof useTokens>, open: boolean) {
@@ -193,8 +194,9 @@ function DateRangeFilter({ value, dataDays, onChange }: { value: FilterState; da
 }
 
 /**
- * Year, Period and Week, like the old report's slicers. Changing the year or period jumps to its latest week.
- * The calendar button next to them picks a week on a calendar instead: a click on any day selects its whole week.
+ * One week button, styled like the date-range button ("Week 26 · 21 Jun → 27 Jun 2026"), with ‹ › for the previous
+ * and next week. It opens the calendar: a click on any day selects its whole week (Sunday to Saturday), and Year /
+ * Period at the top of the calendar jump to the latest week of that year or period, like the old report's slicers.
  */
 function RetailWeekPicker({ value, dataDays, onChange }: { value: FilterState; dataDays?: Set<string>; onChange: (v: FilterState) => void }) {
   const t = useTokens();
@@ -205,42 +207,47 @@ function RetailWeekPicker({ value, dataDays, onChange }: { value: FilterState; d
     () => weeks.map((w) => ({ week_start: w.week_start, week_end: w.week_end, label: `${w.retail_year} · P${w.retail_period} · Week ${w.retail_week}` })),
     [weeks],
   );
-  const current = weeks.find((w) => w.week_start === value.dateFrom) ?? weeks[weeks.length - 1];
+  const index = weeks.findIndex((w) => w.week_start === value.dateFrom);
+  const current = weeks[index] ?? weeks[weeks.length - 1];
   if (!current) return null;
+  const at = index < 0 ? weeks.length - 1 : index;
   const pick = (w: RetailWeek | undefined) => w && onChange({ ...value, dateFrom: w.week_start, dateTo: w.week_end });
   const latest = (match: (w: RetailWeek) => boolean) => [...weeks].reverse().find(match);
   const years = [...new Set(weeks.map((w) => w.retail_year))].reverse();
   const periods = [...new Set(weeks.filter((w) => w.retail_year === current.retail_year).map((w) => w.retail_period))];
-  const inPeriod = weeks.filter((w) => w.retail_year === current.retail_year && w.retail_period === current.retail_period);
-  const field = { size: 'small' as const, select: true, InputLabelProps: { shrink: true }, sx: fieldSx };
+  const field = { size: 'small' as const, select: true, InputLabelProps: { shrink: true } };
+  const arrowSx = { ...fieldButtonSx(t, false), px: 0, width: FIELD_H - 4 };
   return (
-    <>
-      <Tooltip title="Pick a week on the calendar">
-        <ButtonBase
-          ref={anchor}
-          onClick={() => setOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-label="Pick a week on the calendar"
-          sx={{ ...fieldButtonSx(t, open), px: 0, width: FIELD_H + 4 }}
-        >
-          <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: t.accent }} />
-        </ButtonBase>
+    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0 }}>
+      <Tooltip title="Previous week">
+        <span>
+          <ButtonBase aria-label="Previous week" disabled={at <= 0} onClick={() => pick(weeks[at - 1])} sx={{ ...arrowSx, opacity: at <= 0 ? 0.4 : 1 }}>
+            <ChevronLeftRoundedIcon sx={{ fontSize: 18 }} />
+          </ButtonBase>
+        </span>
       </Tooltip>
-      <TextField {...field} label="Year" value={current.retail_year} sx={{ ...fieldSx, width: 88, flexShrink: 0 }}
-        onChange={(e) => pick(latest((w) => w.retail_year === Number(e.target.value)))}>
-        {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-      </TextField>
-      <TextField {...field} label="Period" value={current.retail_period} sx={{ ...fieldSx, width: 78, flexShrink: 0 }}
-        onChange={(e) => pick(latest((w) => w.retail_year === current.retail_year && w.retail_period === Number(e.target.value)))}>
-        {periods.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
-      </TextField>
-      <TextField {...field} label="Week" value={current.week_start} sx={{ ...fieldSx, width: 188, flexShrink: 0 }}
-        onChange={(e) => pick(weeks.find((w) => w.week_start === e.target.value))}>
-        {inPeriod.map((w) => (
-          <MenuItem key={w.week_start} value={w.week_start}>Week {w.retail_week}: {mmdd(w.week_start)} – {mmdd(w.week_end)}</MenuItem>
-        ))}
-      </TextField>
+      <ButtonBase
+        ref={anchor}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Week ${current.retail_week}, ${formatRange(current.week_start, current.week_end)}. Change week`}
+        sx={{ ...fieldButtonSx(t, open), justifyContent: 'space-between', maxWidth: '100%' }}
+      >
+        <CalendarMonthRoundedIcon sx={{ fontSize: 17, color: t.accent }} />
+        <Box component="span" sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <Box component="span" sx={{ color: t.textMuted }}>Week {current.retail_week} · </Box>
+          {formatRange(current.week_start, current.week_end)}
+        </Box>
+        <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, color: t.textMuted, transition: 'transform .2s ease', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </ButtonBase>
+      <Tooltip title="Next week">
+        <span>
+          <ButtonBase aria-label="Next week" disabled={at >= weeks.length - 1} onClick={() => pick(weeks[at + 1])} sx={{ ...arrowSx, opacity: at >= weeks.length - 1 ? 0.4 : 1 }}>
+            <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
+          </ButtonBase>
+        </span>
+      </Tooltip>
       <CalendarPopover
         anchorEl={anchor.current}
         open={open}
@@ -253,8 +260,20 @@ function RetailWeekPicker({ value, dataDays, onChange }: { value: FilterState; d
         dataDays={dataDays}
         weeks={calendarWeeks}
         onPick={(from) => pick(weeks.find((w) => w.week_start === from))}
+        extra={(
+          <>
+            <TextField {...field} label="Year" value={current.retail_year} sx={{ ...fieldSx, width: 84 }}
+              onChange={(e) => pick(latest((w) => w.retail_year === Number(e.target.value)))}>
+              {years.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+            </TextField>
+            <TextField {...field} label="Period" value={current.retail_period} sx={{ ...fieldSx, width: 70 }}
+              onChange={(e) => pick(latest((w) => w.retail_year === current.retail_year && w.retail_period === Number(e.target.value)))}>
+              {periods.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            </TextField>
+          </>
+        )}
       />
-    </>
+    </Box>
   );
 }
 

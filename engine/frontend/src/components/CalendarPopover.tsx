@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, ButtonBase, IconButton, Popover, Typography, useMediaQuery } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
@@ -70,6 +71,8 @@ type Props = {
   dataDays?: Set<string>;
   weeks?: CalendarWeek[];
   onPick: (from: string, to: string) => void;
+  /** Extra controls shown above the quick picks (e.g. Year and Period for a retail week). */
+  extra?: ReactNode;
 };
 
 /**
@@ -77,7 +80,7 @@ type Props = {
  * ringed, days outside the data greyed out and days with data dotted. A range applies on the second click. Esc or a
  * click outside closes it.
  */
-export default function CalendarPopover({ anchorEl, open, onClose, mode, from, to, minDate, maxDate, dataDays, weeks = [], onPick }: Props) {
+export default function CalendarPopover({ anchorEl, open, onClose, mode, from, to, minDate, maxDate, dataDays, weeks = [], onPick, extra }: Props) {
   const t = useTokens();
   const sound = useSound();
   const phone = useMediaQuery((th: Theme) => th.breakpoints.down('sm'));
@@ -103,6 +106,11 @@ export default function CalendarPopover({ anchorEl, open, onClose, mode, from, t
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, months]);
+  // A selection changed from outside while open (e.g. the Year / Period controls): show its month.
+  useEffect(() => {
+    if (open) setView(startView());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [to]);
 
   const weekOf = useMemo(() => {
     const sorted = [...weeks].sort((a, b) => (a.week_start < b.week_start ? -1 : 1));
@@ -256,6 +264,7 @@ export default function CalendarPopover({ anchorEl, open, onClose, mode, from, t
         pr: phone ? 0 : 1.25, mr: phone ? 0 : 1.25, mb: phone ? 1 : 0, borderRight: phone ? 'none' : `1px solid ${t.panelBorder}`, minWidth: phone ? 0 : 150,
       }}
     >
+      {extra && <Box sx={{ display: 'flex', gap: 0.75, px: phone ? 0 : 0.5, pb: 1, mb: 0.5, borderBottom: `1px solid ${t.panelBorder}`, width: phone ? '100%' : 'auto' }}>{extra}</Box>}
       {!phone && <Typography sx={{ fontSize: '0.66rem', letterSpacing: '0.14em', fontWeight: 700, color: t.textMuted, px: 1, pt: 0.5, pb: 0.5 }}>QUICK PICK</Typography>}
       {presets.map((p) => (
         <ButtonBase
@@ -297,7 +306,7 @@ export default function CalendarPopover({ anchorEl, open, onClose, mode, from, t
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: phone ? 'column' : 'row' }} onMouseLeave={() => setHover(null)}>
-        {presets.length > 0 && presetList}
+        {(presets.length > 0 || extra) && presetList}
         <Box>
           <Box sx={{ position: 'relative', display: 'flex', gap: 2 }}>
             <IconButton size="small" aria-label="Previous month" disabled={!canPrev} onClick={() => step(-1)} sx={{ position: 'absolute', left: 0, top: 0, p: 0.5, zIndex: 1 }}>
