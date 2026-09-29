@@ -52,13 +52,13 @@ visuals:
       - { label: Variance,           measure: variance,     good_direction: down, icon: cash }
       - { label: Variance % of COGS, measure: variance_pct, good_direction: down, icon: store }
   - type: flow
-    title: From stock to cost of goods
+    title: Where the stock went
     values: [begin_value, purchase_value, transfer_out, end_value]
     signs:  ['+', '+', '-', '-']
     total: cogs          # any gap between the steps and COGS is shown as "Other adjustments", not hidden
     span: 6
   - type: rank
-    title: Variance by plaza - money lost against expected cost
+    title: Variance by plaza
     rows: [plaza]
     values: [variance, variance_pct]   # the bar, then its % of COGS
     span: 6
