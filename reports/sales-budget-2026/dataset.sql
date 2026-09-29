@@ -15,9 +15,9 @@
 -- Labour hours budget = vena_labour_hours.value
 --   "Sales", "Transactions" and "DLH" are empty on DEV and are not read. vena_sales holds the same budget loaded
 --   6 times (400 day, location and brand groups a 7th time, rows differ only in id and timestamps, checked on DEV
---   2026-09-28), so only the latest load per day, location and brand is kept. vena_transactions and
---   vena_labour_hours have the same key and created_timestamp columns, so the same rule is applied to them.
---   OPEN: same repeated-load check not run on vena_transactions or vena_labour_hours yet.
+--   2026-09-28), so only the latest load per day, location and brand is kept. vena_transactions has the same size
+--   and columns, so the same rule is applied (OPEN: not checked row by row). vena_labour_hours is different: see
+--   bud_labour below (latest load, its rows added up).
 --   Budget brands follow the old clean-up: upper case, NYF -> NEW YORK FRIES, STARBUCKS KIOSK -> STARBUCKS,
 --   WENDY'S -> WENDYS, and in the labour budget only MIC -> ADMIN, ONCARE -> UTILITY. Whole names only.
 --   OPEN: budget brand spellings not yet compared with the POS brand spellings (probe B5), so a budget brand
@@ -63,9 +63,15 @@ WITH plaza_rename (old_name, new_name) AS (
     FROM master.vena_transactions
     ORDER BY "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp DESC
 ), bud_labour AS (
-    -- OPEN: same repeated-load check not run on this table yet
+    -- Checked on DEV 2026-09-29: about 4.27 million rows, 44,044 day / location / brand keys, 14 loads. Inside ONE load a
+    -- key has up to 24 rows with different values and nothing else different (location, region, dates, year all the
+    -- same) - most likely one row per opening hour, with no hour column. So the rows of the latest load are ADDED UP
+    -- (keeping only one would drop real budget hours). Summing per load first also keeps this fast.
+    -- OPEN (tech lead): confirm the rows are hourly and that summing them is right.
     SELECT DISTINCT ON ("TimePeriod_Date", "HostLocationID", "Brand") "TimePeriod_Date", "HostLocationID", "Brand", value
-    FROM master.vena_labour_hours
+    FROM (SELECT "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp, sum(value) AS value
+          FROM master.vena_labour_hours
+          GROUP BY 1, 2, 3, 4) per_load
     ORDER BY "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp DESC
 ), budgets AS (
     SELECT b."TimePeriod_Date" AS day, b."HostLocationID"::integer AS host_location_id,

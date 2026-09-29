@@ -35,7 +35,9 @@ SELECT * FROM (
         ORDER BY "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp DESC
     ), bud_labour AS (
         SELECT DISTINCT ON ("TimePeriod_Date", "HostLocationID", "Brand") "TimePeriod_Date", "HostLocationID", "Brand", value
-        FROM master.vena_labour_hours
+        FROM (SELECT "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp, sum(value) AS value
+              FROM master.vena_labour_hours
+              GROUP BY 1, 2, 3, 4) per_load
         ORDER BY "TimePeriod_Date", "HostLocationID", "Brand", created_timestamp DESC
     ), budgets AS (
         SELECT b."TimePeriod_Date" AS day, b."HostLocationID"::integer AS host_location_id,
