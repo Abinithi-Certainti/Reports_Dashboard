@@ -1,12 +1,13 @@
 # Connection settings come from environment variables, or from a .env file in the repo root or engine/backend
 # (git-ignored - copy .env.example). Nothing secret lives in this file.
+# ETL_DB_URL (full JDBC address), ETL_DB_USERNAME and ETL_DB_PASSWORD are the names DevOps uses; PG_* still work.
 spring:
   config:
     import: "optional:file:./.env[.properties],optional:file:../../.env[.properties]"
   datasource:
-    url: jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5432}/${PG_NAME:tender_demo}${PG_URL_PARAMS:}
-    username: ${PG_USERNAME:postgres}
-    password: ${PG_PASSWORD:}
+    url: ${ETL_DB_URL:jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5432}/${PG_NAME:tender_demo}${PG_URL_PARAMS:}}
+    username: ${ETL_DB_USERNAME:${PG_USERNAME:postgres}}
+    password: ${ETL_DB_PASSWORD:${PG_PASSWORD:}}
     hikari:
       # Belt and braces on top of a read-only database user: every connection refuses writes.
       connection-init-sql: SET default_transaction_read_only = on
