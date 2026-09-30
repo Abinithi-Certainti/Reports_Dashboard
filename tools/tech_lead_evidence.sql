@@ -55,3 +55,31 @@ SELECT table_schema, table_name, column_name
 FROM information_schema.columns
 WHERE column_name ILIKE '%plu%' OR (table_name ILIKE '%plu%') OR (table_name ILIKE '%product%' AND column_name ILIKE '%categ%')
 ORDER BY 1, 2, 3;
+
+-- Q5b. Could the new database already link Market sales to categories?
+--      Sales lines (pos_order_details.plu) against the COGS product list (weekly_cogs_prod_num.product_num, which has
+--      category and sub_category). A high "matched" share means Market Category could show sales by category
+--      WITHOUT Net-Chef. Market stores only, as in the report.
+WITH market AS (
+    SELECT DISTINCT store_id FROM master.netsuite_location_mapping WHERE brand_name ILIKE 'mark%'
+), sold AS (
+    SELECT d.plu::text AS plu, d.menu_item_name, sum(d.price * d.quantity) AS amount
+    FROM master.pos_order_details d JOIN market m ON m.store_id = d.store_id
+    GROUP BY 1, 2
+), products AS (
+    SELECT DISTINCT product_num::text AS product_num, product_name, category FROM master.weekly_cogs_prod_num
+)
+SELECT count(*)                                                        AS items_sold,
+       count(*) FILTER (WHERE p.product_num IS NOT NULL)               AS items_matched_by_code,
+       round(100.0 * count(*) FILTER (WHERE p.product_num IS NOT NULL) / nullif(count(*), 0), 1) AS pct_items_matched,
+       round(100.0 * sum(s.amount) FILTER (WHERE p.product_num IS NOT NULL) / nullif(sum(s.amount), 0), 1) AS pct_sales_matched
+FROM sold s LEFT JOIN products p ON p.product_num = s.plu;
+
+-- Q5c. A few examples side by side (sold item vs product list), to see whether the codes look alike at all
+SELECT d.plu, d.menu_item_name, p.product_num, p.product_name, p.category
+FROM (SELECT DISTINCT plu::text AS plu, menu_item_name FROM master.pos_order_details
+      WHERE store_id IN (SELECT store_id FROM master.netsuite_location_mapping WHERE brand_name ILIKE 'mark%')
+      LIMIT 20) d
+LEFT JOIN (SELECT DISTINCT product_num::text AS product_num, product_name, category FROM master.weekly_cogs_prod_num) p
+       ON p.product_num = d.plu
+ORDER BY p.product_num NULLS LAST;
