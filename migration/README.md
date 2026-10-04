@@ -26,7 +26,15 @@ python3 migrate.py --env my.env --dry-run      # checks everything, writes nothi
 python3 migrate.py --env my.env                # load
 python3 migrate.py --env my.env --tables POS_ORDERS --from 2026-09-01 --to 2026-09-30   # part of the data
 ```
-Results: `run/summary.json`, `run/errors/<table>.csv`, `run/warnings.log`.
+Results: `run/summary.json`, `run/errors/<table>.csv`, `run/warnings.log`, and `run/progress.json` (live progress).
+
+## Live progress dashboard
+
+`run/progress.json` is rewritten after every week the script loads. It holds only table names, counts, old vs new
+totals and rejection reasons (column + problem, never the row values), with no server names or passwords. Upload it
+on the shared BI Migration Tracker page (`dashboard.html`, published on claude.ai) and everyone with the link sees the
+new numbers at once. The same page holds the Power BI vs new report checks. Upload only `progress.json`: never
+`my.env`, `errors/*.csv` or `checkpoint.json`.
 
 ## Test on mock databases (no real data, no real servers)
 

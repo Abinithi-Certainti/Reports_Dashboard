@@ -41,7 +41,11 @@ VERIFY_SUMS = {"POS_ORDERS": ["Net", "Tax"], "POS_ORDERDETAILS": ["ValueAddedBas
 
 
 class Reject(Exception):
-    """A value that cannot go into its target column; the row is written to the error file instead."""
+    """A value that cannot go into its target column; the row is written to the error file instead.
+    kind: the reason without any row values (column + problem), safe to show on the progress dashboard."""
+    def __init__(self, msg, kind):
+        super().__init__(msg)
+        self.kind = kind
 
 
 # ---------------------------------------------------------------- settings
@@ -121,26 +125,26 @@ def convert(v, col, info, warn):
         d = (info["default"] or "").lower()
         if "now()" in d or "current_timestamp" in d:
             return dt.datetime.now()
-        raise Reject(f"{col}: empty, but the target column does not allow empty values")
+        raise Reject(f"{col}: empty, but the target column does not allow empty values", f"{col}: empty, not allowed")
     t = info["type"]
     try:
         if t in ("character varying", "text", "character"):
             s = iso_text(v) if isinstance(v, (dt.date, dt.datetime)) else str(v)
             if info["length"] and len(s) > info["length"]:
-                raise Reject(f"{col}: {len(s)} characters, the target allows {info['length']}")
+                raise Reject(f"{col}: {len(s)} characters, the target allows {info['length']}", f"{col}: text too long")
             return s
         if t in ("integer", "bigint", "smallint"):
             n = int(v)
             lim = {"smallint": 2 ** 15, "integer": 2 ** 31, "bigint": 2 ** 63}[t]
             if not -lim <= n < lim:
-                raise Reject(f"{col}: {n} is too big for {t}")
+                raise Reject(f"{col}: {n} is too big for {t}", f"{col}: number too big")
             return n
         if t == "numeric":
             d = Decimal(str(v))
             if info["scale"] is not None:
                 d = d.quantize(Decimal(1).scaleb(-info["scale"]), rounding=ROUND_HALF_UP)
             if info["precision"] is not None and abs(d) >= Decimal(10) ** (info["precision"] - (info["scale"] or 0)):
-                raise Reject(f"{col}: {d} is too big for numeric({info['precision']},{info['scale']})")
+                raise Reject(f"{col}: {d} is too big for numeric({info['precision']},{info['scale']})", f"{col}: number too big")
             return d
         if t in ("double precision", "real"):
             return float(v)
@@ -152,7 +156,7 @@ def convert(v, col, info, warn):
                 return True
             if s in FALSE:
                 return False
-            raise Reject(f"{col}: '{v}' is not a yes/no value")
+            raise Reject(f"{col}: '{v}' is not a yes/no value", f"{col}: not a yes/no value")
         if t == "uuid":
             return uuid.UUID(str(v).strip())
         if t == "date":
@@ -172,19 +176,21 @@ def convert(v, col, info, warn):
         if t == "USER-DEFINED":
             s = str(v)
             if s not in info["enum"]:
-                raise Reject(f"{col}: '{s}' is not one of the allowed values {sorted(info['enum'])}")
+                raise Reject(f"{col}: '{s}' is not one of the allowed values {sorted(info['enum'])}", f"{col}: not an allowed value")
             return s
     except Reject:
         raise
     except (ValueError, InvalidOperation, TypeError) as e:
-        raise Reject(f"{col}: '{v}' does not fit {t} ({e})")
+        raise Reject(f"{col}: '{v}' does not fit {t} ({e})", f"{col}: wrong type")
     return v
 
 
 # ---------------------------------------------------------------- chunks
-def chunks(sc, ph, table, col, date_from, date_to):
+def chunks(sc, ph, table, col, date_from, date_to, plan=None):
     """(label, where-clause, params) per week of col, then the rows where col is empty; one chunk without col."""
+    plan = {} if plan is None else plan
     if not col:
+        plan["total"] = 1
         yield "all", "", ()
         return
     cur = sc.cursor()
@@ -197,17 +203,20 @@ def chunks(sc, ph, table, col, date_from, date_to):
             lo = max(lo, date_from)
         if date_to:
             hi = min(hi, date_to)
+        plan["total"] = max(0, -(-((hi - lo).days + 1) // 7)) + (0 if date_from or date_to else 1)
         start = lo
         while start <= hi:
             end = min(start + dt.timedelta(days=7), hi + dt.timedelta(days=1))
             yield f"{start}..{end - dt.timedelta(days=1)}", f"WHERE [{col}] >= {ph} AND [{col}] < {ph}", (start, end)
             start = end
+    if lo is None:
+        plan["total"] = 0 if date_from or date_to else 1
     if not date_from and not date_to:
         yield "empty-" + col, f"WHERE [{col}] IS NULL", ()
 
 
 # ---------------------------------------------------------------- one table
-def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
+def migrate_table(m, sc, ph, tc, schema, args, state, out, env, progress):
     src, tgt = m["source"], m["target"]
     tcols, pk = describe_target(tc, schema, tgt)
     mapped = [(s, t) for s, t in m["columns"].items() if t in tcols]
@@ -224,16 +233,23 @@ def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
                              f"(empty it first, or delete the checkpoint only if you know it is safe)")
     stats = {"read": 0, "loaded": 0, "rejected": 0, "warnings": 0, "chunks": 0, "skipped_chunks": 0,
              "src_sums": {c: Decimal(0) for c in VERIFY_SUMS.get(src, []) if c in src_cols}}
+    live = progress.table(src)
+    live.update(status="running", rejected_by_reason={})
     err_path = out / "errors" / f"{tgt}.csv"
     err_path.parent.mkdir(parents=True, exist_ok=True)
     with open(err_path, "a", newline="") as ef:
         ew = csv.writer(ef)
         if ef.tell() == 0:
             ew.writerow(["source_table", "chunk", "reason", "source_row"])
-        for label, where, params in chunks(sc, ph, src, m.get("chunk_column"), args.date_from, args.date_to):
+        plan = {}
+        for label, where, params in chunks(sc, ph, src, m.get("chunk_column"), args.date_from, args.date_to, plan):
+            live["chunks_total"] = plan.get("total")
             if isinstance(done.get(label), dict):          # finished in an earlier run
                 stats["skipped_chunks"] += 1
+                live["chunks_skipped"] = stats["skipped_chunks"]
                 continue
+            live["current_chunk"] = label
+            progress.save()
             cur = sc.cursor()
             cur.execute(f"SELECT {', '.join(f'[{c}]' for c in src_cols)} FROM dbo.[{src}] {where}", params)
             good, chunk_sums = [], {c: Decimal(0) for c in stats["src_sums"]}
@@ -251,7 +267,7 @@ def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
                         if keep_pk:
                             key = tuple(vals[tgt_cols.index(c)] for c in keep_pk)
                             if key in seen:
-                                raise Reject(f"{'/'.join(keep_pk)} {key}: duplicate key (already loaded)")
+                                raise Reject(f"{'/'.join(keep_pk)} {key}: duplicate key (already loaded)", f"{'/'.join(keep_pk)}: duplicate key")
                             seen.add(key)
                         good.append(vals)
                         for c in chunk_sums:
@@ -260,6 +276,7 @@ def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
                     except Reject as e:
                         stats["rejected"] += 1
                         ew.writerow([src, label, str(e), json.dumps(row, default=str)])
+                        live["rejected_by_reason"][e.kind] = live["rejected_by_reason"].get(e.kind, 0) + 1
             stats["warnings"] += len(warnings)
             if warnings:
                 (out / "warnings.log").open("a").write("".join(f"{src} {label}: {w}\n" for w in warnings))
@@ -279,6 +296,9 @@ def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
                 done[label] = {"loaded": len(good), "sums": {c: str(v) for c, v in chunk_sums.items()}}
                 save_state(out, state)
             print(f"    {src:30} {label:24} loaded {len(good):>7}  rejected so far {stats['rejected']}", flush=True)
+            live.update({k: stats[k] for k in ("read", "loaded", "rejected", "warnings")},
+                        chunks_done=stats["chunks"], last_chunk=label, current_chunk=None)
+            progress.save()
     # an identity copied from the source: move the target's sequence past it
     for c, info in tcols.items():
         d = info["default"] or ""
@@ -300,6 +320,27 @@ def migrate_table(m, sc, ph, tc, schema, args, state, out, env):
 
 def save_state(out, state):
     (out / "checkpoint.json").write_text(json.dumps(state, indent=1))
+
+
+class Progress:
+    """run/progress.json, rewritten after every chunk, for the online progress dashboard (upload it there).
+    Holds only table names, counts, totals and reasons without row values: no rows, hosts, names or passwords."""
+    def __init__(self, out, mapping, dry_run, args):
+        self.path = out / "progress.json"
+        now = dt.datetime.now().astimezone().isoformat(timespec="seconds")
+        self.data = {"format": "bi-migration-progress/1", "run_id": now, "mode": "dry-run" if dry_run else "load",
+                     "date_from": str(args.date_from or ""), "date_to": str(args.date_to or ""),
+                     "started_at": now, "updated_at": now, "finished": False, "result": None,
+                     "tables": [{"source": m["source"], "target": m["target"], "status": "waiting"} for m in mapping]}
+
+    def table(self, src):
+        return next(t for t in self.data["tables"] if t["source"] == src)
+
+    def save(self, **top):
+        self.data.update(top, updated_at=dt.datetime.now().astimezone().isoformat(timespec="seconds"))
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self.data, indent=1, default=str))
+        tmp.replace(self.path)      # swap in whole, so an upload mid-run never reads half a file
 
 
 # ---------------------------------------------------------------- main
@@ -327,10 +368,18 @@ def main():
     tc = target_conn(env)
     print(f"{'DRY RUN - nothing is written' if args.dry_run else 'LOADING'}: {len(mapping)} tables -> {env['TGT_DATABASE']}.{schema}")
     summary, ok = {}, True
+    progress = Progress(out, mapping, args.dry_run, args)
+    progress.save()
     for m in mapping:
         t0 = time.time()
         print(f"  {m['source']} -> {m['target']}")
-        s = migrate_table(m, sc, ph, tc, schema, args, state, out, env)
+        try:
+            s = migrate_table(m, sc, ph, tc, schema, args, state, out, env, progress)
+        except BaseException as e:
+            progress.table(m["source"])["status"] = "failed"
+            progress.table(m["source"])["error"] = type(e).__name__   # the type only: messages can hold values
+            progress.save(finished=True, result="stopped")
+            raise
         s["seconds"] = round(time.time() - t0, 1)
         balanced = s["read"] == s["loaded"] + s["rejected"]
         if "target_rows" in s and s["target_rows"] != s["loaded_all_runs"]:
@@ -343,7 +392,14 @@ def main():
         ok &= balanced
         s.pop("src_sums"); s.pop("tgt_sums", None)
         summary[m["source"]] = s
+        progress.table(m["source"]).update(
+            {k: s[k] for k in ("read", "loaded", "rejected", "warnings", "seconds", "check_rows")},
+            status="done", current_chunk=None, chunks_done=s["chunks"], target_rows=s.get("target_rows"),
+            loaded_all_runs=s.get("loaded_all_runs"), check_sums=s.get("check_sums", {}))
+        progress.save()
     (out / "summary.json").write_text(json.dumps(summary, indent=1, default=str))
+    sums_ok = all(abs(Decimal(d["diff"])) < Decimal("0.005") for s in summary.values() for d in s.get("check_sums", {}).values())
+    progress.save(finished=True, result="ok" if ok and sums_ok else "problems")
     print("\nSUMMARY (source -> read / loaded / rejected / warnings)")
     for src, s in summary.items():
         print(f"  {src:30} {s['read']:>9} {s['loaded']:>9} {s['rejected']:>7} {s['warnings']:>5}  in target {s.get('target_rows', '-'):>7}  rows {s['check_rows']}"

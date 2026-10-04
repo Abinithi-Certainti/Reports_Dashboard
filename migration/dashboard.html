@@ -1,0 +1,487 @@
+<title>BI Migration Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,600&display=swap">
+<style>
+/* Layout: one column control board. Run status strip, then the 15 tables as rows, then the report checks. */
+:root {
+  --bg: #f6f7f2; --surface: #ffffff; --sunk: #eef0e7; --line: #dde1d2; --fg: #1f2418; --muted: #636b57;
+  --accent: #5f7f1f; --accent-soft: #e6eed3; --on-accent: #ffffff;
+  --ok: #2f7a3e; --ok-soft: #e1f0e3; --warn: #9a6400; --warn-soft: #f8ecd2; --bad: #b3322a; --bad-soft: #f8e1df;
+  --run: #2f62a3; --run-soft: #e1eaf6;
+  --display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15180f; --surface: #1d2116; --sunk: #191c13; --line: #343b28; --fg: #e8ebdf; --muted: #a2aa93;
+  --accent: #a8c46a; --accent-soft: #2b3519; --on-accent: #15180f;
+  --ok: #7fc48c; --ok-soft: #1d3322; --warn: #e3b25a; --warn-soft: #3a2d14; --bad: #f08a80; --bad-soft: #3d1d1a;
+  --run: #8db4ea; --run-soft: #1b2a40; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15180f; --surface: #1d2116; --sunk: #191c13; --line: #343b28; --fg: #e8ebdf; --muted: #a2aa93;
+  --accent: #a8c46a; --accent-soft: #2b3519; --on-accent: #15180f;
+  --ok: #7fc48c; --ok-soft: #1d3322; --warn: #e3b25a; --warn-soft: #3a2d14; --bad: #f08a80; --bad-soft: #3d1d1a;
+  --run: #8db4ea; --run-soft: #1b2a40; color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); margin: 0 }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 28px }
+h1, h2 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em }
+h1 { font-size: 1.9rem; line-height: 1.15 }
+h2 { font-size: 1.25rem }
+p { margin: 0 }
+.muted { color: var(--muted) }
+.small { font-size: 0.85rem }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+button, select, input { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between }
+header .lead { display: grid; gap: 6px; min-width: 0 }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted) }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted) }
+.dot.on { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft) }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; white-space: nowrap }
+.pill.ok { background: var(--ok-soft); color: var(--ok) }
+.pill.warn { background: var(--warn-soft); color: var(--warn) }
+.pill.bad { background: var(--bad-soft); color: var(--bad) }
+.pill.run { background: var(--run-soft); color: var(--run) }
+.pill.idle { background: var(--sunk); color: var(--muted) }
+
+/* status strip */
+.strip { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) }
+.strip > div { padding: 14px 18px; display: grid; gap: 2px; border-right: 1px solid var(--line); min-width: 0 }
+.strip > div:last-child { border-right: 0 }
+.strip .big { font-family: var(--mono); font-size: 1.35rem; font-variant-numeric: tabular-nums }
+.banner { padding: 12px 16px; border-radius: 8px; font-size: 0.92rem }
+.banner.warn { background: var(--warn-soft); color: var(--warn) }
+.banner.bad { background: var(--bad-soft); color: var(--bad) }
+.banner.ok { background: var(--ok-soft); color: var(--ok) }
+
+/* upload */
+.upload { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: 10px }
+.upload.drag { border-color: var(--accent); background: var(--accent-soft) }
+.upload .txt { flex: 1 1 280px; min-width: 0; display: grid; gap: 2px }
+.btn { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 7px; padding: 8px 14px; font-weight: 600 }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line) }
+.btn:disabled { opacity: 0.5; cursor: default }
+.msg { font-size: 0.88rem }
+.msg.bad { color: var(--bad) } .msg.ok { color: var(--ok) }
+
+section { display: grid; gap: 12px }
+.sechead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between }
+
+/* tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem }
+th { text-align: left; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--sunk) }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+tr:last-child > td { border-bottom: 0 }
+td.r, th.r { text-align: right }
+.tname { font-weight: 600 }
+.tname small { display: block; font-weight: 400; color: var(--muted); font-family: var(--mono); font-size: 0.78rem }
+.bar { height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; width: 120px; margin-top: 6px }
+.bar > i { display: block; height: 100%; background: var(--accent) }
+.reasons { min-width: 210px; text-align: left; margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 0.8rem; color: var(--bad) }
+.sums { display: grid; gap: 2px; font-size: 0.8rem }
+.sums span.diff0 { color: var(--ok) } .sums span.diffx { color: var(--bad); font-weight: 600 }
+
+/* report checks */
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; display: grid; gap: 4px; min-width: 0 }
+.chip b { font-weight: 600; font-size: 0.88rem }
+.chip .cnt { display: flex; gap: 6px; flex-wrap: wrap }
+form.add { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.9fr 0.9fr auto; gap: 8px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px }
+form.add label { display: grid; gap: 4px; font-size: 0.78rem; color: var(--muted); min-width: 0 }
+form.add input, form.add select, td input { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0 }
+td input { width: 9.5em; font-family: var(--mono); text-align: right }
+td input.note { width: 14em; font-family: var(--body); text-align: left }
+.x { background: none; border: 0; color: var(--muted); padding: 4px 6px; border-radius: 5px }
+.x:hover { color: var(--bad); background: var(--bad-soft) }
+.empty { padding: 28px 20px; text-align: left; color: var(--muted); display: grid; gap: 6px }
+.empty b { color: var(--fg) }
+.empty.card { border: 1px solid var(--line); border-radius: 10px; background: var(--surface) }
+details { font-size: 0.9rem }
+details summary { cursor: pointer; color: var(--accent); font-weight: 600 }
+details ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; max-width: 70ch }
+code { font-family: var(--mono); font-size: 0.85em; background: var(--sunk); padding: 1px 5px; border-radius: 4px }
+
+@media (max-width: 760px) {
+  form.add { grid-template-columns: 1fr 1fr }
+  form.add .wide { grid-column: 1 / -1 }
+  .strip > div { border-right: 0; border-bottom: 1px solid var(--line) }
+  h1 { font-size: 1.5rem }
+}
+@media (prefers-reduced-motion: no-preference) { .dot.on { transition: box-shadow .3s } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="lead">
+      <span class="eyebrow">Old SQL Server → new Postgres · 15 tables · 8 reports</span>
+      <h1>BI Migration Tracker</h1>
+      <p class="muted">Migration progress from <code>run/progress.json</code>, then old Power BI vs new BI Analytics numbers per report.</p>
+    </div>
+    <span class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">Connecting…</span></span>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <div class="strip" id="strip">
+    <div><span class="eyebrow">Run</span><span id="sMode">No run uploaded</span><span class="small muted" id="sStarted"></span></div>
+    <div><span class="eyebrow">Tables done</span><span class="big" id="sTables">0 / 15</span></div>
+    <div><span class="eyebrow">Rows loaded</span><span class="big" id="sLoaded">–</span></div>
+    <div><span class="eyebrow">Rows rejected</span><span class="big" id="sRejected">–</span></div>
+    <div><span class="eyebrow">Totals equal</span><span class="big" id="sSums">–</span></div>
+    <div><span class="eyebrow">Last update</span><span id="sUpdated">–</span><span class="small muted" id="sUploader"></span></div>
+  </div>
+
+  <div class="upload" id="drop">
+    <div class="txt">
+      <b>Upload the latest progress</b>
+      <span class="small muted">Pick <code>run/progress.json</code> from the folder where the script runs. The script rewrites it after every week it loads. Upload again whenever you want everyone to see the newest numbers.</span>
+      <span class="msg" id="upMsg" role="status"></span>
+    </div>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+    <button class="btn" id="pick" type="button">Choose progress.json</button>
+  </div>
+
+  <details>
+    <summary>How to update this page, and what never to upload</summary>
+    <ol>
+      <li>Run the migration as usual: <code>python3 migrate.py --env my.env</code> (or with <code>--dry-run</code>).</li>
+      <li>While it runs, or after, upload <code>run/progress.json</code> here. Everyone who has the page open sees the new numbers straight away.</li>
+      <li>Upload only <code>progress.json</code>. It holds table names, counts, totals and reasons, with no rows, server names or passwords. The page checks the file and refuses anything else.</li>
+      <li>Never upload <code>my.env</code> (passwords), <code>errors/*.csv</code> (real rows) or <code>checkpoint.json</code>.</li>
+    </ol>
+  </details>
+
+  <section>
+    <div class="sechead">
+      <h2>Tables</h2>
+      <span class="small muted" id="tblNote">Lookup tables first, big POS tables last, in the order the script runs them.</span>
+    </div>
+    <div class="empty card" id="runEmpty"><b>No migration run uploaded yet.</b><span>When the script runs, it writes run/progress.json. Upload that file above and each of the 15 tables appears here with its progress, rejected rows and old vs new totals.</span></div>
+    <div class="scroll" id="runTable">
+      <table>
+        <thead><tr>
+          <th>Table</th><th>Status</th><th>Weeks</th><th class="r">Read</th><th class="r">Loaded</th><th class="r">Rejected</th><th>Rows check</th><th>Totals old vs new</th><th class="r">Time</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <h2>Report checks: Power BI vs new</h2>
+      <span class="small muted">A row matches when the two numbers differ by 0.01 or less.</span>
+    </div>
+    <div class="chips" id="chips"></div>
+    <form class="add" id="addForm" autocomplete="off">
+      <label class="wide">Report
+        <select id="fReport" required></select></label>
+      <label>What was checked<input id="fMeasure" placeholder="e.g. Net sales" required maxlength="80"></label>
+      <label>Period / filter<input id="fPeriod" placeholder="e.g. Week of 6 Sep 2026" maxlength="80"></label>
+      <label>Power BI value<input id="fPbi" inputmode="decimal" placeholder="0.00"></label>
+      <label>New value<input id="fNew" inputmode="decimal" placeholder="0.00"></label>
+      <button class="btn" type="submit" id="fAdd">Add check</button>
+    </form>
+    <span class="msg" id="addMsg" role="status"></span>
+    <div class="empty card" id="chkEmpty"><b>No report checks yet.</b><span id="chkEmptyTxt"></span></div>
+    <div class="scroll" id="chkTable">
+      <table>
+        <thead><tr>
+          <th>Report</th><th>What was checked</th><th>Period / filter</th><th class="r">Power BI</th><th class="r">New</th><th class="r">Difference</th><th>Result</th><th>Note</th><th></th>
+        </tr></thead>
+        <tbody id="cbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const REPORTS = [
+    ["tender-report", "Tender Report"], ["sales-report-1", "Sales Report"], ["sales-field-team", "Sales Report Field Team"],
+    ["sales-budget-2026", "Sales Report - Including Budget 2026"], ["sales-margin-budget", "Sales and Margin with Budget"],
+    ["financial-reports", "Financial Reports"], ["market-category", "Market Category"], ["waste-report", "Detailed Waste Report"],
+  ];
+  const REPORT_NAME = Object.fromEntries(REPORTS);
+  const FORMAT = "bi-migration-progress/1";
+  const STALE_MIN = 30;
+  const $ = (id) => document.getElementById(id);
+  const fmt = new Intl.NumberFormat("en-CA");
+  const n = (v) => (v === null || v === undefined || v === "") ? "–" : fmt.format(v);
+
+  function el(tag, attrs, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else e.setAttribute(k, v);
+    }
+    for (const k of kids) if (k !== null && k !== undefined) e.append(k);
+    return e;
+  }
+  function ago(iso) {
+    const t = Date.parse(iso); if (!t) return "–";
+    const m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+    const h = Math.round(m / 60); if (h < 48) return h + " h ago";
+    return new Date(t).toLocaleDateString("en-CA", { day: "numeric", month: "short", year: "numeric" });
+  }
+  const when = (iso) => { const t = Date.parse(iso); return t ? new Date(t).toLocaleString("en-CA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""; };
+
+  // ---------- progress file: keep only known fields, so nothing else can be stored
+  const num = (v) => (typeof v === "number" && isFinite(v)) ? v : null;
+  const str = (v, max = 120) => (typeof v === "string") ? v.slice(0, max) : null;
+  const decStr = (v) => (typeof v === "string" && /^-?[0-9.Ee+-]{1,40}$/.test(v)) ? v : null;
+  function cleanProgress(raw) {
+    if (!raw || typeof raw !== "object" || raw.format !== FORMAT || !Array.isArray(raw.tables))
+      throw new Error("This is not a progress.json from migrate.py. Pick run/progress.json from the run folder.");
+    if (raw.tables.length > 60) throw new Error("The file lists too many tables to be a progress.json.");
+    const STATUS = ["waiting", "running", "done", "failed"];
+    return {
+      format: FORMAT, run_id: str(raw.run_id, 40), mode: raw.mode === "dry-run" ? "dry-run" : "load",
+      date_from: str(raw.date_from, 10) || "", date_to: str(raw.date_to, 10) || "",
+      started_at: str(raw.started_at, 40), updated_at: str(raw.updated_at, 40), finished: raw.finished === true,
+      result: ["ok", "problems", "stopped"].includes(raw.result) ? raw.result : null,
+      tables: raw.tables.map((t) => {
+        const reasons = {};
+        for (const [k, v] of Object.entries(t.rejected_by_reason || {}).slice(0, 30)) if (num(v) !== null) reasons[String(k).slice(0, 100)] = v;
+        const sums = {};
+        for (const [k, v] of Object.entries(t.check_sums || {}).slice(0, 10))
+          if (v && typeof v === "object") sums[String(k).slice(0, 60)] = { source: decStr(v.source), target: decStr(v.target), diff: decStr(v.diff) };
+        return {
+          source: str(t.source, 80) || "?", target: str(t.target, 80) || "?",
+          status: STATUS.includes(t.status) ? t.status : "waiting", error: str(t.error, 60),
+          read: num(t.read), loaded: num(t.loaded), rejected: num(t.rejected), warnings: num(t.warnings),
+          chunks_total: num(t.chunks_total), chunks_done: num(t.chunks_done), chunks_skipped: num(t.chunks_skipped),
+          current_chunk: str(t.current_chunk, 40), last_chunk: str(t.last_chunk, 40), seconds: num(t.seconds),
+          check_rows: t.check_rows === "ok" ? "ok" : (t.check_rows === "MISMATCH" ? "MISMATCH" : null),
+          target_rows: num(t.target_rows), loaded_all_runs: num(t.loaded_all_runs),
+          rejected_by_reason: reasons, check_sums: sums,
+        };
+      }),
+    };
+  }
+  const sumOk = (d) => d.diff !== null && Math.abs(Number(d.diff)) < 0.005;
+
+  // ---------- render: migration
+  let run = null, runMeta = {};
+  const statusPill = (t) => {
+    if (t.status === "done") return el("span", { class: "pill ok", text: "Done" });
+    if (t.status === "running") return el("span", { class: "pill run", text: "Loading" });
+    if (t.status === "failed") return el("span", { class: "pill bad", text: "Stopped" });
+    return el("span", { class: "pill idle", text: "Waiting" });
+  };
+  function renderRun() {
+    const tb = $("tbody"); tb.replaceChildren();
+    const banner = $("banner"); banner.hidden = true;
+    $("runEmpty").hidden = !!run; $("runTable").hidden = !run;
+    if (!run) {
+      ["sLoaded", "sRejected", "sSums", "sUpdated"].forEach((id) => $(id).textContent = "–");
+      $("sTables").textContent = "0 / 15"; $("sMode").textContent = "No run uploaded"; $("sStarted").textContent = ""; $("sUploader").textContent = "";
+      return;
+    }
+    const T = run.tables;
+    const done = T.filter((t) => t.status === "done").length;
+    const loaded = T.reduce((a, t) => a + (t.loaded_all_runs ?? t.loaded ?? 0), 0);
+    const rejected = T.reduce((a, t) => a + (t.rejected ?? 0), 0);
+    const allSums = T.flatMap((t) => Object.values(t.check_sums));
+    const badSums = allSums.filter((d) => !sumOk(d)).length;
+    const rowBad = T.filter((t) => t.check_rows === "MISMATCH");
+    $("sMode").replaceChildren(el("span", { class: "pill " + (run.mode === "dry-run" ? "idle" : "run"), text: run.mode === "dry-run" ? "Dry run (nothing written)" : "Real load" }));
+    $("sStarted").textContent = "Started " + when(run.started_at) + (run.date_from || run.date_to ? ` · days ${run.date_from || "start"} to ${run.date_to || "end"}` : "");
+    $("sTables").textContent = `${done} / ${T.length}`;
+    $("sLoaded").textContent = n(loaded);
+    $("sRejected").textContent = n(rejected);
+    $("sSums").textContent = allSums.length ? `${allSums.length - badSums} / ${allSums.length}` : "–";
+    $("sUpdated").textContent = ago(run.updated_at);
+    $("sUpdated").title = when(run.updated_at);
+    $("sUploader").textContent = runMeta.uploadedAt ? "Uploaded " + ago(runMeta.uploadedAt) + (runMeta.uploaderName ? " by " + runMeta.uploaderName : "") : "";
+
+    const staleMin = (Date.now() - Date.parse(run.updated_at)) / 60000;
+    let b = null;
+    if (run.result === "stopped" || T.some((t) => t.status === "failed")) b = ["bad", "The run stopped before the end. Check the terminal output on the machine that ran it, fix the cause, and run the same command again: it continues where it stopped."];
+    else if (run.finished && (run.result === "problems" || rowBad.length || badSums)) b = ["bad", `Finished with problems: ${rowBad.length} table(s) with a row count mismatch, ${badSums} total(s) that differ old vs new. Do not compare with Power BI until these are explained.`];
+    else if (run.finished && run.mode === "dry-run") b = ["ok", "Dry run finished: everything was read and checked, nothing was written. Review the rejected rows, then run the real load."];
+    else if (run.finished) b = ["ok", "Finished. Every table loaded, rows balance and old vs new totals are equal. Next step: compare the reports with Power BI below."];
+    else if (staleMin > STALE_MIN) b = ["warn", `The script was still running at the last upload, ${Math.round(staleMin)} min ago. Upload the newest progress.json to see where it is now.`];
+    if (b) { banner.className = "banner " + b[0]; banner.textContent = b[1]; banner.hidden = false; }
+
+    for (const t of T) {
+      const total = t.chunks_total, got = (t.chunks_done ?? 0) + (t.chunks_skipped ?? 0);
+      const pct = total ? Math.min(100, Math.round(got / total * 100)) : (t.status === "done" ? 100 : 0);
+      const weeks = el("td", {},
+        el("span", { class: "num small", text: total ? `${got} / ${total}` : (t.status === "waiting" ? "–" : String(got)) }),
+        el("div", { class: "bar", "aria-hidden": "true" }, Object.assign(el("i"), { style: `width:${pct}%` })),
+        t.current_chunk ? el("span", { class: "small muted", text: "now " + t.current_chunk }) : null,
+        t.chunks_skipped ? el("span", { class: "small muted", text: ` · ${t.chunks_skipped} done in an earlier run` }) : null);
+      const rej = el("td", { class: "r" }, el("span", { class: "num", text: n(t.rejected) }));
+      const rs = Object.entries(t.rejected_by_reason);
+      if (rs.length) rej.append(el("ul", { class: "reasons" }, ...rs.map(([k, v]) => el("li", { text: `${v} × ${k}` }))));
+      const rows = t.check_rows === "ok" ? el("span", { class: "pill ok", text: "Balanced" })
+        : t.check_rows === "MISMATCH" ? el("span", { class: "pill bad", text: "Mismatch" }) : el("span", { class: "muted", text: "–" });
+      const rowsTd = el("td", {}, rows);
+      if (t.target_rows !== null) rowsTd.append(el("div", { class: "small muted num", text: `${n(t.target_rows)} in new table` }));
+      const sums = Object.entries(t.check_sums);
+      const sumsTd = el("td", {}, sums.length ? el("div", { class: "sums" }, ...sums.map(([c, d]) =>
+        el("div", {}, el("span", { class: "num", text: `${c}: ${d.source ?? "?"}` }), " ",
+          el("span", { class: sumOk(d) ? "diff0" : "diffx", text: sumOk(d) ? "equal" : `diff ${d.diff}` })))) : el("span", { class: "muted small", text: t.status === "done" ? "no amounts" : "–" }));
+      tb.append(el("tr", {},
+        el("td", {}, el("div", { class: "tname", text: t.source }, el("small", { text: "→ " + t.target }))),
+        el("td", {}, statusPill(t), t.error ? el("div", { class: "small muted", text: t.error }) : null),
+        weeks,
+        el("td", { class: "r num", text: n(t.read) }),
+        el("td", { class: "r num", text: n(t.loaded_all_runs ?? t.loaded) }),
+        rej, rowsTd, sumsTd,
+        el("td", { class: "r num small", text: t.seconds !== null ? t.seconds + " s" : "–" })));
+    }
+  }
+
+  // ---------- render: report checks
+  let checks = [], canWrite = false, db = null;
+  const parseNum = (s) => { const v = String(s ?? "").replace(/[,\s$]/g, ""); return v === "" ? null : (isFinite(Number(v)) ? Number(v) : NaN); };
+  const result = (c) => (c.pbi === null || c.newv === null) ? "pending" : (Math.abs(c.pbi - c.newv) <= 0.01 ? "match" : "mismatch");
+  const fmt2 = (v) => v === null ? "" : new Intl.NumberFormat("en-CA", { maximumFractionDigits: 4 }).format(v);
+  function renderChecks() {
+    const chips = $("chips"); chips.replaceChildren();
+    for (const [id, name] of REPORTS) {
+      const mine = checks.filter((c) => c.report === id);
+      const r = { match: 0, mismatch: 0, pending: 0 }; mine.forEach((c) => r[result(c)]++);
+      chips.append(el("div", { class: "chip" }, el("b", { text: name }), el("div", { class: "cnt" },
+        mine.length ? null : el("span", { class: "pill idle", text: "Not checked" }),
+        r.match ? el("span", { class: "pill ok", text: r.match + " match" }) : null,
+        r.mismatch ? el("span", { class: "pill bad", text: r.mismatch + " differ" }) : null,
+        r.pending ? el("span", { class: "pill warn", text: r.pending + " waiting" }) : null)));
+    }
+    const cb = $("cbody"); cb.replaceChildren();
+    $("chkEmpty").hidden = !!checks.length; $("chkTable").hidden = !checks.length;
+    $("chkEmptyTxt").textContent = canWrite ? "Open the same report, period and filters in Power BI and in BI Analytics, then add each number above. Leave New empty if you only have the Power BI side so far." : "Checks appear here when someone with edit access adds them.";
+    if (!checks.length) return;
+    const sorted = [...checks].sort((a, b) => REPORTS.findIndex((r) => r[0] === a.report) - REPORTS.findIndex((r) => r[0] === b.report) || String(a.created_at).localeCompare(String(b.created_at)));
+    for (const c of sorted) {
+      const res = result(c);
+      const cell = (field, cls) => {
+        if (!canWrite) return el("td", { class: cls === "note" ? "" : "r num", text: cls === "note" ? (c.note || "") : fmt2(c[field]) });
+        const inp = el("input", { id: `c-${c.id}-${field}`, class: cls || "", value: cls === "note" ? (c.note || "") : fmt2(c[field]), "aria-label": field, inputmode: cls === "note" ? "text" : "decimal", maxlength: "120" });
+        inp.addEventListener("change", () => saveField(c, field, inp));
+        return el("td", { class: cls === "note" ? "" : "r" }, inp);
+      };
+      const diff = (c.pbi !== null && c.newv !== null) ? c.newv - c.pbi : null;
+      cb.append(el("tr", {},
+        el("td", { text: REPORT_NAME[c.report] || c.report }),
+        el("td", { text: c.measure }),
+        el("td", { class: "muted", text: c.period || "" }),
+        cell("pbi"), cell("newv"),
+        el("td", { class: "r num", text: diff === null ? "–" : (diff > 0 ? "+" : "") + fmt2(Math.round(diff * 10000) / 10000) }),
+        el("td", {}, el("span", { class: "pill " + (res === "match" ? "ok" : res === "mismatch" ? "bad" : "warn"), text: res === "match" ? "Match" : res === "mismatch" ? "Differs" : "Waiting" })),
+        cell("note", "note"),
+        el("td", {}, canWrite ? delBtn(c) : null)));
+    }
+  }
+  function delBtn(c) {
+    const b = el("button", { class: "x", type: "button", title: "Delete this check", "aria-label": "Delete this check", text: "✕" });
+    b.addEventListener("click", async () => {
+      if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Delete?"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "✕"; }, 3000); return; }
+      try { await db.collection("checks").doc(c.id).delete(); } catch (e) { $("addMsg").className = "msg bad"; $("addMsg").textContent = "Could not delete: " + (e.message || e.code); }
+    });
+    return b;
+  }
+  async function saveField(c, field, inp) {
+    let val;
+    if (field === "note") val = inp.value.trim().slice(0, 120);
+    else { val = parseNum(inp.value); if (Number.isNaN(val)) { inp.setCustomValidity("Enter a number"); inp.reportValidity(); return; } inp.setCustomValidity(""); }
+    try { await db.collection("checks").doc(c.id).update({ [field]: val, updated_at: new Date().toISOString() }); }
+    catch (e) { $("addMsg").className = "msg bad"; $("addMsg").textContent = "Could not save: " + (e.message || e.code); }
+  }
+
+  // ---------- setup
+  $("fReport").append(...REPORTS.map(([id, name]) => el("option", { value: id, text: name })));
+  renderRun(); renderChecks();
+  setInterval(() => { if (run) { $("sUpdated").textContent = ago(run.updated_at); if (runMeta.uploadedAt) renderRun(); } }, 60000);
+
+  function setWritable(on) {
+    canWrite = on;
+    $("drop").hidden = !on;
+    $("addForm").hidden = !on;
+    renderChecks();
+  }
+  setWritable(false);
+
+  (async () => {
+    db = window.claude ? await claude.use("db") : null;
+    if (!db) { $("liveTxt").textContent = "Offline: sign in to claude.ai to see the shared numbers"; return; }
+    const user = await claude.use("user");
+    let w = user ? await user.can("data.write") : null;
+    setWritable(w !== false);
+    const myId = user ? await user.id() : null;
+
+    db.doc("runs/latest").onSnapshot(async (s) => {
+      $("liveDot").classList.add("on"); $("liveTxt").textContent = "Live: updates appear for everyone";
+      if (!s.exists) { run = null; runMeta = {}; renderRun(); return; }
+      const d = s.data();
+      try { run = cleanProgress(d.progress); } catch { run = null; }
+      runMeta = { uploadedAt: d.uploaded_at, uploaderName: "" };
+      if (d.uploaded_by && user && user.profiles) {
+        try { const ps = await user.profiles([d.uploaded_by]); runMeta.uploaderName = ps[d.uploaded_by]?.name || ""; } catch {}
+      }
+      renderRun();
+    }, () => { $("liveDot").classList.remove("on"); $("liveTxt").textContent = "Live updates stopped. Reload the page."; });
+
+    db.collection("checks").onSnapshot((snap) => {
+      checks = snap.docs.map((d) => { const x = d.data(); return { id: d.id, report: x.report, measure: String(x.measure || ""), period: String(x.period || ""), pbi: typeof x.pbi === "number" ? x.pbi : null, newv: typeof x.newv === "number" ? x.newv : null, note: String(x.note || ""), created_at: x.created_at || "" }; });
+      renderChecks();
+    }, () => {});
+
+    // upload
+    const msg = $("upMsg");
+    async function handle(file) {
+      msg.className = "msg"; msg.textContent = "Reading…";
+      try {
+        if (!/progress\.json$/i.test(file.name)) throw new Error(`"${file.name}" is not progress.json. Only upload run/progress.json.`);
+        if (file.size > 200000) throw new Error("This file is too big to be a progress.json.");
+        let raw; try { raw = JSON.parse(await file.text()); } catch { throw new Error("The file is not valid JSON. Upload it again after the script has saved it."); }
+        const clean = cleanProgress(raw);
+        if (run && run.run_id === clean.run_id && Date.parse(clean.updated_at) < Date.parse(run.updated_at))
+          throw new Error("This file is older than the one already shown. Pick the newest progress.json.");
+        await db.doc("runs/latest").set({ progress: clean, uploaded_at: new Date().toISOString(), uploaded_by: myId });
+        if (clean.run_id) await db.collection("history").doc(clean.run_id.replace(/[^A-Za-z0-9_.~:@+-]/g, "-")).set({ progress: clean, uploaded_at: new Date().toISOString() });
+        msg.className = "msg ok"; msg.textContent = "Uploaded. Everyone now sees this progress.";
+      } catch (e) {
+        msg.className = "msg bad";
+        msg.textContent = e.code === "invalid_argument" ? "You can view this page but not update it. Ask the owner for Contributor access." : (e.message || "Upload failed.");
+        if (e.code === "invalid_argument") setWritable(false);
+      }
+    }
+    $("pick").addEventListener("click", () => $("file").click());
+    $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) handle(f); e.target.value = ""; });
+    const drop = $("drop");
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drag"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+    drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("drag"); const f = e.dataTransfer.files[0]; if (f) handle(f); });
+
+    // add check
+    $("addForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const am = $("addMsg");
+      const pbi = parseNum($("fPbi").value), newv = parseNum($("fNew").value);
+      if (Number.isNaN(pbi) || Number.isNaN(newv)) { am.className = "msg bad"; am.textContent = "Values must be numbers, like 21950.66."; return; }
+      $("fAdd").disabled = true;
+      try {
+        await db.collection("checks").add({ report: $("fReport").value, measure: $("fMeasure").value.trim().slice(0, 80), period: $("fPeriod").value.trim().slice(0, 80), pbi, newv, note: "", created_at: new Date().toISOString(), created_by: myId });
+        am.className = "msg ok"; am.textContent = "Check added.";
+        $("fMeasure").value = ""; $("fPbi").value = ""; $("fNew").value = "";
+      } catch (err) {
+        am.className = "msg bad";
+        am.textContent = err.code === "invalid_argument" ? "You can view this page but not change it. Ask the owner for Contributor access." : "Could not add: " + (err.message || err.code);
+        if (err.code === "invalid_argument") setWritable(false);
+      } finally { $("fAdd").disabled = false; }
+    });
+  })();
+})();
+</script>
