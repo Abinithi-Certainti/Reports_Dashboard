@@ -1,0 +1,321 @@
+{
+  "tables": [
+    {
+      "source": "NetSuiteLocation_Mapping",
+      "target": "netsuite_location_mapping",
+      "columns": {
+        "LocationID": "location_id",
+        "PreAcquisition": "pre_acquisition",
+        "PostAcquisition": "post_acquisition",
+        "AcquitsionDate": "acquisition_date",
+        "Company": "company",
+        "Location": "location",
+        "LocationName": "location_name",
+        "Brand": "brand",
+        "BrandName": "brand_name",
+        "CTLocation": "ct_location",
+        "CTBrand": "ct_brand",
+        "NSDeptID": "ns_dept_id",
+        "ROLLOUT": "rollout",
+        "HostLocationID": "host_location_id",
+        "GUID": "guid",
+        "StoreID": "store_id",
+        "brand_w_DT": "brand_w_dt",
+        "no_of_type": "no_of_type"
+      },
+      "chunk_column": null
+    },
+    {
+      "source": "District_Directors",
+      "target": "district_directors",
+      "columns": {
+        "Plaza": "plaza",
+        "District": "district",
+        "District_Director": "district_director",
+        "HostLocationID": "host_location_id"
+      },
+      "chunk_column": null
+    },
+    {
+      "source": "date_table",
+      "target": "date_table",
+      "columns": {
+        "day_id": "day_id",
+        "Date": "date",
+        "Week": "week",
+        "Month": "month",
+        "Year": "year",
+        "Day_of_Month": "day_of_month",
+        "Day of_Week": "day_of_week",
+        "Weekday": "weekday",
+        "Start_of_Week": "start_of_week",
+        "End_of_Week": "end_of_week",
+        "Retail_Week_of_Year": "retail_week_of_year",
+        "Retail_Period": "retail_period",
+        "Retail_Year": "retail_year",
+        "Retail_Period_Start_Date": "retail_period_start_date",
+        "Retail_Period_End_Date": "retail_period_end_date"
+      },
+      "chunk_column": null
+    },
+    {
+      "source": "WeeklyCogsProdNum",
+      "target": "weekly_cogs_prod_num",
+      "columns": {
+        "product_name": "product_name",
+        "product_num": "product_num",
+        "category": "category",
+        "sub_category": "sub_category",
+        "micro_category": "micro_category",
+        "inv_unit": "inv_unit"
+      },
+      "chunk_column": null
+    },
+    {
+      "source": "Temp_DLH",
+      "target": "temp_dlh",
+      "columns": {
+        "Plaza": "plaza",
+        "Brand": "brand",
+        "DLH_Date": "dlh_date",
+        "DLH": "dlh"
+      },
+      "chunk_column": "DLH_Date"
+    },
+    {
+      "source": "Sales_2026_UnPivot_New",
+      "target": "vena_sales",
+      "columns": {
+        "Region": "Region",
+        "Location": "Location",
+        "Brand": "Brand",
+        "value": "value",
+        "TimePeriod": "TimePeriod",
+        "TimePeriod_Date": "TimePeriod_Date",
+        "HostLocationID": "HostLocationID"
+      },
+      "chunk_column": "TimePeriod_Date",
+      "fixed": {
+        "budget_year": 2026
+      }
+    },
+    {
+      "source": "GM_2026_UnPivot_New",
+      "target": "vena_gross_margin",
+      "columns": {
+        "Region": "Region",
+        "Location": "Location",
+        "Brand": "Brand",
+        "value": "value",
+        "TimePeriod": "TimePeriod",
+        "TimePeriod_Date": "TimePeriod_Date",
+        "HostLocationID": "HostLocationID"
+      },
+      "chunk_column": "TimePeriod_Date",
+      "fixed": {
+        "budget_year": 2026
+      }
+    },
+    {
+      "source": "Transactions_2026_UnPivot_v2",
+      "target": "vena_transactions",
+      "columns": {
+        "Region": "Region",
+        "Location": "Location",
+        "Brand": "Brand",
+        "value": "value",
+        "TimePeriod": "TimePeriod",
+        "TimePeriod_Date": "TimePeriod_Date",
+        "HostLocationID": "HostLocationID"
+      },
+      "chunk_column": "TimePeriod_Date",
+      "fixed": {
+        "budget_year": 2026
+      }
+    },
+    {
+      "source": "DLH_2026_UnPivot_New",
+      "target": "vena_labour_hours",
+      "columns": {
+        "Region": "Region",
+        "Location": "Location",
+        "Brand": "Brand",
+        "value": "value",
+        "TimePeriod": "TimePeriod",
+        "TimePeriod_Date": "TimePeriod_Date",
+        "HostLocationID": "HostLocationID"
+      },
+      "chunk_column": "TimePeriod_Date",
+      "fixed": {
+        "budget_year": 2026
+      }
+    },
+    {
+      "source": "WeeklyCogs",
+      "target": "weekly_cogs",
+      "columns": {
+        "WeeklyCogs_ID": "id",
+        "loc_code": "loc_code",
+        "Start_Date": "start_date",
+        "period": "period",
+        "product_num": "product_num",
+        "unit_price": "unit_price",
+        "begin_quantity": "begin_quantity",
+        "begin_value": "begin_value",
+        "purchase_quantity": "purchase_quantity",
+        "purchase_value": "purchase_value",
+        "inv_adj_quantity": "inv_adj_quantity",
+        "inv_adj_value": "inv_adj_value",
+        "waste_quantity": "waste_quantity",
+        "waste_value": "waste_value",
+        "var_adj_quantity": "var_adj_quantity",
+        "var_adj_value": "var_adj_value",
+        "transfer_out_quantity": "transfer_out_quantity",
+        "transfer_out_value": "transfer_out_value",
+        "end_quantity": "end_quantity",
+        "end_value": "end_value",
+        "cogs": "cogs",
+        "theo_depletion": "theo_depletion",
+        "theo_cost": "theo_cost",
+        "createdate": "created_at"
+      },
+      "chunk_column": "period"
+    },
+    {
+      "source": "EmployeePaySummaryV2",
+      "target": "employee_pay_summary",
+      "columns": {
+        "EmployeeNumber": "employee_number",
+        "EmployeeName": "employee_name",
+        "PayDate": "pay_date",
+        "Location": "location",
+        "Department": "department",
+        "Job": "job",
+        "PayCode": "pay_code",
+        "PayCategory": "pay_category",
+        "Hours": "hours",
+        "Rounded_In_Out": "rounded_in_out",
+        "PayAmount": "pay_amount",
+        "Retrieve_Date": "retrieve_date"
+      },
+      "chunk_column": "PayDate"
+    },
+    {
+      "source": "POS_ORDERPAIDOUTS",
+      "target": "pos_order_paid_outs",
+      "columns": {
+        "OrderDetailID": "order_detail_id",
+        "OrderID": "order_id",
+        "MenuItemID": "menu_item_id",
+        "MenuItemName": "menu_item_name",
+        "EnteredTime": "entered_time",
+        "OrderTypeName": "order_type_name",
+        "OrderType": "order_type",
+        "FinishOn": "finish_on",
+        "EndDay": "end_day",
+        "PaymentAmount": "payment_amount",
+        "GUID": "guid",
+        "StoreId": "store_id"
+      },
+      "chunk_column": "EndDay"
+    },
+    {
+      "source": "POS_ORDERS",
+      "target": "pos_orders",
+      "columns": {
+        "OrderID": "order_id",
+        "StartOn": "start_on",
+        "FinishOn": "finish_on",
+        "OrderTypeName": "order_type_name",
+        "OrderType": "order_type",
+        "Tax": "tax",
+        "SubTotal": "subtotal",
+        "GrandTotal": "grand_total",
+        "Total": "total",
+        "Discount": "discount",
+        "ComboSaved": "combo_saved",
+        "IsRefund": "is_refund",
+        "Endday": "end_day",
+        "Gross": "gross",
+        "Net": "net",
+        "ReceiptNumber": "receipt_number",
+        "OrderNumberID": "order_number_id",
+        "StartPerson": "start_person",
+        "ClosePerson": "close_person",
+        "StartPersonEmployeeID": "start_person_employee_id",
+        "ClosePersonEmployeeID": "close_person_employee_id",
+        "Third_Party_OrderID": "third_party_order_id",
+        "TargetComputer": "target_computer",
+        "GUID": "guid",
+        "StoreId": "store_id"
+      },
+      "chunk_column": "Endday"
+    },
+    {
+      "source": "POS_ORDERPAYMENTS",
+      "target": "pos_order_payments",
+      "columns": {
+        "OrderID": "order_id",
+        "FinishOn": "finish_on",
+        "Endday": "end_day",
+        "PaymentTypeID": "payment_type_id",
+        "PaymentAmount": "payment_amount",
+        "Gratuity": "gratuity",
+        "PennyRounded": "penny_rounded",
+        "UsePennyRounding": "use_penny_rounding",
+        "ExchangeRate": "exchange_rate",
+        "PaymentTypeName": "payment_type_name",
+        "GUID": "guid",
+        "StoreId": "store_id"
+      },
+      "chunk_column": "Endday"
+    },
+    {
+      "source": "POS_ORDERDETAILS",
+      "target": "pos_order_details",
+      "columns": {
+        "OrderDetailID": "order_detail_id",
+        "OrderID": "order_id",
+        "MenuItemID": "menu_item_id",
+        "MenuItemName": "menu_item_name",
+        "KitchenName": "kitchen_name",
+        "MenuItemType": "menu_item_type",
+        "PLU": "plu",
+        "Price": "price",
+        "Quantity": "quantity",
+        "DepartmentID": "department_id",
+        "DepartmentName": "department_name",
+        "DiscountID": "discount_id",
+        "DiscountValue": "discount_value",
+        "Discountamount": "discount_amount",
+        "HasMods": "has_mods",
+        "Sequence": "sequence",
+        "EnteredTime": "entered_time",
+        "TaxExemption": "tax_exemption",
+        "TaxQuantity": "tax_quantity",
+        "Deposit": "deposit",
+        "ValueAddedBasePrice": "value_added_base_price",
+        "ComboDiscountedPrice": "combo_discounted_price",
+        "ALCPrice": "alc_price",
+        "ALCMaxPrice": "alc_max_price",
+        "ALCRemainingPrice": "alc_remaining_price",
+        "PricingGroupPLU": "pricing_group_plu",
+        "PricingGroupName": "pricing_group_name",
+        "UpgradeAmount": "upgrade_amount",
+        "ComboPercentBasedPrice": "combo_percent_based_price",
+        "ComboPercentBasedDiscountPrice": "combo_percent_based_discount_price",
+        "OrderTypeName": "order_type_name",
+        "OrderType": "order_type",
+        "FinishOn": "finish_on",
+        "Endday": "end_day",
+        "DiscountType": "discount_type",
+        "PriceBackUP": "price_backup",
+        "MaxOrderDetailID": "max_order_detail_id",
+        "PersistentPLU": "persistent_plu",
+        "GUID": "guid",
+        "StoreId": "store_id"
+      },
+      "chunk_column": "Endday"
+    }
+  ]
+}
