@@ -54,7 +54,7 @@ tgt_sql = ["-- Mock of the NEW Postgres tables (schema master), generated from t
            "CREATE SCHEMA IF NOT EXISTS master;",
            "CREATE EXTENSION IF NOT EXISTS pgcrypto;",
            "DO $$ BEGIN CREATE TYPE master.order_type_name_enum AS ENUM "
-           "('Dine In', 'Take Out', 'Drive-Thru', 'Delivery', 'Mobile', 'Cash Drop'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;"]
+           "('Mobile - Take Out', 'Eat In', 'Drive-Thru', 'Digital Order', 'Cash Drop', 'Take Out', 'Mobile - Drive Thru', 'Paid Out'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;"]
 PK = {"weekly_cogs_prod_num": "product_num"}
 for s in ORDER:
     e = tables[s]; t = e["target"]; parts = []

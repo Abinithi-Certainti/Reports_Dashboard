@@ -1,7 +1,7 @@
 -- Mock of the NEW Postgres tables (schema master), generated from the schema review. Test only.
 CREATE SCHEMA IF NOT EXISTS master;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-DO $$ BEGIN CREATE TYPE master.order_type_name_enum AS ENUM ('Dine In', 'Take Out', 'Drive-Thru', 'Delivery', 'Mobile', 'Cash Drop'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE master.order_type_name_enum AS ENUM ('Mobile - Take Out', 'Eat In', 'Drive-Thru', 'Digital Order', 'Cash Drop', 'Take Out', 'Mobile - Drive Thru', 'Paid Out'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DROP TABLE IF EXISTS master.netsuite_location_mapping;
 CREATE TABLE master.netsuite_location_mapping (
     "location_id" integer NOT NULL,

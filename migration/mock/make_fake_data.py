@@ -23,7 +23,8 @@ STORES = [  # store id, location id, plaza, brand, host location, ct location, r
     ("101701", 5, "Barrie ON S", "Market", 4003, "MKT40", "Yes"),
     ("101702", 6, "Barrie ON S", "Subway", 4003, "SUB40", "No"),
 ]
-ORDER_TYPES = ["Dine In", "Take Out", "Drive-Thru", "Cash Drop"]
+# The real values, as in DEV's master.order_type_name_enum (checked 2026-10-05). Orders use the first six.
+ORDER_TYPES = ["Take Out", "Drive-Thru", "Digital Order", "Eat In", "Mobile - Take Out", "Mobile - Drive Thru", "Cash Drop", "Paid Out"]
 EXPECTED_ERRORS = {  # source table -> number of rows that must be rejected (each has one broken value)
     "POS_ORDERS": 4,          # empty StoreId, bad GUID, unknown OrderTypeName 'Catering', IsRefund 'maybe'
     "POS_ORDERDETAILS": 2,    # empty GUID, HasMods 'perhaps'
@@ -91,7 +92,7 @@ def main():
         for d in DAYS:
             for _ in range(12):
                 oid += 1
-                net = money(4, 40); tax = round(net * 0.13, 2); ot = random.choice(ORDER_TYPES[:3])
+                net = money(4, 40); tax = round(net * 0.13, 2); ot = random.choice(ORDER_TYPES[:6])
                 t = dt.datetime.combine(d, dt.time(random.randint(6, 21), random.randint(0, 59)))
                 g = str(uuid.uuid4())
                 orders.append(dict(OrderID=oid, StartOn=t, FinishOn=t, OrderTypeName=ot, OrderType=ORDER_TYPES.index(ot), Tax=tax,
@@ -115,7 +116,7 @@ def main():
                                  PaymentAmount=round(net + tax, 2), Gratuity=0, PennyRounded=0, UsePennyRounding="True",
                                  ExchangeRate=1, PaymentTypeName=random.choice(["Cash", "Visa", "Debit Card"]), GUID=str(uuid.uuid4()), StoreId=sid))
             paidouts.append(dict(OrderDetailID=1, OrderID=oid, MenuItemID=900, MenuItemName="Paid Out: lotto win", EnteredTime=t,
-                                 OrderTypeName="Cash Drop", OrderType=3, FinishOn=t, EndDay=dt.datetime.combine(d, dt.time()),
+                                 OrderTypeName="Paid Out", OrderType=ORDER_TYPES.index("Paid Out"), FinishOn=t, EndDay=dt.datetime.combine(d, dt.time()),
                                  PaymentAmount=money(5, 50), GUID=str(uuid.uuid4()), StoreId=sid))
     # broken on purpose
     orders[0]["StoreId"] = None
