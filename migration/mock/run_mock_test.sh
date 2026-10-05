@@ -34,11 +34,38 @@ set -a; . "$ENV"; set +a
 python3 mock/make_fake_data.py
 rm -rf run-mock && python3 migrate.py --env "$ENV" --dry-run --out run-mock-dry
 python3 migrate.py --env "$ENV" --out run-mock
-python3 - <<'PY'
+check_rejects() {
+python3 - "$1" <<'PY'
 import csv, collections, glob, sys
 sys.path.insert(0, "mock"); from make_fake_data import EXPECTED_ERRORS
-got = collections.Counter(r["source_table"] for f in glob.glob("run-mock/errors/*.csv") for r in csv.DictReader(open(f)))
+got = collections.Counter(r["source_table"] for f in glob.glob(sys.argv[1] + "/errors/*.csv") for r in csv.DictReader(open(f)))
 bad = {t: (n, got.get(t, 0)) for t, n in EXPECTED_ERRORS.items() if got.get(t, 0) != n}
-print("rejected rows match the broken rows planted on purpose" if not bad else f"MISMATCH expected/got: {bad}")
+print(sys.argv[1] + ": rejected rows match the broken rows planted on purpose" if not bad else f"MISMATCH expected/got: {bad}")
 sys.exit(1 if bad else 0)
 PY
+}
+check_rejects run-mock
+
+# Second path: export to files -> load_raw into a local Postgres copy -> migrate from that copy. Same results expected.
+psql -q -c 'DROP DATABASE IF EXISTS raw_mock WITH (FORCE)' -c 'CREATE DATABASE raw_mock' \
+        -c 'DROP DATABASE IF EXISTS qa_mock2 WITH (FORCE)' -c 'CREATE DATABASE qa_mock2'
+psql -q -v ON_ERROR_STOP=1 -d qa_mock2 -f mock/target_schema.sql
+LOCAL=$(mktemp); trap 'rm -f "$ENV" "$LOCAL"; docker rm -f mock-mssql >/dev/null' EXIT
+cat > "$LOCAL" <<E
+SRC_DRIVER=postgres
+SRC_HOST=${PGHOST:-127.0.0.1}
+SRC_PORT=${PGPORT:-5432}
+SRC_DATABASE=raw_mock
+SRC_USER=${PGUSER:-postgres}
+SRC_PASSWORD=${PGPASSWORD:-}
+TGT_HOST=${PGHOST:-127.0.0.1}
+TGT_PORT=${PGPORT:-5432}
+TGT_DATABASE=qa_mock2
+TGT_USER=${PGUSER:-postgres}
+TGT_PASSWORD=${PGPASSWORD:-}
+E
+rm -rf export-mock run-mock-files
+python3 export.py --env "$ENV" --out export-mock --to 2026-12-31
+python3 load_raw.py --env "$LOCAL" --dir export-mock
+python3 migrate.py --env "$LOCAL" --out run-mock-files
+check_rejects run-mock-files
