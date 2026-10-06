@@ -33,6 +33,9 @@ E
 set -a; . "$ENV"; set +a
 python3 mock/make_fake_data.py
 rm -rf run-mock && python3 migrate.py --env "$ENV" --dry-run --out run-mock-dry
+# A part first, with dates in the middle of a week (the case that once loaded rows twice), then everything: the
+# second run must skip that week, and the check against the source fails the test if any row is in twice.
+python3 migrate.py --env "$ENV" --out run-mock --from 2026-09-08 --to 2026-09-10
 python3 migrate.py --env "$ENV" --out run-mock
 check_rejects() {
 python3 - "$1" <<'PY'

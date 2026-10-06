@@ -263,10 +263,28 @@ def convert(v, col, info, warn):
 
 
 # ---------------------------------------------------------------- chunks
-def chunks(src, table, col, date_from, date_to):
-    """[(label, where-clause, params)]: one per week of col, then the rows where col is empty; one chunk without col."""
+def week_start(d):
+    """The Sunday on or before d. Every run cuts the weeks at the same place, so a week always has the same label."""
+    return d - dt.timedelta(days=(d.weekday() + 1) % 7)
+
+
+def chunk_range(label):
+    """(first day, day after the last) of a week label "YYYY-MM-DD..YYYY-MM-DD", or None for other labels."""
+    m = re.fullmatch(r"(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})", label)
+    if not m:
+        return None
+    return dt.date.fromisoformat(m.group(1)), dt.date.fromisoformat(m.group(2)) + dt.timedelta(days=1)
+
+
+def chunks(src, table, col, date_from, date_to, today=None):
+    """[(label, where-clause, params)]: one per calendar week (Sunday to Saturday) of col, then the rows where col is
+    empty; one chunk for a table without col.
+    The weeks never depend on --from/--to or on the data: --from/--to only choose which whole weeks are loaded (a
+    week partly inside the range is loaded whole). A week that has not ended yet is left for a later run, so it is
+    never marked done while rows can still arrive."""
     if not col:
         return [("all", "", ())]
+    today = today or dt.date.today()
     cur = src.conn.cursor()
     cur.execute(f"SELECT MIN({src.q(col)}), MAX({src.q(col)}) FROM {src.table(table)}")
     lo, hi = cur.fetchone()
@@ -279,15 +297,55 @@ def chunks(src, table, col, date_from, date_to):
             lo = max(lo, date_from)
         if date_to:
             hi = min(hi, date_to)
-        start = lo
-        while start <= hi:
-            end = min(start + dt.timedelta(days=7), hi + dt.timedelta(days=1))
+        start = week_start(lo)
+        while start <= hi and start + dt.timedelta(days=7) <= today:
+            end = start + dt.timedelta(days=7)
             plan.append((f"{start}..{end - dt.timedelta(days=1)}",
                          f"WHERE {src.q(col)} >= {src.ph} AND {src.q(col)} < {src.ph}", (start, end)))
             start = end
+        if start <= hi:
+            print(f"    {table}: the week from {start} has not ended yet: left for a later run", flush=True)
     if not date_from and not date_to:
         plan.append(("empty-" + col, f"WHERE {src.q(col)} IS NULL", ()))
     return plan
+
+
+def overlapping(label, done):
+    """A finished chunk (other than label itself) whose days overlap label's: loading label would load rows twice."""
+    r = chunk_range(label)
+    if not r:
+        return None
+    for other, v in done.items():
+        o = chunk_range(other)
+        if other != label and isinstance(v, dict) and o and o[0] < r[1] and r[0] < o[1]:
+            return other
+    return None
+
+
+def source_count(src, table, col, done):
+    """Rows the source holds in the finished chunks, counted straight from the source (not from our own notes)."""
+    if not col:
+        sql, params = f"SELECT COUNT(*) FROM {src.table(table)}", ()
+    else:
+        parts, params, merged = [], [], []
+        for r in sorted(filter(None, (chunk_range(lb) for lb in done))):
+            if merged and r[0] <= merged[-1][1]:            # weeks next to each other become one range
+                merged[-1][1] = max(merged[-1][1], r[1])
+            else:
+                merged.append(list(r))
+        for a, b in merged:
+            parts.append(f"({src.q(col)} >= {src.ph} AND {src.q(col)} < {src.ph})")
+            params += [a, b]
+        if "empty-" + col in done:
+            parts.append(f"{src.q(col)} IS NULL")
+        if not parts:
+            return 0
+        sql = f"SELECT COUNT(*) FROM {src.table(table)} WHERE " + " OR ".join(parts)
+    cur = src.conn.cursor()
+    cur.execute(sql, tuple(params))
+    n = cur.fetchone()[0]
+    src.end()
+    return n
 
 
 # ---------------------------------------------------------------- one chunk (main process or a worker process)
@@ -430,6 +488,12 @@ def migrate_table(m, src, tc, schema, args, state, out, env, progress, pool):
         if isinstance(done.get(label), dict):           # finished in an earlier run
             stats["skipped_chunks"] += 1
         else:
+            clash = overlapping(label, done)
+            if clash and not args.dry_run:
+                raise SystemExit(
+                    f"{schema}.{tgt}: week {label} overlaps {clash}, which an earlier run loaded with different week "
+                    f"boundaries (made by an older version of this script, or by hand). Loading it would put those rows "
+                    f"in twice. Empty {schema}.{tgt} and delete its entry in {out}/checkpoint.json, then run again.")
             todo.append((label, where, params))
     live["chunks_skipped"] = stats["skipped_chunks"]
     progress.save()
@@ -445,7 +509,7 @@ def migrate_table(m, src, tc, schema, args, state, out, env, progress, pool):
         if not args.dry_run:
             # saved only after the chunk's transaction committed; its loaded count and amounts make the final check
             # cover the whole table, also when a later run resumes
-            done[r["label"]] = {"loaded": r["loaded"], "sums": r["sums"]}
+            done[r["label"]] = {"loaded": r["loaded"], "rejected": r["rejected"], "sums": r["sums"]}
             save_state(out, state)
         print(f"    {s_name:30} {r['label']:24} loaded {r['loaded']:>8}  rejected so far {stats['rejected']}", flush=True)
         live.update({k: stats[k] for k in ("read", "loaded", "rejected", "warnings")},
@@ -493,6 +557,12 @@ def migrate_table(m, src, tc, schema, args, state, out, env, progress, pool):
             stats["target_rows"] = fresh.execute(f'SELECT count(*) FROM {schema}."{tgt}"').fetchone()[0]
             stats["tgt_sums"] = {c: fresh.execute(f'SELECT coalesce(sum("{tgt_map[c]}"), 0) FROM {schema}."{tgt}"').fetchone()[0]
                                  for c in stats["src_sums"]}
+        # Independent check, straight against the source: rows in the finished weeks minus the rows rejected there
+        # must be exactly what the target holds. Catches rows loaded twice, which the counts above cannot see
+        # (they add up our own notes). Needs the rejected counts, which older checkpoints did not keep.
+        if all("rejected" in v for v in all_done):
+            stats["source_rows"] = source_count(src, s_name, m.get("chunk_column"), done)
+            stats["expected_rows"] = stats["source_rows"] - sum(v["rejected"] for v in all_done)
     return stats
 
 
@@ -529,8 +599,8 @@ def main():
     ap.add_argument("--env", help="settings file (see config.example.env)")
     ap.add_argument("--dry-run", action="store_true", help="read and check everything, write nothing")
     ap.add_argument("--tables", help="comma-separated source tables (default: all, in mapping.json order)")
-    ap.add_argument("--from", dest="date_from", type=dt.date.fromisoformat, help="first day to copy (chunked tables)")
-    ap.add_argument("--to", dest="date_to", type=dt.date.fromisoformat, help="last day to copy (chunked tables)")
+    ap.add_argument("--from", dest="date_from", type=dt.date.fromisoformat, help="first week to copy: any day in it (the whole Sunday-Saturday week is copied)")
+    ap.add_argument("--to", dest="date_to", type=dt.date.fromisoformat, help="last week to copy: any day in it (the whole week; a week that has not ended is left for later)")
     ap.add_argument("--workers", type=int, default=min(4, os.cpu_count() or 1),
                     help="chunks of a big table loaded at the same time (default: 4, or fewer CPUs)")
     ap.add_argument("--batch", type=int, default=5000, help="rows fetched at a time")
@@ -571,6 +641,10 @@ def main():
             if "target_rows" in s and s["target_rows"] != s["loaded_all_runs"]:
                 balanced = False
                 print(f"  !! {m['target']}: {s['loaded_all_runs']} rows loaded in all runs, but the target holds {s['target_rows']}")
+            if "expected_rows" in s and s["target_rows"] != s["expected_rows"]:
+                balanced = False
+                print(f"  !! {m['target']}: the source has {s['source_rows']} rows in the loaded weeks, minus the rejected ones "
+                      f"that is {s['expected_rows']}, but the target holds {s['target_rows']} (rows loaded twice, or missing)")
             s["check_rows"] = "ok" if balanced else "MISMATCH"
             if "tgt_sums" in s:
                 s["check_sums"] = {c: {"source": str(v), "target": str(s["tgt_sums"][c]),

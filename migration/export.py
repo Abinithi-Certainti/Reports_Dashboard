@@ -111,7 +111,11 @@ def month_starts(lo, hi):
 
 
 def plan(conn, table, col, date_from, date_to, explicit_range):
-    """[(piece, where, params)] for one table: one per month of col up to date_to, then the rows where col is empty."""
+    """[(piece, where, params)] for one table: one per calendar month of col, then the rows where col is empty.
+    A piece is always a whole calendar month, whatever --from/--to say (they only choose which months), so the same
+    month always covers the same days; only the month that is still running stops at date_to (yesterday by
+    default) and grows on a later run. Its receipt keeps the days it covers, so a later run sees it is not whole yet
+    and exports it again (load_raw.py then replaces that month's rows)."""
     if not col:
         return [("all", "", ())]
     cur = conn.cursor()
@@ -121,11 +125,12 @@ def plan(conn, table, col, date_from, date_to, explicit_range):
     if lo is not None:
         lo = lo.date() if isinstance(lo, dt.datetime) else lo
         hi = hi.date() if isinstance(hi, dt.datetime) else hi
-        lo, hi = max(lo, date_from) if date_from else lo, min(hi, date_to)
-        for m in month_starts(lo, hi):
+        if date_from:
+            lo = max(lo, dt.date(date_from.year, date_from.month, 1))
+        stop = date_to + dt.timedelta(days=1)          # the day after the last day to export
+        for m in month_starts(lo, min(hi, date_to)):
             nxt = dt.date(m.year + (m.month == 12), m.month % 12 + 1, 1)
-            a, b = max(m, lo), min(nxt, hi + dt.timedelta(days=1))
-            pieces.append((m.strftime("%Y-%m"), f"WHERE [{col}] >= %s AND [{col}] < %s", (a, b)))
+            pieces.append((m.strftime("%Y-%m"), f"WHERE [{col}] >= %s AND [{col}] < %s", (m, min(nxt, stop))))
     if not explicit_range:
         pieces.append(("empty-date", f"WHERE [{col}] IS NULL", ()))
     return pieces
@@ -140,7 +145,8 @@ def export_piece(env, out, table, cols, piece, where, params, chunk_col, level):
     data, receipt = folder / f"{piece}.tsv.gz", folder / f"{piece}.json"
     if receipt.exists() and data.exists():
         done = json.loads(receipt.read_text())
-        if done.get("count_matches") and done.get("bytes") == data.stat().st_size:
+        same_days = done.get("range") == ([str(p) for p in params] if params else None)
+        if same_days and done.get("count_matches") and done.get("bytes") == data.stat().st_size:
             return {"table": table, "piece": piece, "skipped": True}
     folder.mkdir(parents=True, exist_ok=True)
     for attempt in range(3):
@@ -203,8 +209,8 @@ def main():
     ap.add_argument("--tables", help="comma-separated source tables (default: all in mapping.json)")
     ap.add_argument("--extra", action="append", default=[],
                     help="a table not in mapping.json, as Table or Table:DateColumn (repeat for more)")
-    ap.add_argument("--from", dest="date_from", type=dt.date.fromisoformat, help="first day (date-split tables)")
-    ap.add_argument("--to", dest="date_to", type=dt.date.fromisoformat, help="last day, default yesterday")
+    ap.add_argument("--from", dest="date_from", type=dt.date.fromisoformat, help="first month to export: any day in it (the whole month is exported)")
+    ap.add_argument("--to", dest="date_to", type=dt.date.fromisoformat, help="last month to export: any day in it (whole month, never past yesterday); default up to yesterday")
     ap.add_argument("--workers", type=int, default=4, help="pieces exported at the same time (default 4)")
     ap.add_argument("--level", type=int, default=1, help="gzip level 1 (fast) to 9 (small); default 1")
     args = ap.parse_args()
@@ -216,7 +222,13 @@ def main():
         want = set(args.tables.split(","))
         tables = [t for t in tables if t[0] in want]
     tables += [(e.split(":")[0], e.split(":")[1] if ":" in e else None) for e in args.extra]
-    date_to = args.date_to or dt.date.today() - dt.timedelta(days=1)
+    # Up to yesterday (today is still being written). A --to inside a month means the whole month, still never past
+    # yesterday, so a month is never cut at a day someone typed.
+    yesterday = dt.date.today() - dt.timedelta(days=1)
+    date_to = yesterday
+    if args.date_to:
+        nxt = dt.date(args.date_to.year + (args.date_to.month == 12), args.date_to.month % 12 + 1, 1)
+        date_to = min(nxt - dt.timedelta(days=1), yesterday)
     explicit = bool(args.date_from)        # a slice from a start date leaves out the rows with no date; --to alone does not
 
     conn = connect(env)

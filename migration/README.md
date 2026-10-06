@@ -25,7 +25,10 @@ Two ways to run it, with the same rules and checks:
 3. Writes a **receipt** next to it (`<month>.json`): rows written, and the **row count and amount totals calculated by
    SQL Server itself**, the file's size and sha256 checksum, and the column list. The receipt is written last, so a
    piece without one is unfinished; a re-run skips finished pieces.
-4. Stops at **yesterday** by default (`--to`), so a month that is still filling is not half exported.
+4. Pieces are always **whole calendar months**. `--from`/`--to` only choose which months (a date inside a month
+   means the whole month), so a month always covers the same days. Nothing after **yesterday** is exported; the month
+   that is still running is exported up to yesterday, and a later run sees from its receipt that it is not whole yet,
+   exports it again, and `load_raw.py` replaces that month's rows.
 
 **`load_raw.py`** (writes only the local copy)
 1. Creates `src."<OldTable>"` with the **old names** and close types (varchar → text, datetime → timestamp ...).
@@ -36,7 +39,10 @@ Two ways to run it, with the same rules and checks:
 
 **`migrate.py`** (reads the source, writes the target)
 1. Reads the **target** table's rules from Postgres: column types, lengths, decimals, NOT NULL, defaults, enum values.
-2. Plans the chunks: one **week** at a time for big tables, then the rows whose date is empty.
+2. Plans the chunks: one **calendar week (Sunday to Saturday)** at a time for big tables, then the rows whose date is
+   empty. The weeks never depend on `--from`/`--to` (a date inside a week means the whole week), so every run cuts
+   them the same way and a finished week is always recognised. A week that has not ended yet is left for a later
+   run. If an older checkpoint holds a week cut differently, the script stops instead of loading those rows twice.
 3. Fixes each row to fit: renames, text flags → true/false, text → uuid, enum check, datetime → date or `YYYY-MM-DD`
    text, rounding to the target's decimals, length and NOT NULL checks, `budget_year` from the table name. Each
    column's rule is worked out once, then applied to every value.
@@ -46,7 +52,9 @@ Two ways to run it, with the same rules and checks:
    `run/checkpoint.json`, so a stopped run continues where it left off and never loads a week twice. A week that
    fails on a lost connection is rolled back and tried again (2 more times).
 6. Checks: source rows = loaded + rejected; rows in the target (on a fresh connection) = loaded; totals of key
-   amounts (sales, tax, payments, COGS, hours, budgets) equal old vs new.
+   amounts (sales, tax, payments, COGS, hours, budgets) equal old vs new; and, **counted straight from the source**,
+   the rows in all finished weeks minus the rejected ones = the rows in the target (catches rows loaded twice or
+   missing). Any mismatch ends the run with exit code 1.
 
 ## Run it
 
@@ -111,6 +119,9 @@ Starts a throwaway SQL Server in Docker with the old tables (`mock/source_schema
 tables (`mock/target_schema.sql`), fills the source with 2 weeks of made-up data for 6 stores plus 15 rows broken on
 purpose (`mock/make_fake_data.py`), then tests both paths: direct (dry run and load), and export → load_raw →
 migrate. Each must reject exactly the broken rows.
+
+The direct path first loads a few days in the middle of a week, then everything, so a run with `--from`/`--to`
+followed by a full run is tested every time (it once loaded that week twice).
 
 Last result: both paths loaded all 15 tables, rows balanced, totals equal old vs new, the 15 broken rows rejected
 with the right reason, re-runs skipped finished work, and a file with one row missing was refused by `load_raw.py`
