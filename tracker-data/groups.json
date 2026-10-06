@@ -1,0 +1,377 @@
+[
+  {
+    "contains": [
+      "Screens: login, choose brand, idle ads, menu, item detail, my order, receipt",
+      "Menu data: brands, categories, items, modifiers, upsell, promotions, rebates, weather-based items",
+      "Order flow: price order, pay on pin pad, send order to Panasonic POS",
+      "Live menu refresh: catalog changes reach kiosks over a WebSocket"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Kiosk",
+    "nextStep": "",
+    "order": 1,
+    "ownerId": "u_Ted17qyhFdlpDES5rgUB_Q",
+    "repos": [
+      {
+        "name": "kios-frontend",
+        "role": "Kiosk app \u00b7 React Native, Expo"
+      },
+      {
+        "name": "kios-backend-catalog-retrieval",
+        "role": "Menu and catalog API \u00b7 Spring Boot"
+      },
+      {
+        "name": "kios-backend-order-service",
+        "role": "Orders API \u00b7 Spring Boot"
+      },
+      {
+        "name": "kios-backend-user-service",
+        "role": "Device login and live updates \u00b7 Spring Boot"
+      }
+    ],
+    "stage": "owned",
+    "summary": "The customer-facing self-ordering kiosk app and the backend services it calls. Orders are priced and sent to the store's Panasonic POS (the till system).",
+    "updatedAt": "2026-10-05T12:26:16.256Z",
+    "updatedBy": "u_Ted17qyhFdlpDES5rgUB_Q",
+    "id": "kiosk"
+  },
+  {
+    "contains": [
+      "Catalog database schema (\"OnRoute PIMS POC\")",
+      "Directus admin setup"
+    ],
+    "health": "unk",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "PIMS",
+    "nextStep": "",
+    "order": 2,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-common",
+        "role": "Catalog database scripts (database/catalog-database)"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Product information management: the master menu and product data. It runs on Directus at pims.onroute.ca. There is no PIMS service repo; only its database scripts live in kios-common.",
+    "id": "pims"
+  },
+  {
+    "contains": [
+      "Locations and kiosk setup, including payment settings per kiosk",
+      "Content management: campaigns, playlists, advertisers, assets",
+      "Vouchers: campaigns, members, companies",
+      "Role-based access control and audit logs",
+      "Play-analytics reports"
+    ],
+    "health": "weak",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Control Center",
+    "nextStep": "",
+    "order": 3,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend-control-center",
+        "role": "Admin web app \u00b7 React, Vite"
+      },
+      {
+        "name": "kios-backend-control-center",
+        "role": "Admin API \u00b7 Spring Boot, about 97 endpoints"
+      }
+    ],
+    "stage": "exploring",
+    "summary": "The admin web portal and its backend: locations and kiosks, digital signage, vouchers, users, roles and audit logs.",
+    "updatedAt": "2026-10-05T12:25:06.723Z",
+    "updatedBy": "u_Ted17qyhFdlpDES5rgUB_Q",
+    "id": "control-center"
+  },
+  {
+    "contains": [
+      "8 reports: financial, market category, sales budget 2026, sales field team, sales margin budget, sales report 1, tender, waste",
+      "Report specs written in YAML with SQL datasets",
+      "Read-only access to the ETL reporting database"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Analytics",
+    "nextStep": "",
+    "order": 4,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend-bi-analytics",
+        "role": "Reports web app \u00b7 React, Vite, ECharts"
+      },
+      {
+        "name": "kios-backend-bi-analytics",
+        "role": "Report engine \u00b7 Spring Boot (Maven)"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "The BI reporting dashboard that replaces the old Power BI reports, and the report engine behind it. Both repos work on the uat branch.",
+    "id": "analytics"
+  },
+  {
+    "contains": [
+      "Backend: order events published when an order is paid",
+      "Backend: Ready command moves an order to fulfilled",
+      "Frontend: login page and placeholder dashboard"
+    ],
+    "health": "weak",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Virtual Bumpbar",
+    "nextStep": "",
+    "order": 5,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend-bumpbar",
+        "role": "Bumpbar web app \u00b7 only a login page and empty dashboard"
+      },
+      {
+        "name": "kios-backend-order-service",
+        "role": "Order events and Ready command"
+      },
+      {
+        "name": "kios-backend-user-service",
+        "role": "WebSocket topics for bumpbar"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "A screen for kitchen staff to see orders and mark them ready. The backend APIs live in order-service and user-service (ticket E0-772).",
+    "id": "bumpbar"
+  },
+  {
+    "contains": [
+      "Backend: a display topic with order number, guest name and status",
+      "Frontend: nothing built yet"
+    ],
+    "health": "weak",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Pickup Board",
+    "nextStep": "",
+    "order": 6,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend-pickupboard",
+        "role": "Pickup web app \u00b7 README only"
+      },
+      {
+        "name": "kios-backend-user-service",
+        "role": "WebSocket topic for the pickup display"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "A screen that shows customers when their order is ready. The backend APIs live in order-service and user-service (ticket E0-772).",
+    "id": "pickup"
+  },
+  {
+    "contains": [
+      "Catalog / menu sync (partial)",
+      "T-log end of day and trickle: POS sales files to reporting DB and Crunchtime",
+      "EDI 810 invoices and EDI 850 purchase orders",
+      "Ceridian employees and labour hours",
+      "Vena reports (8 feeds) and Vena budget",
+      "Weekly COGS, car count, KPI Template6",
+      "Code only: Ceridian to Azure AD, Dayforce punch export"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "product",
+    "name": "Middleware (NGMW)",
+    "nextStep": "",
+    "order": 7,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-ngmw-orchestration",
+        "role": "Starts flows and moves them between steps"
+      },
+      {
+        "name": "kios-ngmw-pre-processor",
+        "role": "Pre-process step"
+      },
+      {
+        "name": "kios-ngmw-worker-extract",
+        "role": "Extract step"
+      },
+      {
+        "name": "kios-ngmw-worker-transform",
+        "role": "Transform step"
+      },
+      {
+        "name": "kios-ngmw-worker-load",
+        "role": "Load step"
+      },
+      {
+        "name": "kios-ngmw-post-processor",
+        "role": "Post-process step \u00b7 empty skeleton"
+      },
+      {
+        "name": "kios-ngmw-worker-boot-starter",
+        "role": "Shared library the workers use"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "A data pipeline engine. Each flow runs in steps: pre-process, extract, transform, load, post-process. Steps pass work through Kafka, and each flow is one config row in the database.",
+    "id": "middleware"
+  },
+  {
+    "contains": [
+      "Pin pad payment over TCP",
+      "Payment failure recording",
+      "Payment gateway setting per kiosk in Control Center (Moneris or Stripe Terminal)"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "integration",
+    "name": "Payment Integration",
+    "nextStep": "",
+    "order": 8,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend",
+        "role": "Pin pad connection and message format"
+      },
+      {
+        "name": "kios-backend-order-service",
+        "role": "Stores payment results"
+      },
+      {
+        "name": "kios-backend-user-service",
+        "role": "Returns pin pad IP and port at login"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "The kiosk app talks directly to a card pin pad over the local network. The backend only stores the payment result. We integrate with this; we don't rebuild it.",
+    "id": "payment"
+  },
+  {
+    "contains": [
+      "USB receipt printing",
+      "Receipt text builder (has a test)",
+      "Text-me-my-receipt screen (UI only)"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "integration",
+    "name": "Receipt Print",
+    "nextStep": "",
+    "order": 9,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-frontend",
+        "role": "USB printer package"
+      },
+      {
+        "name": "kios-common",
+        "role": "Receipt API contract"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Receipts print from the kiosk app to a USB receipt printer using the ICOD printer SDK. We integrate with this; we don't rebuild it.",
+    "id": "receipt"
+  },
+  {
+    "contains": [
+      "Business and alert notification consumers",
+      "Email, SMS, Teams and Slack channels",
+      "Message templates and replay"
+    ],
+    "health": "weak",
+    "jiraEpic": "",
+    "kind": "layer",
+    "name": "Notification Service",
+    "nextStep": "",
+    "order": 10,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-backend-notification-service",
+        "role": "Notification sender \u00b7 Spring Boot"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Sends email, SMS, Teams and Slack messages when other services publish events to Kafka.",
+    "id": "notification"
+  },
+  {
+    "contains": [
+      "Azure Application Insights configuration in each backend",
+      "Actuator health and Prometheus endpoints"
+    ],
+    "health": "unk",
+    "jiraEpic": "",
+    "kind": "layer",
+    "name": "Observability",
+    "nextStep": "",
+    "order": 11,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "certainti-ai/onroute-kios-infra",
+        "role": "Infrastructure and Grafana (not reviewed)"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Monitoring and dashboards. The team says Grafana lives in kios-infra (certainti-ai org), which has not been reviewed yet. In onroute-ca, services send data to Azure Application Insights.",
+    "id": "observability"
+  },
+  {
+    "contains": [
+      "OpenAPI contracts for catalog, order, user, notification, orchestration and catalog sync",
+      "Shared logging and error handling",
+      "Database scripts for catalog, operational and reporting DBs",
+      "Service templates"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "layer",
+    "name": "Kios Common",
+    "nextStep": "",
+    "order": 12,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-common",
+        "role": "Shared contracts, helpers and DB scripts"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Shared package used by most services: API contracts, shared Java helpers, middleware message schemas and database scripts.",
+    "id": "common"
+  },
+  {
+    "contains": [
+      "GitHub Actions deploy to Azure (ACR and AKS) in each repo",
+      "Dev and preprod start/stop schedules"
+    ],
+    "health": "attn",
+    "jiraEpic": "",
+    "kind": "layer",
+    "name": "CI/CD",
+    "nextStep": "",
+    "order": 13,
+    "ownerId": null,
+    "repos": [
+      {
+        "name": "kios-cicd",
+        "role": "Azure start/stop schedulers"
+      }
+    ],
+    "stage": "not-started",
+    "summary": "Build and deploy pipelines. A push to develop deploys to dev; a push to uat deploys to QA. kios-cicd starts and stops the dev and preprod Azure resources on a schedule.",
+    "id": "cicd"
+  }
+]

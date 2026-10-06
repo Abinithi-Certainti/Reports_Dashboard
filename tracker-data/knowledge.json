@@ -1,0 +1,40 @@
+{
+  "u_2cB6mgEz7_2RkOYZVOEpFA": {
+    "levels": {
+      "analytics": 4,
+      "bumpbar": 1,
+      "cicd": 1,
+      "common": 3,
+      "control-center": 3,
+      "kiosk": 3,
+      "middleware": 3,
+      "notification": 3,
+      "observability": 1,
+      "payment": 1,
+      "pickup": 1,
+      "pims": 4,
+      "receipt": 1
+    },
+    "updatedAt": "2026-10-05T12:20:54.626Z"
+  },
+  "u_Ted17qyhFdlpDES5rgUB_Q": {
+    "helping": [],
+    "levels": {
+      "analytics": 1,
+      "bumpbar": 1,
+      "cicd": 0,
+      "common": 1,
+      "control-center": 1,
+      "kiosk": 2,
+      "middleware": 1,
+      "notification": 1,
+      "observability": 1,
+      "payment": 0,
+      "pickup": 1,
+      "pims": 1,
+      "receipt": 0
+    },
+    "strengths": [],
+    "updatedAt": "2026-10-05T13:00:03.496Z"
+  }
+}
